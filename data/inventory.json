@@ -1,0 +1,24 @@
+[
+  {
+    "colors": "Bright yellow",
+    "img": "images/faux.jpg",
+    "price": "100",
+    "ref": "3046/023/322",
+    "sizes": [
+      "m"
+    ],
+    "title": "Faux Leather Jacket"
+  },
+  {
+    "colors": "Bright yellow",
+    "img": "images/double.jpg",
+    "price": "90",
+    "ref": "6254/022/382",
+    "sizes": [
+      "s",
+      "m",
+      "l"
+    ],
+    "title": "Double Faced Coat"
+  }
+]

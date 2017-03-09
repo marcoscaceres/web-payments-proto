@@ -1,0 +1,109 @@
+body {
+  font-family: sans-serif;
+  max-width: 76em;
+  margin: auto;
+}
+
+form {
+  display: grid;
+  grid-template-columns: 75% 25%;
+}
+
+h1,
+h2,
+h3 {
+  text-transform: uppercase;
+}
+
+table {
+  grid-column-start: 1;
+  width: 100%;
+}
+
+h2 {
+  border-top: thin solid rgb(235, 235, 235);
+  border-bottom: thin solid rgb(235, 235, 235);
+  text-align: center;
+  padding: .5cm 0;
+  text-transform: uppercase;
+  margin: 0;
+  font-weight: normal;
+  font-size: 1em;
+}
+
+table th {
+  color: rgb(146, 146, 146);
+  text-transform: uppercase;
+  padding: .5cm 0;
+  text-align: center;
+}
+
+table td {
+  vertical-align: middle;
+}
+
+td img {
+  box-shadow: 3px 2px 4px 0px rgba(200, 200, 200, 0.75);
+}
+
+td h3 {
+  font-weight: normal;
+  color: black;
+}
+
+td {
+  color: rgb(136, 151, 159);
+  font-size: .9em;
+}
+
+#order-summary {
+  grid-column-start: 2;
+  background-color: rgb(235, 235, 235);
+  padding: 0 .5cm .5cm .5cm;
+  display: inline-grid;
+}
+
+#order-summary h3 {
+  font-weight: normal;
+  font-size: 1em;
+  color: rgb(122, 122, 122);
+  padding: .1cm 0;
+  border-bottom: thin solid rgb(192, 192, 192);
+}
+
+#order-summary dl {
+  display: grid;
+  grid-template-columns: 65% 35%;
+  padding: 0;
+  margin: 0;
+}
+
+#order-summery dt {
+  align-self: center;
+}
+
+#order-summary dl dd {
+  justify-self: end;
+}
+
+#checkout-button {
+  text-transform: uppercase;
+  background-color: black;
+  color: white;
+  border: none;
+  padding: .3cm 1cm;
+  width: 100%;
+}
+
+select {
+  border: 2px solid rgb(222, 226, 230);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: white;
+  padding: 0 .3cm;
+}
+
+#tax-line {
+  margin-bottom: .7cm;
+}

@@ -1,0 +1,189 @@
+@keyframes grow {
+  0% {
+    max-height: 0px;
+  }
+  100% {
+    max-height: 600px;
+  }
+}
+
+#payment-sheet {
+  padding: 0;
+  width: 500px;
+  top: 0;
+  overflow: hidden;
+  box-shadow: 0px 0px 35px -4px rgba(138, 138, 138, 0.77);
+  border: thin solid rgb(204, 204, 204);
+  border-top: none;
+  background-color: white;
+}
+
+#payment-sheet>section {
+  padding: .3cm;
+}
+
+#payment-sheet>section:last-child {
+  padding: 0;
+}
+
+#payment-sheet>section:first-child {
+  background-color: rgb(251, 251, 251);
+  border-bottom: thin solid rgb(212, 212, 212);
+}
+
+#payment-sheet h1 {
+  color: rgb(74, 74, 74);
+  text-align: center;
+  text-transform: none;
+  font-weight: normal;
+  font-size: 1em;
+  margin: 0;
+  padding: 0;
+}
+
+#payment-sheet h1 img {
+  vertical-align: bottom;
+  margin-right: .2cm;
+}
+
+#payment-sheet.hide {
+  max-height: 0px;
+  animation: grow 1s ease-in;
+  animation-direction: reverse;
+}
+
+#payment-sheet.show {
+  animation: grow .3s ease-out;
+}
+
+
+#button-container {
+  padding-top: 1cm;
+  display: inline-grid;
+  border-top: thin solid rgb(110, 110, 110);
+}
+
+#paysheet-controls {
+  margin-right: .3cm;
+  text-align: right;
+}
+
+#paysheet-controls button {
+  border-radius: 3px;
+  height: .7cm;
+  border: thin solid rgb(212, 212, 212);
+  width: 2cm;
+  margin-left: .3cm;
+}
+
+#paysheet-controls button.active {
+  color: white;
+  border: rgb(6, 117, 211);
+  background-color: rgb(36, 138, 235)
+}
+
+#payment-sheet dialog h2 {
+  text-transform: none;
+  font-size: .8em;
+  margin: 0;
+  padding: .2cm 0 .5cm 0;
+  border: none;
+}
+
+#payment-sheet #payment-methods-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  margin-bottom: .5cm;
+  overflow-x: auto;
+  scroll-snap-type: proximity;
+  scroll-snap-align: start none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-destination: 0% 100%;
+  scroll-snap-points-x: repeat(50%);
+  padding-bottom: .5cm;
+}
+
+#payment-sheet #payment-methods-buttons input[role=button] {
+  margin: 0 .2cm;
+  background-color: white;
+  border-radius: 3px;
+  border: thin solid rgb(208, 208, 208);
+  text-align: center;
+  min-width: 45%;
+  padding: .1cm;
+}
+
+#payment-sheet #payment-methods-buttons input:active {
+  border-color: rgb(46, 167, 252);
+}
+
+#payment-sheet #origin {
+  margin: 0;
+  padding: 0;
+}
+
+#payment-sheet #origin p {
+  padding-left: 1em;
+  color: rgb(227, 227, 227);
+  font-size: .7em;
+}
+
+#payment-sheet #view-line-items-button:before {
+  content: "▷";
+  position: absolute;
+  font-size: .5em;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+#payment-sheet #view-line-items-button.open:before {
+  position: absolute;
+  font-size: .5em;
+  content: "▽";
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+#payment-sheet #view-line-items-button {
+  margin: 0;
+  padding: 0;
+  font-weight: initial;
+  font-size: 1em;
+  border: none;
+  color: inherit;
+  background-color: initial;
+}
+
+#payment-sheet #line-items-table td {
+  padding: .2cm .3cm;
+  vertical-align: top;
+}
+
+#payment-sheet #line-items-table td:last-child {
+  text-align: right;
+}
+
+#payment-sheet #line-items-table select {
+  border: thin solid rgb(177, 177, 177);
+  text-align: left;
+}
+
+#payment-sheet output.total {
+  color: rgb(36, 138, 235);
+  font-size: 1.2em;
+}
+
+#payment-sheet #line-items-list {
+  list-style: none;
+  padding: 0 .5cm;
+  margin: 0;
+}
+
+#payment-sheet #line-items-list li {
+  padding: .2cm 0;
+}
+
+#payment-sheet .showing .items-sum {
+  display: none;
+}
