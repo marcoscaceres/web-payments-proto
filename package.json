@@ -9,22 +9,24 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "babel-core": "^6.23.1",
+    "babel-core": "^6.24.0",
     "babel-loader": "^6.4.0",
     "babel-plugin-transform-async-to-generator": "^6.22.0",
     "babel-polyfill": "^6.23.0",
-    "babel-preset-env": "^1.2.1",
-    "css-loader": "^0.26.4",
+    "babel-preset-env": "^1.2.2",
+    "css-loader": "^0.27.3",
     "dialog-polyfill": "^0.4.7",
     "file-loader": "^0.10.1",
     "http-server": "^0.9.0",
-    "hyperhtml": "^0.7.0",
-    "style-loader": "^0.13.2",
+    "hyperhtml": "^0.8.2",
+    "style-loader": "^0.14.1",
     "webpack": "^2.2.1",
-    "webpack-dev-server": "^2.4.1"
+    "webpack-dev-server": "^2.4.2"
   },
   "dependencies": {
     "babel-polyfill": "^6.23.0",
-    "event-target-shim": "^2.0.0"
+    "dexie": "^1.5.1",
+    "event-target-shim": "^2.0.0",
+    "uuid": "^3.0.1"
   }
 }

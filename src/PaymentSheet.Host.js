@@ -2,33 +2,32 @@ import hyperHTML from "hyperhtml/hyperhtml.js";
 
 const privates = new WeakMap();
 
-class Host {
+export default class Host {
   constructor(url = window.location.href) {
     const priv = privates.set(this, new Map()).get(this);
-    const section = document.createElement("section");
-    priv.set("section", section);
-    priv.set("render", hyperHTML.bind(section));
-    this.update(url);
+    const containerElem = document.createElement("section");
+    containerElem.id = "payment-sheet-host";
+    priv.set("containerElem", containerElem);
+    priv.set("renderer", hyperHTML.bind(containerElem));
   }
-  get section() {
-    return privates.get(this).get("section");
-  }
-  update(url) {
+  render(url) {
     const priv = privates.get(this);
-    const render = priv.get("render");
+    const renderer = priv.get("renderer");
+    let result;
     try {
       let host = new URL(url).host;
-      console.log("ssooo", host)
-      render `
-        <p>Requested by <span>${host}</span>
-        </p>
+      result = renderer `
+        <p>Requested by <span>${host}</span></p>
       `;
     } catch (err) {
-      render `
+      result = renderer `
         <p class="payment-sheet-error">Invalid URL!!!!</p>
       `;
     }
+    return result;
+  }
+  get containerElem() {
+    return privates.get(this).get("containerElem");
   }
 }
 
-export const host = new Host();

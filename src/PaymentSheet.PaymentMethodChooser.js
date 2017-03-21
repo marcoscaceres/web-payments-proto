@@ -1,55 +1,84 @@
 import hyperHTML from "hyperhtml/hyperhtml.js";
-import EventTarget from "event-target-shim";
+import DataSheet from "./PaymentSheet.DataSheet";
+
 const privates = new WeakMap();
 
-class PaymentMethodChooser extends EventTarget(["choosen"]) {
-  constructor(paymentMethods = []) {
-    super();
+const defaultMethods = [{
+  name: "basic-card",
+  icons: [
+    { src: "/payment-sheet/images/visa.svg", sizes: "256x256" },
+  ],
+}, {
+  name: "https://paypal.com",
+  icons: [
+    { src: "/payment-sheet/images/paypal.svg", sizes: "256x256" },
+  ],
+}];
+
+export default class PaymentMethodChooser extends DataSheet {
+  constructor(sheet, paymentMethods = defaultMethods) {
+    super("How would you like to pay?");
     const priv = privates.set(this, new Map()).get(this);
-    const section = document.createElement("section");
-    section.id = "payment-method-chooser";
-    priv.set("section", section);
-    priv.set("render", hyperHTML.bind(section));
-    this.update(paymentMethods);
+    const containerElem = document.createElement("section");
+    containerElem.id = "payment-method-chooser";
+    priv.set("containerElem", containerElem);
+    priv.set("renderer", hyperHTML.bind(containerElem));
+    priv.set("sheet", sheet);
+    this.render(paymentMethods);
   }
-  update(paymentMethods) {
-    const render = privates.get(this).get("render");
+  render(paymentMethods) {
+    const render = privates.get(this).get("renderer");
+    const sheet = privates.get(this).get("sheet");
     if (!paymentMethods.length) {
       render `<h2>No payment methods available.</h2>`;
       return;
     }
-    const buttons = paymentMethods.map(toButton.bind(this));
-    render `
-      <h2>How would you like to pay:</h2>
+    const buttons = paymentMethods
+      .map(method => toRadio(method, this));
+
+    const abortHandler = () => {
+      sheet.abort();
+    }
+
+    return render`<h2>How would you like to pay:</h2>
       <div id="payment-methods-buttons">${buttons}</div>
+      <section class="paysheet-controls">
+        <button onclick="${abortHandler}">Cancel</button><button disabled>Continue</button>
+      </div>
     `;
   }
-  get section() {
-    return privates.get(this).get("section");
+  get containerElem() {
+    return privates.get(this).get("containerElem");
+  }
+  static supports(method) {
+    return defaultMethods.some(({ name }) => method === name)
   }
 }
 
-function toButton(paymentMethod) {
+function toRadio(paymentMethod, controller) {
   const { name, icons } = paymentMethod;
   const srcset = icons.map(toSrcset);
   const handlerWrapper = () => {
-    const ev = new CustomEvent("choosen", {
+    const ev = new CustomEvent("chosen", {
       detail: Object.assign({}, paymentMethod),
     });
-    this.dispatchEvent({
-      type: "choosen",
+    controller.dispatchEvent({
+      type: "chosen",
       paymentMethod: ev.detail,
-    });;
+    });
   }
+  const frag = hyperHTML.wire()
+  `<input onclick="${handlerWrapper}">${toImage(srcset, name)}</button>`;
+  return frag;
+}
+// Either a srcset or just a src
+function toImage(srcset, alt) {
   return hyperHTML.wire()
-  `<button onclick="${handlerWrapper}">
-    <img 
-        width="195"
-        height="80"
-        srcset="${srcset}"
-        name="${name}">
-    </button>
-  `;
+  `<img
+      role="button"
+      alt="${alt}"
+      srcset="${srcset.join(" ")}"
+      width="195" height="80"/>`;
 }
 
 function toSrcset({ src, sizes }) {
@@ -62,17 +91,3 @@ function toSrcset({ src, sizes }) {
     .sort()
     .join();
 }
-
-const defaultMethods = [{
-  name: "Visa",
-  icons: [
-    { src: "/payment-sheet/images/visa.svg", sizes: "256x256" },
-  ],
-}, {
-  name: "PayPal",
-  icons: [
-    { src: "/payment-sheet/images/paypal.svg", sizes: "256x256" },
-  ],
-}];
-
-export const paymentMethodChooser = new PaymentMethodChooser(defaultMethods);

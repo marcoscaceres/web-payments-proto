@@ -7,7 +7,7 @@
     "sizes": [
       "m"
     ],
-    "title": "Faux Leather Jacket"
+    "label": "Faux Leather Jacket"
   },
   {
     "colors": "Bright yellow",
@@ -19,6 +19,6 @@
       "m",
       "l"
     ],
-    "title": "Double Faced Coat"
+    "label": "Double Faced Coat"
   }
 ]
