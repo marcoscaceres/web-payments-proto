@@ -77,5 +77,14 @@ async function doPaymentRequest() {
     requestShipping: true,
   }
   const request = new PaymentRequest(methodData, details, options);
-  const response = await request.show();
+  console.log(request)
+  request.onshippingoptionchange = (ev) => {
+    console.log("hmmm.", ev)
+
+  }
+  try{
+    const response = await request.show();
+  }catch(err){
+    console.log(err);
+  }
 }

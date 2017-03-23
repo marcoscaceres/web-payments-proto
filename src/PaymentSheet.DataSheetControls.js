@@ -3,13 +3,12 @@ import EventTarget from "event-target-shim";
 
 const privates = new WeakMap();
 
-export default class Controls extends EventTarget(["cancel", "continue"]) {
+export default class DataSheetControls extends EventTarget(["cancel", "continue"]) {
   constructor() {
     super();
     const priv = privates.set(this, new Map()).get(this);
     priv.set("canContinue", false);
-    const dialog = document.createElement("section");
-    const containerElem = document.createElement("section");
+    priv.set("renderer", hyperHTML.bind(document.createElement("section")));
   }
   activate(){
     privates.get(this).set("canContinue", true);
@@ -20,18 +19,23 @@ export default class Controls extends EventTarget(["cancel", "continue"]) {
     this.render();
   }
   render() {
+    const priv = privates.get(this)
+    const renderer = priv.get("renderer");
     const cancelHandler = () => {
       this.dispatchEvent(new CustomEvent("cancel"));
     };
     const continueHandler = () => {
+      console.log("next!");
       this.dispatchEvent(new CustomEvent("continue"));
     };
-    this.renderer `
-      <button class="cancel" onclick="${cancelHandler}">Cancel</button>
-      <button class="continue" onclick="${continueHandler}" disabled="${this.canContinue}">Continue</button>
+    const canContinue = !priv.get("canContinue");
+    return renderer`
+      <button class="cancel" onclick="${cancelHandler}">
+        Cancel
+      </button>
+      <button class="continue" onclick="${continueHandler}" disabled="${canContinue}">
+        Continue
+      </button>
     `;
-  }
-  get containerElem() {
-    return privates.get(this).get("containerElem");
   }
 }

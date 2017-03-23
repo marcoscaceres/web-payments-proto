@@ -1,13 +1,16 @@
-import dialogPolyfill from "dialog-polyfill/dialog-polyfill";
-import hyperHTML from "hyperhtml/hyperhtml.js";
-import EventTarget from "event-target-shim";
-import "dialog-polyfill/dialog-polyfill.css";
 import "../css/payment-sheet.css";
+import "dialog-polyfill/dialog-polyfill.css";
+import AddressCollector from "./datacollectors/AddressCollector";
+import DataSheet from "./PaymentSheet.DataSheet.js";
+import dialogPolyfill from "dialog-polyfill/dialog-polyfill";
+import EventTarget from "event-target-shim";
 import Host from "./PaymentSheet.Host";
-import Total from "./PaymentSheet.Total";
+import hyperHTML from "hyperhtml/hyperhtml.js";
 import LineItems from "./PaymentSheet.LineItems";
-import PaymentMethodChooser from "./PaymentSheet.PaymentMethodChooser";
+import PaymentMethodChooser from "./datacollectors/PaymentMethodChooser";
 import ShippingOptions from "./PaymentSheet.ShippingOptions";
+import Total from "./PaymentSheet.Total";
+import DataSheetManager from "./DataSheetManager";
 const privates = new WeakMap();
 
 const eventListeners = [
@@ -30,29 +33,59 @@ const eventListeners = [
  *    [x] host information
  */
 
-export default class PaymentSheet extends EventTarget(eventListeners) {
+class PaymentSheet extends EventTarget(eventListeners) {
   constructor() {
     super();
     const priv = privates.set(this, new Map()).get(this);
+    const donePromise = {};
+    const promise = new Promise((resolve, reject) => {
+      Object.assign(donePromise, {resolve, reject});
+    });
+    priv.set("done", Object.assign(donePromise, { promise }));
     const dialog = document.createElement("dialog");
     priv.set("ready", attatchDialog(dialog));
     dialog.id = "payment-sheet";
+    const abortListener = ()=>{
+      this.abort();
+    }
+    dialog.addEventListener("cancel", abortListener);
+
     priv.set("dialog", dialog);
     priv.set("renderer", hyperHTML.bind(dialog));
 
     // WIDGETS
     priv.set("host-widget", new Host());
+    const shippingOptionsPicker = new ShippingOptions();
+    shippingOptionsPicker.addEventListener("shippingoptionchange", ev => {
+      this.dispatchEvent(ev);
+    })
     priv.set("topWidgets", [
       new LineItems(),
-      new ShippingOptions(),
+      shippingOptionsPicker,
       new Total(),
     ]);
-    // const methodChooser = new PaymentMethodChooser(this);
-    // priv.set("activeWidget", methodChooser)
-    // const bottomWidgets = [
-    //   methodChooser,
-    // ]
-    // priv.set("bottomWidgets", bottomWidgets);
+    
+    const sheets = [
+      new DataSheet("How would you like to pay?", new PaymentMethodChooser()),
+      new DataSheet("Shipping address", new AddressCollector("shipping")),
+    ]
+
+    sheets.forEach(sheet => sheet.addEventListener("abort", abortListener));
+    const dataSheetManager = new DataSheetManager(sheets);
+    priv.set("dataSheetManager", dataSheetManager);
+    dataSheetManager.addEventListener("next", ()=>{
+      console.log("showing next...")
+      this.render();
+    });
+    dataSheetManager.addEventListener("done", ()=>{
+      console.log("we are done...")
+      this.render();
+
+    });
+  }
+
+  get done(){
+    return privates.get(this).get("done").promise;
   }
 
   get ready() {
@@ -60,39 +93,68 @@ export default class PaymentSheet extends EventTarget(eventListeners) {
   }
 
   async abort() {
+    console.log("aborting");
+    const priv = privates.get(this);
+    priv.get("dataSheetManager").reset();
     const event = new CustomEvent("abort");
     await this.close();
     this.dispatchEvent(event);
   }
 
-  async open(paymentMethods) {
+  async open(requestData) {
+    const priv = privates.get(this);
     await this.ready;
-    const dialog = privates.get(this).get("dialog");
-    dialog.show();
+    const dialog = priv.get("dialog");
+    priv.set("requestData", requestData);
+    this.render();
+    dialog.showModal();
+    await this.done;
+  }
+
+  async requestClose(reason){
+    // We need to investigate how to show the different reasons for closing
+    switch(reason){
+      case "fail":
+        // do sad animation here, wait for user input then close()
+        break;
+      case "abort":
+        // We should let the user know the page is trying to abort. 
+        // this has complications if they are filling out 
+        // autofill stuff.
+        break;
+      case "success":
+        // do a success animation here
+        break;
+      case "unknown": // unknown reason
+        break;
+      default:
+        console.assert(false, "This should never happen: " + reason);
+    }
+    await this.close();
   }
 
   async close() {
     const dialog = privates.get(this).get("dialog");
     dialog.close();
-    dialog.remove();
   }
 
-  render(requestData) {
+  render() {
     const priv = privates.get(this);
+    const requestData = priv.get("requestData");
     const renderer = priv.get("renderer");
     const topWidgets = priv.get("topWidgets");
-
-    // const bottomWidgets = priv.get("bottomWidgets");
-    // const activeWidget = priv.get("activeWidget");
     const host = priv.get("host-widget");
-    renderer `<h1><img src="/payment-sheet/images/logo-payment.png" alt="">Firefox Web Payment</h1>
+    const dataSheetsManager = priv.get("dataSheetManager");
+    const currentSheet = dataSheetsManager.active;
+    return renderer`
+    <h1>
+      <img src="/payment-sheet/images/logo-payment.png" alt="">Firefox Web Payment
+    </h1>
     <section id="payment-sheet-top-section">${topWidgets.map(widget => widget.render(requestData))}</section>
-    <section>${host.render(window.location)}<section>`;
+    <section>${(currentSheet) ? currentSheet.render() : "" }</section>
+    <section id="payment-sheet-bottom" hidden="${dataSheetsManager.done}">${host.render(window.location)}<section>`;
   }
 }
-
-// <section id="payment-sheet-top">${topWidgets.map(widget => widget.containerElem)}</section>
-// <section id="payment-sheet-bottom">${activeWidget.containerElem}</section>
 
 function attatchDialog(dialog) {
   return new Promise((resolve) => {
@@ -109,85 +171,5 @@ function attatchDialog(dialog) {
   });
 }
 
-// `
-//   <section id="line-items">
-//     <table id="">
-//       <tr>
-//         <td>
-//           <button id="view-line-items-button">View all items</button>
-//         </td>
-//         <td class="items-sum">$190 USD</td>
-//       </tr>
-//       <tr class="sheet-line-item" hidden="true">
-//         <td>Faux leather</td>
-//         <td>$90 USD</td>
-//       </tr>
-//       <tr class="sheet-line-item" hidden="true">
-//         <td>Double face coat</td>
-//         <td>$100 USD</td>
-//       </tr>
-//       <tr>
-//         <td>Shipping:
-//           <select id="shipping-selector">
-//             <option value="10">Standard $10</option>
-//             <option value="20">Express $20</option>
-//             <option value="30">Premium $30</option>
-//           </select>
-//         </td>
-//         <td>
-//           <output id="shipping-selector-output">$10 USD</output>
-//         </td>
-//       </tr>
-//       <tr>
-//         <td>Tax:</td>
-//         <td>$20 USD</td>
-//       </tr>
-//       <tr>
-//         <td colspan="2">Total:
-//           <output class="total">$220.00</output> USD</td>
-//       </tr>
-//     </table>
-//   </section>
-//   <section>
-//     <section id="payment-method-chooser">
-//       <section>
-//         <h2>Choose your payment method:</h2>
-//         <div id="payment-methods-buttons">
-//           <input width="195" height="80" role="button" type="image" name="credit card" src="payment-sheet/images/visa.svg" alt="credit card">
-//           <input width="195" height="80" role="button" type="image" name="PayPal" src="payment-sheet/images/paypal.svg" alt="PayPal">
-//           <input width="195" height="80" role="button" type="image" name="bitcoin" src="payment-sheet/images/bitcoin.svg" alt="BitCoin">
-//           <input width="195" height="80" role="button" type="image" name="unionpay" src="payment-sheet/images/unionpay.svg" alt="Union Pay">
-//         </div>
-//       </section>
-//     </section>
-//     <!--       <section id="shipping-address">
-//       <h2>Shipping address:</h2>
-//       <form>
-//         <fieldset id="personal-details">
-//           <input type="text" placeholder="Name">
-//           <input type="text" placeholder="Phone Number">
-//         </fieldset>
-//         <fieldset id="street-address">
-//           <input type="text" placeholder="Address">
-//         </fieldset>
-//         <fieldset id="county-details">
-//           <input type="text" placeholder="City">
-//           <input type="text" placeholder="State">
-//         </fieldset>
-//         <fieldset id="county-details">
-//           <select>
-//             <option value="USA">United States</option>
-//           </select>
-//           <input type="text" name="post-code">
-//         </fieldset>
-//       </form>
-//     </section> -->
-//   </section>
-//   <section id="paysheet-controls">
-//     <button id="paycancel" class="neutral">Cancel</button>
-//     <button class="active">Continue</button>
-//   </section>
-//   <section id="origin">
-//     <p>Requested by shopping.com</p>
-//   </section>
-// `
+const paymentSheet = new PaymentSheet();
+export default paymentSheet;

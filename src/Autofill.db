@@ -1,4 +1,0 @@
-
-
-
-const request = indexedDB.open("prototype-autofill");

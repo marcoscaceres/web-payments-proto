@@ -1,5 +1,5 @@
 import hyperHTML from "hyperhtml/hyperhtml.js";
-import { countries } from "./currencies";
+import Countries from "./Countries";
 import Controls from "./PaymentSheet.Controls";
 
 const privates = new WeakMap();
@@ -58,8 +58,9 @@ export default class AddressForm extends EventTarget(["datacollected"]) {
   }
 }
 
-function toOption([code, { name }]) {
-    return hyperHTML.wire()`<option value="${code}">${name}`
+function toOption(entry) {
+  const [code, { name }] = entry;
+  return hyperHTML.wire(entry)`<option value="${code}">${name}`
 }
 
 export const shippingAddress = new Address("shipping");

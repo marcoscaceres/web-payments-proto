@@ -3,7 +3,7 @@ import { currencies } from "./currencies.js";
 const privates = new WeakMap();
 import EventTarget from "event-target-shim";
 
-export default class ShippingOptions extends EventTarget(["change"]) {
+export default class ShippingOptions extends EventTarget(["shippingoptionchange"]) {
   constructor() {
     super();
     const priv = privates.set(this, new Map()).get(this);
@@ -20,13 +20,15 @@ export default class ShippingOptions extends EventTarget(["change"]) {
     const renderer = priv.get("renderer");
     const output = toOutput(shippingOptions.find(({ selected }) => selected))
     const changeHandler = (ev) => {
-      const newValue = ev.target.item(ev.target.selectedIndex).value; 
-      output.value = newValue;
+      const option = ev.target.item(ev.target.selectedIndex); 
+      output.value = option.dataset.value;
+      const event = new CustomEvent("shippingoptionchange", {detail: {shippingOption: option.value}});
+      this.dispatchEvent(event);
     }
     const html = renderer `
     <tr>
       <td>Shipping: <select onchange="${changeHandler}">${shippingOptions.map(toOption)}</select></td>
-      <td>${output}<td>
+      <td>${""}<td>
     </tr>`;
     return html;
   }
@@ -36,18 +38,16 @@ function toOption(shippingOption) {
   const { id, selected, label, dir, lang } = shippingOption;
   const { currency, value } = shippingOption.amount;
   const { symbol } = currencies.get(currency);
-  const optionValue = `${symbol}${value} ${currency}`;
-  if (selected) {
-    return hyperHTML.wire(shippingOption)
-    `<option
+  const optionValue = `${symbol}${value} ${currency}`; 
+  const option = hyperHTML.wire(shippingOption)`<option
       name="shippingOption"
-      selected="${selected}" value="${optionValue}">
+      value="${id}" data-value="${optionValue}">
       <span dir="${dir}" lang="${lang}">${label}</span> ${symbol}${value}</option>`;
+  
+  if(selected){
+    option.selected = true;
   }
-  return hyperHTML.wire(shippingOption)
-  `<option
-      name="shippingOption" value="${optionValue}">
-      <span dir="${dir}" lang="${lang}">${label}</span> ${symbol}${value}</option>`;
+  return option;
 }
 
 function toOutput({ amount }) {
