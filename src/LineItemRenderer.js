@@ -1,5 +1,4 @@
 import hyperHTML from "hyperhtml/hyperhtml";
-import { currencies } from "./currencies.js";
 const privates = new WeakMap();
 
 export default class LineItemRenderer {
@@ -26,15 +25,12 @@ export default class LineItemRenderer {
 }
 
 function toDefListItem(paymentItem) {
-  const code = paymentItem.amount.currency;
-  const { name: currencyName, symbol: currencySymbol } = currencies.get(code);
-  const { value } = paymentItem.amount;
+  const {currency, value} = paymentItem.amount;
+  const formatter = new Intl.NumberFormat(navigator.languages, { style: "currency", currency, currencyDisplay: "code" });
   return hyperHTML.wire()`
     <dt>
       ${paymentItem.label}
     </dt>
-    <dd>
-    <abbr title="${currencyName}">${currencySymbol}</abbr>${value}
-    </dd>
+    <dd>${formatter.format(value)}</dd>
   `;
 }

@@ -22,12 +22,12 @@ const eventListeners = [
  * Payment Sheet a HTMLDialogElement that is composed of two section:
  *  Top section:
  *    [x] Heading + image
- *    [ ] Line items
- *    [ ] Shipping selector
- *    [ ] Total
+ *    [x] Line items
+ *    [x] Shipping selector
+ *    [x] Total
  *
  *  DataSheets
- *    [] Payment Method Selector
+ *    [x] Payment Method Selector
  *  
  *  Bottom info
  *    [x] host information
@@ -52,6 +52,7 @@ class PaymentSheet extends EventTarget(eventListeners) {
 
     priv.set("dialog", dialog);
     priv.set("renderer", hyperHTML.bind(dialog));
+    priv.set("state", "closed");
 
     // WIDGETS
     priv.set("host-widget", new Host());
@@ -77,10 +78,10 @@ class PaymentSheet extends EventTarget(eventListeners) {
       console.log("showing next...")
       this.render();
     });
+    
     dataSheetManager.addEventListener("done", ()=>{
       console.log("we are done...")
       this.render();
-
     });
   }
 
@@ -148,10 +149,10 @@ class PaymentSheet extends EventTarget(eventListeners) {
     const currentSheet = dataSheetsManager.active;
     return renderer`
     <h1>
-      <img src="/payment-sheet/images/logo-payment.png" alt="">Firefox Web Payment
+      <img src="../payment-sheet/images/logo-payment.png" alt="">Firefox Web Payment
     </h1>
     <section id="payment-sheet-top-section">${topWidgets.map(widget => widget.render(requestData))}</section>
-    <section>${(currentSheet) ? currentSheet.render() : "" }</section>
+    <section>${currentSheet ? currentSheet.render() : "" }</section>
     <section id="payment-sheet-bottom" hidden="${dataSheetsManager.done}">${host.render(window.location)}<section>`;
   }
 }

@@ -1,16 +1,12 @@
 import PaymentCurrencyAmount from "./PaymentCurrencyAmount";
 import LineItemRenderer from "./LineItemRenderer";
 import PaymentItem from "./PaymentItem";
-import { currencies } from "./currencies";
 
 const privates = new WeakMap();
 
 export default class TaxCalculator extends LineItemRenderer {
   constructor(taxPercent, sections = [], defaultCurrency = "USD") {
     super();
-    if (!currencies.has(defaultCurrency)) {
-      throw new TypeError(`Unknown currency ${defaultCurrency}`);
-    }
     const priv = privates.set(this, new Map()).get(this);
     priv.set("taxPercent", taxPercent);
     priv.set("defaultCurrency", defaultCurrency);
@@ -19,7 +15,9 @@ export default class TaxCalculator extends LineItemRenderer {
     const renderListener = () => {
       this.render(this.displayItems);
     };
-    sections.forEach(section => section.addEventListener("change", renderListener))
+    sections.forEach(
+      section => section.addEventListener("change", renderListener)
+    );
     this.render(this.displayItems);
   }
 

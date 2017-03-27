@@ -2,14 +2,10 @@ import hyperHTML from "hyperhtml/hyperhtml";
 import PaymentCurrencyAmount from "./PaymentCurrencyAmount";
 import PaymentShippingOption from "./PaymentShippingOption";
 import PaymentItem from "./PaymentItem";
-import { currencies } from "./currencies";
 const privates = new WeakMap();
 
 export default class OrderSummary {
   constructor(summaryElem, sections = [], defaultCurrency = "USD") {
-    if (!currencies.has(defaultCurrency)) {
-      throw new TypeError(`Unknown currency: ${defaultCurrency}`);
-    }
     const priv = privates.set(this, new Map()).get(this);
     priv.set("sections", new Set(sections));
     priv.set("renderer", hyperHTML.bind(summaryElem));
@@ -78,9 +74,9 @@ async function doPaymentRequest() {
   }
   const request = new PaymentRequest(methodData, details, options);
   console.log(request)
+  
   request.onshippingoptionchange = (ev) => {
     console.log("hmmm.", ev)
-
   }
   try{
     const response = await request.show();

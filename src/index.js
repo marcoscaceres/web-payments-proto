@@ -7,7 +7,7 @@ import ShippingOptions from "./ShippingOptions";
 import TaxCalculator from "./TaxCalculator";
 import InventorySummary from "./InventorySummary";
 
-window.addEventListener("DOMContentLoaded", async() => {
+window.addEventListener("DOMContentLoaded", async () => {
   const tableElem = document.getElementById("inventory-table");
   const inventoryTable = new InventoryTable(tableElem, "data/inventory.json");
   await inventoryTable.ready;

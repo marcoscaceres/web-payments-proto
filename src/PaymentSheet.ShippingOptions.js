@@ -1,5 +1,4 @@
 import hyperHTML from "hyperhtml/hyperhtml.js";
-import { currencies } from "./currencies.js";
 const privates = new WeakMap();
 import EventTarget from "event-target-shim";
 
@@ -36,14 +35,10 @@ export default class ShippingOptions extends EventTarget(["shippingoptionchange"
 
 function toOption(shippingOption) {
   const { id, selected, label, dir, lang } = shippingOption;
-  const { currency, value } = shippingOption.amount;
-  const { symbol } = currencies.get(currency);
-  const optionValue = `${symbol}${value} ${currency}`; 
   const option = hyperHTML.wire(shippingOption)`<option
       name="shippingOption"
-      value="${id}" data-value="${optionValue}">
-      <span dir="${dir}" lang="${lang}">${label}</span> ${symbol}${value}</option>`;
-  
+      value="${id}" data-value="${shippingOption.amount.toString()}">
+      <span dir="${dir}" lang="${lang}">${label}</span> ${shippingOption.amount.toString()}</option>`;  
   if(selected){
     option.selected = true;
   }
@@ -51,8 +46,6 @@ function toOption(shippingOption) {
 }
 
 function toOutput({ amount }) {
-  const { currency, value } = amount;
-  const { symbol } = currencies.get(currency);
   return hyperHTML.wire()
-  `<output>${symbol}${value} ${currency}</output>`;
+  `<output>${amount.toString()}</output>`;
 }

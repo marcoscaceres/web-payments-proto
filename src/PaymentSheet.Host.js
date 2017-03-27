@@ -7,7 +7,6 @@ export default class Host {
     const priv = privates.set(this, new Map()).get(this);
     const containerElem = document.createElement("section");
     containerElem.id = "payment-sheet-host";
-    priv.set("containerElem", containerElem);
     priv.set("renderer", hyperHTML.bind(containerElem));
   }
   render(url) {
@@ -16,18 +15,10 @@ export default class Host {
     let result;
     try {
       let host = new URL(url).host;
-      result = renderer `
-        <p>Requested by <span>${host}</span></p>
-      `;
+      return renderer `<p>Requested by <span>${host}</span></p>`;
     } catch (err) {
-      result = renderer `
-        <p class="payment-sheet-error">Invalid URL!!!!</p>
-      `;
+      return renderer `<p class="payment-sheet-error">Invalid URL!!!!</p>`;
     }
-    return result;
-  }
-  get containerElem() {
-    return privates.get(this).get("containerElem");
   }
 }
 

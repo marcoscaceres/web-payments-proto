@@ -2,7 +2,6 @@ import EventTarget from "event-target-shim";
 import hyperHTML from "hyperhtml/hyperhtml.js";
 import PaymentCurrencyAmount from "./PaymentCurrencyAmount.js";
 import PaymentShippingOption from "./PaymentShippingOption.js";
-import { currencies } from "./currencies.js";
 
 const privates = new WeakMap();
 
