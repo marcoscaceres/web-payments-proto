@@ -4,11 +4,19 @@ import EventTarget from "event-target-shim";
 const privates = new WeakMap();
 
 export default class DataSheetControls extends EventTarget(["cancel", "continue"]) {
-  constructor() {
+  constructor(dataSheet) {
     super();
     const priv = privates.set(this, new Map()).get(this);
     priv.set("canContinue", false);
-    priv.set("renderer", hyperHTML.bind(document.createElement("section")));
+    const containerElement = document.createElement("section");
+    containerElement.classList.add("paysheet-controls");
+    priv.set("renderer", hyperHTML.bind(containerElement));
+    this.addEventListener("cancel", ()=>{
+      dataSheet.dispatchEvent(new CustomEvent("abort"));
+    });
+    this.addEventListener("continue", ()=>{
+      dataSheet.dispatchEvent(new CustomEvent("continue"));
+    });
   }
   activate(){
     privates.get(this).set("canContinue", true);
@@ -19,7 +27,7 @@ export default class DataSheetControls extends EventTarget(["cancel", "continue"
     this.render();
   }
   render() {
-    const priv = privates.get(this)
+    const priv = privates.get(this);
     const renderer = priv.get("renderer");
     const cancelHandler = () => {
       this.dispatchEvent(new CustomEvent("cancel"));

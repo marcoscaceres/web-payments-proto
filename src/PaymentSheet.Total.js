@@ -17,7 +17,12 @@ export default class Total {
     const renderer = privates.get(this).get("renderer");
     const { amount, dir, lang, label } = total;
     const { currency, value } = amount;
-    const numberFormatter = new Intl.NumberFormat(navigator.languages, { style: "currency", currency, currencyDisplay: "code" })
+    const ops = { 
+      style: "currency", 
+      currency, 
+      currencyDisplay: "symbol",
+    };
+    const numberFormatter = new Intl.NumberFormat(navigator.languages, ops);
     return renderer `
       <tr>
         <td colspan="2"><span dir="${dir}" lang="${lang}">${label}</span>:

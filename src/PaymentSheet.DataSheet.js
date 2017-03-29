@@ -12,15 +12,9 @@ export default class DataSheet extends EventTarget(["abort"]) {
     priv.set("dataCollector", dataCollector);
     priv.set("heading", heading);
     priv.set("renderer", hyperHTML.bind(containerElem));
-    const controlButtons = new Controls();
-    controlButtons.addEventListener("cancel", ()=>{
-      this.dispatchEvent(new CustomEvent("abort"));
-    });
-    controlButtons.addEventListener("continue", ()=>{
-      this.dispatchEvent(new CustomEvent("continue"));
-    });
-    dataCollector.addEventListener("datacollected", ()=>{
-      console.log("something changes")
+    const controlButtons = new Controls(this);
+    dataCollector.addEventListener("datacollected", () => {
+      console.log("something changes");
       controlButtons.activate();
     });
     priv.set("controlButtons", controlButtons);

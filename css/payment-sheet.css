@@ -8,8 +8,8 @@
 }
 
 #payment-sheet {
-  padding: 0;
-  width: 500px;
+  padding: .3cm;
+  width: 550px;
   top: 0;
   overflow: hidden;
   box-shadow: 0px 0px 35px -4px rgba(138, 138, 138, 0.77);
@@ -58,13 +58,6 @@
   animation: grow .3s ease-out;
 }
 
-
-#button-container {
-  padding-top: 1cm;
-  display: inline-grid;
-  border-top: thin solid rgb(110, 110, 110);
-}
-
 .paysheet-controls {
   margin-right: .3cm;
   text-align: right;
@@ -78,24 +71,25 @@
   margin-left: .3cm;
 }
 
-.paysheet-controls button:active {
+.paysheet-controls button.continue:not([disabled]) {
   color: white;
   border: rgb(6, 117, 211);
   background-color: rgb(36, 138, 235)
 }
 
-#payment-sheet dialog h2 {
+#payment-sheet .payment-sheet-data-collector h2 {
   text-transform: none;
-  font-size: .8em;
+  font-size: 1em;
+  font-weight: lighter;
+  text-align: center;
   margin: 0;
   padding: .2cm 0 .5cm 0;
   border: none;
 }
 
 #payment-sheet #payment-methods-buttons {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 50% 50%;
   margin-bottom: .5cm;
   overflow-x: auto;
   scroll-snap-type: proximity;
@@ -106,17 +100,27 @@
   padding-bottom: .5cm;
 }
 
-#payment-sheet #payment-methods-buttons button {
+#payment-sheet #payment-methods-buttons label>input {
+  visibility: hidden;
+  position: absolute;
+}
+
+#payment-sheet #payment-methods-buttons label>input+img {
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+#payment-sheet #payment-methods-buttons label>input+img {
   margin: 0 .2cm;
   background-color: white;
-  border-radius: 3px;
-  border: thin solid rgb(208, 208, 208);
+  border-radius: 5px;
+  border: 1px solid rgb(208, 208, 208);
   text-align: center;
   min-width: 45%;
   padding: .1cm;
 }
 
-#payment-sheet #payment-methods-buttons button:active {
+#payment-sheet #payment-methods-buttons label>input:checked+img {
   border-color: rgb(46, 167, 252);
 }
 
@@ -127,8 +131,9 @@
 
 #payment-sheet-host p {
   padding-left: 1em;
-  color: rgb(227, 227, 227);
+  color: rgb(204, 204, 204);
   font-size: .7em;
+  font-weight: lighter;
 }
 
 #payment-sheet-view-line-items-button:before {
@@ -157,6 +162,11 @@
   background-color: initial;
 }
 
+#payment-sheet table {
+  grid-column-start: 1;
+  width: 100%;
+}
+
 #payment-sheet #line-items-table td {
   padding: .2cm .3cm;
   vertical-align: top;
@@ -167,16 +177,16 @@
 }
 
 #payment-sheet-total {
+  font-size: 1.1em;
   text-align: right;
 }
-
 
 #payment-sheet #line-items-table select {
   border: thin solid rgb(177, 177, 177);
   text-align: left;
 }
 
-#payment-sheet-total {
+#payment-sheet-total output {
   color: rgb(36, 138, 235);
   font-size: 1.2em;
 }

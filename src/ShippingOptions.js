@@ -1,7 +1,5 @@
 import EventTarget from "event-target-shim";
 import hyperHTML from "hyperhtml/hyperhtml.js";
-import PaymentCurrencyAmount from "./PaymentCurrencyAmount.js";
-import PaymentShippingOption from "./PaymentShippingOption.js";
 
 const privates = new WeakMap();
 
@@ -31,7 +29,7 @@ export default class ShippingOptions extends EventTarget(["change"]) {
         opt.selected = (opt.id === ev.target.value);
       }
       this.dispatchEvent(new CustomEvent("change"));
-    }
+    };
     return renderer `
       <dl class="shipping-options" onchange="${onChange}">${wires}</dl>
     `;
@@ -51,14 +49,15 @@ function toHTML(shippingOption) {
   return hyperHTML.wire(shippingOption)
   `
   <dt>
-    <label>
-      <input
+    <input
         type="radio"
         name="shipping"
+        id="${"shipping_option_" + shippingOption.id}"
         value="${shippingOption.id}"
         checked="${shippingOption.selected}">
+    <label for="${"shipping_option_" + shippingOption.id}">
       ${shippingOption.label}
-   </label>
+    </label>
   </dt>
   <dd>
     ${shippingOption.amount}

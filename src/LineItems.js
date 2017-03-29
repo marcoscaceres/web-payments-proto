@@ -5,11 +5,11 @@ const privates = new WeakMap();
 export default class LineItems {
   constructor(containerElement, displayItems = []) {
     const priv = privates.set(this, new Map()).get(this);
-    priv.set("render", hyperHTML.bind(containerElement));
-    update(displayItems);
+    priv.set("renderer", hyperHTML.bind(containerElement));
+    render(displayItems);
   }
 
-  update(items) {
+  render(items) {
     const render = privates.get(this).get("render");
     const html = (items.length) ? items.map(toHTML) : "No items selected";
     render `
@@ -21,7 +21,11 @@ export default class LineItems {
 function toHTML(paymentItem) {
   return hyperHTML.wire(paymentItem)
   `
-    <dt>${paymentItem.label}</dt>
-    <dd>${paymentItem.amount.toString()}</dd>
+    <dt>
+      ${paymentItem.label}
+    </dt>
+    <dd>
+      ${paymentItem.amount.toString()}
+    </dd>
   `;
 }

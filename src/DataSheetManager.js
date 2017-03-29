@@ -2,13 +2,13 @@ import EventTarget from "event-target-shim";
 const privates = new WeakMap();
 
 export default class DataSheetManager extends EventTarget(["done", "next"]) {
-  constructor(dataSheets){
+  constructor(dataSheets) {
     super();
     const priv = privates.set(this, new Map()).get(this);
     priv.set("dataSheets", dataSheets.concat());
     this.reset();
-    dataSheets.forEach(sheet => sheet.addEventListener("continue", ( ) => {
-      const index = dataSheets.findIndex(item => item === this.active ) + 1;
+    dataSheets.forEach(sheet => sheet.addEventListener("continue", () => {
+      const index = dataSheets.findIndex(item => item === this.active) + 1;
       const newActive = dataSheets[index];
       if (newActive) {
         priv.set("active", newActive);
@@ -19,13 +19,13 @@ export default class DataSheetManager extends EventTarget(["done", "next"]) {
       this.dispatchEvent(new CustomEvent("done"));
     }));
   }
-  get active(){
+  get active() {
     return privates.get(this).get("active");
   }
-  get done(){
+  get done() {
     return this.active === null;
   }
-  reset(){
+  reset() {
     const priv = privates.get(this);
     priv.set("active", priv.get("dataSheets")[0]);
   }

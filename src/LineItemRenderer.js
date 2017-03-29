@@ -15,9 +15,7 @@ export default class LineItemRenderer {
     const htmlElems = paymentItems
       .map(toDefListItem)
       .reduce((accumulator, elem) => accumulator.concat(elem), []);
-    renderer `
-      <dl class="line-items">${htmlElems}</dl>
-    `;
+    return renderer `<dl class="line-items">${htmlElems}</dl>`;
   }
   get containerElem() {
     return privates.get(this).get("containerElem");
@@ -25,9 +23,17 @@ export default class LineItemRenderer {
 }
 
 function toDefListItem(paymentItem) {
-  const {currency, value} = paymentItem.amount;
-  const formatter = new Intl.NumberFormat(navigator.languages, { style: "currency", currency, currencyDisplay: "code" });
-  return hyperHTML.wire()`
+  const {
+    currency,
+    value
+  } = paymentItem.amount;
+  const formatter = new Intl.NumberFormat(navigator.languages, {
+    style: "currency",
+    currency,
+    currencyDisplay: "symbol"
+  });
+  return hyperHTML.wire()
+  `
     <dt>
       ${paymentItem.label}
     </dt>

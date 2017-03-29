@@ -1,4 +1,4 @@
-import "../css/payment-sheet.css";
+//import "../css/payment-sheet.css";
 import "dialog-polyfill/dialog-polyfill.css";
 import AddressCollector from "./datacollectors/AddressCollector";
 import DataSheet from "./PaymentSheet.DataSheet.js";
@@ -39,13 +39,18 @@ class PaymentSheet extends EventTarget(eventListeners) {
     const priv = privates.set(this, new Map()).get(this);
     const donePromise = {};
     const promise = new Promise((resolve, reject) => {
-      Object.assign(donePromise, {resolve, reject});
+      Object.assign(donePromise, {
+        resolve,
+        reject
+      });
     });
-    priv.set("done", Object.assign(donePromise, { promise }));
+    priv.set("done", Object.assign(donePromise, {
+      promise
+    }));
     const dialog = document.createElement("dialog");
     priv.set("ready", attatchDialog(dialog));
     dialog.id = "payment-sheet";
-    const abortListener = ()=>{
+    const abortListener = () => {
       this.abort();
     }
     dialog.addEventListener("cancel", abortListener);
@@ -65,27 +70,27 @@ class PaymentSheet extends EventTarget(eventListeners) {
       shippingOptionsPicker,
       new Total(),
     ]);
-    
+
     const sheets = [
-      new DataSheet("How would you like to pay?", new PaymentMethodChooser()),
+      new DataSheet("Choose your payment method:", new PaymentMethodChooser()),
       new DataSheet("Shipping address", new AddressCollector("shipping")),
     ]
 
     sheets.forEach(sheet => sheet.addEventListener("abort", abortListener));
     const dataSheetManager = new DataSheetManager(sheets);
     priv.set("dataSheetManager", dataSheetManager);
-    dataSheetManager.addEventListener("next", ()=>{
+    dataSheetManager.addEventListener("next", () => {
       console.log("showing next...")
       this.render();
     });
-    
-    dataSheetManager.addEventListener("done", ()=>{
+
+    dataSheetManager.addEventListener("done", () => {
       console.log("we are done...")
       this.render();
     });
   }
 
-  get done(){
+  get done() {
     return privates.get(this).get("done").promise;
   }
 
@@ -112,9 +117,9 @@ class PaymentSheet extends EventTarget(eventListeners) {
     await this.done;
   }
 
-  async requestClose(reason){
+  async requestClose(reason) {
     // We need to investigate how to show the different reasons for closing
-    switch(reason){
+    switch (reason) {
       case "fail":
         // do sad animation here, wait for user input then close()
         break;
@@ -147,7 +152,7 @@ class PaymentSheet extends EventTarget(eventListeners) {
     const host = priv.get("host-widget");
     const dataSheetsManager = priv.get("dataSheetManager");
     const currentSheet = dataSheetsManager.active;
-    return renderer`
+    return renderer `
     <h1>
       <img src="../payment-sheet/images/logo-payment.png" alt="">Firefox Web Payment
     </h1>

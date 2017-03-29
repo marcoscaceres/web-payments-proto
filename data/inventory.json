@@ -2,7 +2,7 @@
   {
     "colors": "Bright yellow",
     "img": "images/faux.jpg",
-    "price": "100",
+    "price": "10.00",
     "ref": "3046/023/322",
     "sizes": [
       "m"
@@ -12,7 +12,7 @@
   {
     "colors": "Bright yellow",
     "img": "images/double.jpg",
-    "price": "90",
+    "price": "90.00",
     "ref": "6254/022/382",
     "sizes": [
       "s",
