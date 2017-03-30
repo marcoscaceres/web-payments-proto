@@ -154,7 +154,7 @@ class PaymentSheet extends EventTarget(eventListeners) {
     const currentSheet = dataSheetsManager.active;
     return renderer `
     <h1>
-      <img src="./images/logo-payment.png" alt="">Firefox Web Paayment
+      <img src="./images/logo-payment.png" alt="">Firefox Web Payment
     </h1>
     <section id="payment-sheet-top-section">${topWidgets.map(widget => widget.render(requestData))}</section>
     <section>${currentSheet ? currentSheet.render() : "" }</section>
