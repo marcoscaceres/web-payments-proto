@@ -5,13 +5,13 @@ const privates = new WeakMap();
 const defaultMethods = [{
   name: "basic-card",
   icons: [{
-    src: "/payment-sheet/images/visa.svg",
+    src: "./payment-sheet/images/visa.svg",
     sizes: "256x256"
   }, ],
 }, {
   name: "https://paypal.com",
   icons: [{
-    src: "/payment-sheet/images/paypal.svg",
+    src: "./payment-sheet/images/paypal.svg",
     sizes: "256x256"
   }, ],
 }];

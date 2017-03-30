@@ -3719,7 +3719,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _templateObject = _taggedTemplateLiteral(["\n    <h1>\n      <img src=\"./images/logo-payment.png\" alt=\"\">Firefox Web Payment\n    </h1>\n    <section id=\"payment-sheet-top-section\">", "</section>\n    <section>", "</section>\n    <section id=\"payment-sheet-bottom\" hidden=\"", "\">", "<section>"], ["\n    <h1>\n      <img src=\"./images/logo-payment.png\" alt=\"\">Firefox Web Payment\n    </h1>\n    <section id=\"payment-sheet-top-section\">", "</section>\n    <section>", "</section>\n    <section id=\"payment-sheet-bottom\" hidden=\"", "\">", "<section>"]);
+var _templateObject = _taggedTemplateLiteral(["\n    <h1>\n      <img src=\"./payment-sheet/images/logo-payment.png\" alt=\"\">Firefox Web Payment\n    </h1>\n    <section id=\"payment-sheet-top-section\">", "</section>\n    <section>", "</section>\n    <section id=\"payment-sheet-bottom\" hidden=\"", "\">", "<section>"], ["\n    <h1>\n      <img src=\"./payment-sheet/images/logo-payment.png\" alt=\"\">Firefox Web Payment\n    </h1>\n    <section id=\"payment-sheet-top-section\">", "</section>\n    <section>", "</section>\n    <section id=\"payment-sheet-bottom\" hidden=\"", "\">", "<section>"]);
 
 __webpack_require__(338);
 
@@ -4093,13 +4093,13 @@ var privates = new WeakMap();
 var defaultMethods = [{
   name: "basic-card",
   icons: [{
-    src: "/payment-sheet/images/visa.svg",
+    src: "./payment-sheet/images/visa.svg",
     sizes: "256x256"
   }]
 }, {
   name: "https://paypal.com",
   icons: [{
-    src: "/payment-sheet/images/paypal.svg",
+    src: "./payment-sheet/images/paypal.svg",
     sizes: "256x256"
   }]
 }];
