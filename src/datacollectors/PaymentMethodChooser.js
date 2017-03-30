@@ -58,16 +58,26 @@ function toRadio(paymentMethod, controller) {
     name,
     icons
   } = paymentMethod;
+  const keyHandler = ev => {
+    if(ev.keyCode === 32 || ev.keyCode === 13 ){
+      ev.currentTarget.setAttribute("aria-checked", "true");
+      ev.currentTarget.querySelector("input").checked = true;
+      ev.currentTarget.querySelector("input").form.dispatchEvent(new Event("change"));
+    }
+  }
   const srcset = icons.map(toSrcset);
   const img = toImage(srcset, name);
   const frag = hyperHTML.wire()
-  `<label role="radio" aria-checked="false"><input name="payment-method" type="radio">${img}</label>`;
+      
+  `<label onkeypress="${keyHandler}" role="radio" aria-checked="false"><input name="payment-method" type="radio">${img}</label>`;
   return frag;
 }
 // Either a srcset or just a src
 function toImage(srcset, alt) {
+
   return hyperHTML.wire()
   `<img
+      tabindex="0"
       alt="${alt}"
       srcset="${srcset.join(" ")}"
       width="195" height="80">`;

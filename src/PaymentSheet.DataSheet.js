@@ -25,7 +25,7 @@ export default class DataSheet extends EventTarget(["abort"]) {
     const renderer = priv.get("renderer");
     const heading = priv.get("heading");
     const controlButtons = priv.get("controlButtons");
-    return renderer `<h2>${heading}</h2>
+    return renderer `<h2 hidden="${!heading}">${heading}</h2>
     <section>${dataCollector.render()}</section>
     <section>${controlButtons.render()}</section>`;
   }

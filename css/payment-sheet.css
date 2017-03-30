@@ -1,14 +1,16 @@
 @keyframes grow {
   0% {
     max-height: 0px;
+    opacity: 0;
   }
   100% {
-    max-height: 600px;
+    max-height: 500px;
+    opacity: 1.0;
   }
 }
 
 #payment-sheet {
-  padding: .3cm;
+  padding: 0;
   width: 550px;
   top: 0;
   overflow: hidden;
@@ -27,7 +29,7 @@
   padding: 0;
 }
 
-#payment-sheet-top-section {
+#payment-sheet-top-section { 
   background-color: rgb(251, 251, 251);
   border-bottom: thin solid rgb(212, 212, 212);
 }
@@ -48,14 +50,8 @@
   margin-right: .2cm;
 }
 
-#payment-sheet.hide {
-  max-height: 0px;
-  animation: grow 1s ease-in;
-  animation-direction: reverse;
-}
-
-#payment-sheet.show {
-  animation: grow .3s ease-out;
+#payment-sheet[open] {
+  animation: grow .5s ease-out;
 }
 
 .paysheet-controls {
@@ -69,12 +65,20 @@
   border: thin solid rgb(212, 212, 212);
   width: 2cm;
   margin-left: .3cm;
+  background-color: rgb(242,242,242);
+  color: rgb(61,61,61);
+}
+
+.paysheet-controls button:disabled {
+  background-color: rgb(249,249,249);
+  color: rgb(127,127,127);
+  border-color: rgb(244,244,244);
 }
 
 .paysheet-controls button.continue:not([disabled]) {
   color: white;
   border: rgb(6, 117, 211);
-  background-color: rgb(36, 138, 235)
+  background-color: rgb(36, 138, 235);
 }
 
 #payment-sheet .payment-sheet-data-collector h2 {
@@ -111,6 +115,7 @@
 }
 
 #payment-sheet #payment-methods-buttons label>input+img {
+  outline: none;
   margin: 0 .2cm;
   background-color: white;
   border-radius: 5px;
@@ -119,6 +124,12 @@
   min-width: 45%;
   padding: .1cm;
 }
+
+#payment-sheet #payment-methods-buttons label>input+img:focus {
+  border-color: rgb(127, 127, 127);
+}
+
+
 
 #payment-sheet #payment-methods-buttons label>input:checked+img {
   border-color: rgb(46, 167, 252);
@@ -203,4 +214,94 @@
 
 #payment-sheet .showing .items-sum {
   display: none;
+}
+
+
+#payment-sheet .data-collector-shipping-address div {
+  display: grid;
+  grid-gap: .3cm;
+  margin: .3cm ;
+}
+
+#payment-sheet .data-collector-shipping-address input, #payment-sheet .data-collector-shipping-address select {
+  -webkit-border-radius: 0;
+  border-radius: 0;
+  background-color: white;
+  padding: .2cm;
+  font-size: .9em;
+}
+
+
+#payment-sheet .data-collector-shipping-address div.split {
+  grid-template-columns: 50% 48%;
+}
+
+#payment-sheet .data-collector-shipping-address div.two-thirds {
+  grid-template-columns: 75% 23%;
+}
+
+#payment-sheet .data-collector-shipping-address input[type=text], #payment-sheet .data-collector-shipping-address input[type=tel] {
+  justify-self: stetch;
+  border: 1px solid rgb(188,188,188);
+}
+
+#payment-sheet .data-collector-shipping-address label {
+  vertical-align: bottom;
+  font-size: .8em;
+}
+
+#payment-sheet .data-collector-shipping-address input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  padding: 0;
+}
+
+#payment-sheet .data-collector-shipping-address input:before {
+  font-size: 1.3em;
+  border: 1px solid rgb(55,167,251);
+  content: "✓";
+  overflow: clipped;
+  text-align: center;
+  position: relative;
+  width: .5cm;
+  height: .5cm;
+  display: inline-block;
+  color: white;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+#payment-sheet .data-collector-shipping-address input:checked:before{
+  font-size: 1.3em;
+  border: 1px solid rgb(55,167,251);
+  content: "✓";
+  overflow: clipped;
+  text-align: center;
+  position: relative;
+  width: .5cm;
+  height: .5cm;
+  display: inline-block;
+  color: rgb(55,167,251);
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+
+#payment-sheet .credit-card-collector {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  grid-gap: .3cm;
+}
+
+#payment-sheet .credit-card-collector h3 {
+  font-size: 1em;
+  font-weight: normal;
+  
 }

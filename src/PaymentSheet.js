@@ -11,6 +11,7 @@ import PaymentMethodChooser from "./datacollectors/PaymentMethodChooser";
 import ShippingOptions from "./PaymentSheet.ShippingOptions";
 import Total from "./PaymentSheet.Total";
 import DataSheetManager from "./DataSheetManager";
+import CreditCardCollector from "./datacollectors/CreditCardCollector";
 const privates = new WeakMap();
 
 const eventListeners = [
@@ -74,6 +75,7 @@ class PaymentSheet extends EventTarget(eventListeners) {
     const sheets = [
       new DataSheet("Choose your payment method:", new PaymentMethodChooser()),
       new DataSheet("Shipping address", new AddressCollector("shipping")),
+      new DataSheet("", new CreditCardCollector()),
     ]
 
     sheets.forEach(sheet => sheet.addEventListener("abort", abortListener));

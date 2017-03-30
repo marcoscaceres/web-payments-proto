@@ -27,7 +27,7 @@ export default class AddressCollector extends EventTarget(["datacollected"]) {
     }
     const priv = privates.set(this, new Map()).get(this);
     const form = document.createElement("form");
-    form.classList.add(`${addressType}-address`);
+    form.classList.add(`data-collector-${addressType}-address`);
     form.addEventListener("change", () => {
       this.dispatchEvent(new CustomEvent("datacollected"));
     });
@@ -46,21 +46,24 @@ export default class AddressCollector extends EventTarget(["datacollected"]) {
     const data = Object.assign({}, currentData, newData);
     priv.set("currentData", data);
     return render `
-      <fieldset class="personal-details">
+      <div class="personal-details split">
         <input autocomplete="${data.addressType + " name"}" name="name" type="text" placeholder="Name" value="${data.fullName}">
         <input autocomplete="${data.addressType + " tel"}" name="phoneNumber" type="tel" placeholder="Phone Number" value="${data.phoneNumber}">
-      </fieldset>
-      <fieldset class="street-address">
+      </div>
+      <div class="street-address full">
         <input autocomplete="${data.addressType + " address-level"}" type="text" placeholder="Address" value="${data.streeAddress}">
-      </fieldset>
-      <fieldset class="county-details">
+      </div>
+      <div class="county-details two-thirds">
         <input autocomplete="${data.addressType + " address-level"}" type="text" placeholder="City" value="${data.city}">
         <input autocomplete="${data.addressType + " address-level"}" type="text" placeholder="State" value="${data.state}">
-      </fieldset>
-      <fieldset class="county-details">${
+      </div>
+      <div class="county-details two-thirds">${
           Countries.asHTMLSelect("", data.country)
-      }<input autocomplete="postal-code" type="text" name="post-code" value="${data.postCode}">
-      </fieldset>
+      }<input autocomplete="postal-code" type="text" name="post-code" placeholder="Post code" value="${data.postCode}">
+      </div>
+      <div>
+        <label><input type="checkbox" name="save-address-details" checked> Save the address for faster checkout next time</label> 
+      </div>
     `;
   }
 }
