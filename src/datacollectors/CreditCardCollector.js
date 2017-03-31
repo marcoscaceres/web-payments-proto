@@ -2,7 +2,7 @@ import hyperHTML from "hyperhtml/hyperhtml.js";
 import EventTarget from "event-target-shim";
 const privates = new WeakMap();
 
-export default class CreditCardCollector extends EventTarget(["datacollected", "buttonsnamechange"]) {
+export default class CreditCardCollector extends EventTarget(["datacollected"]) {
   constructor() {
     super();
     const priv = privates.set(this, new Map()).get(this);

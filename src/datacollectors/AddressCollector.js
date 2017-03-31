@@ -1,6 +1,7 @@
 import hyperHTML from "hyperhtml/hyperhtml.js";
 import Countries from "../Countries";
 import EventTarget from "event-target-shim";
+import autofillDB from "../AutofillDB";
 
 const privates = new WeakMap();
 
@@ -36,7 +37,7 @@ export default class AddressCollector extends EventTarget(["datacollected"]) {
   }
 
   async getCollectedData() {
-
+    
   }
 
   render(newData) {
