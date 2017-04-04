@@ -78,9 +78,10 @@ async function doPaymentRequest() {
   request.onshippingoptionchange = (ev) => {
     console.log("hmmm.", ev)
   }
-  try{
-    const response = await request.show();
-  }catch(err){
-    console.log(err);
-  }
+  request.show().then(processResponse).catch(err => console.log(err));
+  return false;
+}
+
+function processResponse(r){
+
 }

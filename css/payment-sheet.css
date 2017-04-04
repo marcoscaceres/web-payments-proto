@@ -10,6 +10,7 @@
 }
 
 #payment-sheet {
+  font-size: 1em;
   padding: 0;
   width: 550px;
   top: 0;
@@ -93,7 +94,7 @@
 
 #payment-sheet #payment-methods-buttons {
   display: grid;
-  grid-template-columns: 50% 50%;
+  grid-template-columns: 1fr 1fr;
   margin-bottom: .5cm;
   overflow-x: auto;
   scroll-snap-type: proximity;
@@ -102,6 +103,10 @@
   scroll-snap-destination: 0% 100%;
   scroll-snap-points-x: repeat(50%);
   padding-bottom: .5cm;
+}
+
+#payment-sheet #payment-methods-buttons label {
+   justify-self: center;
 }
 
 #payment-sheet #payment-methods-buttons label>input {
@@ -192,7 +197,7 @@
   text-align: right;
 }
 
-#payment-sheet #line-items-table select {
+#payment-sheet select {
   border: thin solid rgb(177, 177, 177);
   text-align: left;
 }
@@ -292,7 +297,6 @@
   appearance: none;
   -webkit-appearance: none;
 }
-
 
 #payment-sheet .credit-card-collector {
   display: grid;

@@ -5,10 +5,10 @@ const privates = new WeakMap();
 
 export default class DisplayItem extends Localizable {
   constructor(label, amount) {
-    if (!(amount instanceof PaymentCurrencyAmount)) {
-      throw new TypeError("Amount must be a PaymentCurrencyAmount")
-    }
     super();
+    if (!(amount instanceof PaymentCurrencyAmount)) {
+      throw new TypeError("Amount must be a PaymentCurrencyAmount");
+    }
     const priv = privates.set(this, new Map()).get(this);
     priv.set("label", String(label));
     priv.set("amount", amount);

@@ -1,0 +1,25 @@
+[
+  {
+    "colors": "Black",
+    "img": "images/bose.png",
+    "price": "230.00",
+    "ref": "3046/023/322",
+    "sizes": [""],
+    "label": "Comfort 77 Headphone"
+  }, {
+    "colors": "Black",
+    "img": "images/Panasonic.png",
+    "price": "72.00",
+    "ref": "3046/023/322",
+    "sizes": [""],
+    "label": "Panasonic RP-HJE120-PPK In-Ear Headphone"
+  },
+  {
+    "colors": "Black",
+    "img": "images/cowin.png",
+    "price": "125.00",
+    "ref": "3046/023/322",
+    "sizes": [""],
+    "label": "Cowin E-7 Active Noise Cancelling Wireless Bluetooth Over-ear Stereo Headphones"
+  }
+]

@@ -1,5 +1,6 @@
 import EventTarget from "event-target-shim";
 import hyperHTML from "hyperhtml/hyperhtml.js";
+import PaymentShippingOption from "./PaymentShippingOption.js";
 
 const privates = new WeakMap();
 
@@ -8,6 +9,12 @@ export default class ShippingOptions extends EventTarget(["change"]) {
     super();
     const containerElem = document.createElement("section");
     const priv = privates.set(this, new Map()).get(this);
+    for(const shippingOption of shippingOptions) {
+      if(shippingOption instanceof PaymentShippingOption){
+        continue;
+      }
+      throw new TypeError("Expected instance of PaymentShippingOption");
+    }
     priv.set("containerElem", containerElem);
     priv.set("renderer", hyperHTML.bind(containerElem));
     priv.set("shippingOptions", shippingOptions);

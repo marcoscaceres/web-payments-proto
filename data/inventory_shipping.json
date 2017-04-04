@@ -1,0 +1,20 @@
+[
+  {
+    "id": "std",
+    "label": "Standard",
+    "value": "USD$10",
+    "selected": false
+  },
+  {
+    "id": "exp",
+    "label": "Express",
+    "value": "USD$20",
+    "selected": true
+  },
+  {
+    "id": "prm",
+    "label": "Premium",
+    "value": "USD$30",
+    "selected": false
+  }
+]

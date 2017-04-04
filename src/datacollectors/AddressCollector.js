@@ -1,6 +1,7 @@
 import hyperHTML from "hyperhtml/hyperhtml.js";
 import Countries from "../Countries";
 import EventTarget from "event-target-shim";
+import guid from "uuid/v4";
 import autofillDB from "../AutofillDB";
 
 const privates = new WeakMap();

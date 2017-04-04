@@ -112,7 +112,7 @@ function toSelectOptions(listItems) {
   return options;
 }
 
-function toTableData({ img, price, label, sizes, ref }, { onChange }) {
+function toTableData({ img, price, label, sizes, ref, colors }, { onChange }) {
   return hyperHTML.wire()
   `
     <td>
@@ -121,8 +121,8 @@ function toTableData({ img, price, label, sizes, ref }, { onChange }) {
     <td>
       <h3 class="itemLabel">${label}</h3>
       <p>Ref. ${ref}</p>
-      <p>Size: <select name="sizes" class="sizeSelector">${toSelectOptions(sizes)}</select></p>
-      <p>Colors: Bright yellow</p>
+      <p class="itemSizes">Size: <select name="sizes" class="sizeSelector">${toSelectOptions(sizes)}</select></p>
+      <p>Colors: ${colors}</p>
     </td>
     <td>
       <select name="itemCount" class="itemsSelector" onchange="${onChange}">${toSelectOptions(range(1,10))}</select>

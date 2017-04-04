@@ -8,7 +8,7 @@ export default class InventorySummary extends LineItemRenderer {
     const priv = privates.set(this, new Map()).get(this);
     priv.set("inventoryTable", inventoryTable);
     const changeListener = () => this.render(inventoryTable.displayItems);
-    inventoryTable.addEventListener("change", changeListener)
+    inventoryTable.addEventListener("change", changeListener);
     changeListener();
   }
 

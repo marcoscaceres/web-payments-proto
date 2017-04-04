@@ -8,7 +8,7 @@
 <main id="shop">
 <h1>Shopping</h1>
 <h2>Shopping Cart</h2>
-<form onsubmit="return false;">
+<form>
   <section id="inventory-table">
     <!-- dynamically filled -->
   </section>
@@ -17,3 +17,9 @@
   </aside>
 </form>
 </main>
+<script>
+  document.querySelector("form").addEventListener("submit", (ev)=>{
+    ev.preventDefault();
+    return false;
+  });
+</script>
