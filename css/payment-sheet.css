@@ -9,6 +9,18 @@
   }
 }
 
+@keyframes rotate90 {
+  from {
+    transform: rotate(0deg);
+    translate: 0px 0px;
+  }
+
+  to {
+    transform: rotate(90deg);
+    translate: 0px 4px;
+  }
+}
+
 #payment-sheet {
   font-size: 1em;
   padding: 0;
@@ -82,6 +94,10 @@
   background-color: rgb(36, 138, 235);
 }
 
+#payment-sheet .payment-sheet-data-collector {
+  margin: 0 .4cm;
+}
+
 #payment-sheet .payment-sheet-data-collector h2 {
   text-transform: none;
   font-size: 1em;
@@ -134,8 +150,6 @@
   border-color: rgb(127, 127, 127);
 }
 
-
-
 #payment-sheet #payment-methods-buttons label>input:checked+img {
   border-color: rgb(46, 167, 252);
 }
@@ -152,31 +166,31 @@
   font-weight: lighter;
 }
 
-#payment-sheet-view-line-items-button:before {
-  content: "▷";
-  position: absolute;
-  font-size: .5em;
-  margin-left: -10px;
-  margin-top: 4px;
+#payment-sheet summary:focus {
+  outline: none;
 }
 
-#payment-sheet-view-line-items-button.open:before {
-  position: absolute;
-  font-size: .5em;
-  content: "▽";
-  margin-left: -10px;
-  margin-top: 4px;
+#payment-sheet summary::-webkit-details-marker {
+ display: none;
 }
 
-#payment-sheet-view-line-items-button {
-  margin: 0;
-  padding: 0;
-  font-weight: initial;
-  font-size: 1em;
-  border: none;
-  color: inherit;
-  background-color: initial;
+#payment-sheet summary::before {
+ content: '▸'; 
+ padding-right: 0.5em;
+ display: inline-block;
+ animation-direction: alternate;
 }
+
+#payment-sheet details[open] {
+  color:rgb(0,150,246);
+}
+
+#payment-sheet details[open] > summary::before {
+ color:rgb(0,150,246);
+ animation: .2s rotate90;
+ animation-fill-mode: forwards;
+}
+
 
 #payment-sheet table {
   grid-column-start: 1;
@@ -184,8 +198,16 @@
 }
 
 #payment-sheet #line-items-table td {
-  padding: .2cm .3cm;
+  color: rgb(154,152,152);
+  padding: .2cm .0cm .1cm 1cm;
   vertical-align: top;
+}
+
+#payment-sheet #line-items-table td:first-child {
+  max-width: 400px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #payment-sheet #line-items-table td:last-child {
@@ -198,12 +220,17 @@
 }
 
 #payment-sheet select {
-  border: thin solid rgb(177, 177, 177);
+  background-color: white;
+  border-radius: 0;
+  padding: .15cm;
+  -webkit-appearance: none;
+  border: thin solid rgb(171,171,171);
   text-align: left;
+  font-size: .9em;
 }
 
 #payment-sheet-total output {
-  color: rgb(36, 138, 235);
+  color:rgb(0,150,246);
   font-size: 1.2em;
 }
 
@@ -221,28 +248,43 @@
   display: none;
 }
 
-
-#payment-sheet .data-collector-shipping-address div {
+#payment-sheet .data-collector-shipping-address {
   display: grid;
   grid-gap: .3cm;
-  margin: .3cm ;
+  grid-template-columns: repeat(4, 1fr);
 }
 
-#payment-sheet .data-collector-shipping-address input, #payment-sheet .data-collector-shipping-address select {
+#payment-sheet .data-collector-shipping-address input {
+  grid-column-start: 4;
+  grid-column-end: 5;
+}
+
+#payment-sheet .data-collector-shipping-address .left-half {
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+#payment-sheet .data-collector-shipping-address .right-half {
+  grid-column-start: 3;
+  grid-column-end: 5;
+}
+
+#payment-sheet .data-collector-shipping-address .full {
+  grid-column-start: 1;
+  grid-column-end: 5;
+}
+
+#payment-sheet .data-collector-shipping-address .two-thirds {
+  grid-column-start: 1;
+  grid-column-end: 4;
+}
+
+
+#payment-sheet input[type=text], #payment-sheet input[type=tel], #payment-sheet .data-collector-shipping-address select {
   -webkit-border-radius: 0;
   border-radius: 0;
   background-color: white;
   padding: .2cm;
-  font-size: .9em;
-}
 
-
-#payment-sheet .data-collector-shipping-address div.split {
-  grid-template-columns: 50% 48%;
-}
-
-#payment-sheet .data-collector-shipping-address div.two-thirds {
-  grid-template-columns: 75% 23%;
 }
 
 #payment-sheet .data-collector-shipping-address input[type=text], #payment-sheet .data-collector-shipping-address input[type=tel] {
@@ -255,14 +297,18 @@
   font-size: .8em;
 }
 
-#payment-sheet .data-collector-shipping-address input[type="checkbox"] {
+#payment-sheet label {
+  margin-top: .3cm;
+}
+
+#payment-sheet input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
   margin: 0;
   padding: 0;
 }
 
-#payment-sheet .data-collector-shipping-address input:before {
+#payment-sheet input[type="checkbox"]:before {
   font-size: 1.3em;
   border: 1px solid rgb(55,167,251);
   content: "✓";
@@ -280,8 +326,8 @@
   -webkit-appearance: none;
 }
 
-#payment-sheet .data-collector-shipping-address input:checked:before{
-  font-size: 1.3em;
+#payment-sheet input[type="checkbox"]:checked:before {
+  font-size: 1.4em;
   border: 1px solid rgb(55,167,251);
   content: "✓";
   overflow: clipped;
@@ -300,12 +346,30 @@
 
 #payment-sheet .credit-card-collector {
   display: grid;
-  grid-template-columns: 50% 50%;
+  grid-template-columns: 1fr 1fr;
   grid-gap: .3cm;
 }
 
 #payment-sheet .credit-card-collector h3 {
   font-size: 1em;
   font-weight: normal;
-  
+}
+
+#payment-sheet #payment-sheet-shipping-options {
+  padding: .3cm .4cm;
+}
+
+#payment-sheet .credit-card-details {
+  display: grid;
+  grid-gap: .3cm .3cm;
+  grid-template-columns: 1fr 1fr;
+}
+
+#payment-sheet .credit-card-details .fullspan {
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+
+#payment-sheet label {
+  font-size: .5em;
 }

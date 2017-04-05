@@ -24,17 +24,17 @@ export default class PaymentMethodChooser extends EventTarget(["datacollected"])
     form.classList.add("payment-method-chooser");
     form.onsubmit = () => {
       return false;
-    }
-    form.addEventListener("change", ({
-      target
-    }) => {
+    };
+    form.addEventListener("change", () => {
       this.dispatchEvent(new CustomEvent("datacollected"));
     });
+    priv.set("form", form);
     priv.set("renderer", hyperHTML.bind(form));
     priv.set("paymentMethods", paymentMethods);
   }
-  async getCollectedData() {
-
+  toFormData() {
+    const form = privates.get(this).get("form");
+    return new FormData(form);
   }
   render() {
     const priv = privates.get(this);
@@ -64,7 +64,7 @@ function toRadio(paymentMethod, controller) {
       ev.currentTarget.querySelector("input").checked = true;
       ev.currentTarget.querySelector("input").form.dispatchEvent(new Event("change"));
     }
-  }
+  };
   const srcset = icons.map(toSrcset);
   const img = toImage(srcset, name);
   const frag = hyperHTML.wire()

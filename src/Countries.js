@@ -259,9 +259,9 @@ export default class Countries {
     return countries.get(key);
   }
  
-  static asHTMLSelect(id="", selected="", name="country"){
+  static asHTMLSelect(cssClass="", selected="", name="country"){
     const select = document.createElement("select");
-    select.id = id; 
+    select.classList.add(cssClass); 
     select.name = name;
     select.autocomplete = "country";
     const renderer = hyperHTML.bind(select);

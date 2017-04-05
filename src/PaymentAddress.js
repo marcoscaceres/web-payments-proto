@@ -1,5 +1,6 @@
 const privates = new WeakMap();
 
+
 export default class PaymentAddress {
   constructor(details){
     const priv = privates.set(this, new Map()).get(this);
