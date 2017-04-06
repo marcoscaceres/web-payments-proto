@@ -6,10 +6,14 @@ export default class PaymentItem extends DisplayItem {
   constructor(label, amount, pending = false) {
     super(label, amount);
     const priv = privates.set(this, new Map()).get(this);
-    priv.set("label", String(label));
     priv.set("pending", Boolean(pending));
   }
   get pending() {
     return privates.get(this).get("pending");
-  };
-};
+  }
+  toObject(){
+    return Object.assign(super.toObject(), {
+      pending: this.pending,
+    });
+  }
+}

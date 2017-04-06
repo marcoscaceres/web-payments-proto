@@ -373,3 +373,8 @@
 #payment-sheet label {
   font-size: .5em;
 }
+
+#payment-sheet input:required:invalid {
+  border: thin solid red;
+
+}

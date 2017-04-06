@@ -65,12 +65,14 @@ async function doPaymentRequest() {
   const id = `super-store-order-${String(Math.random()).substr(2)}`;
   const details = {
     id,
-    displayItems,
-    total,
-    shippingOptions,
+    displayItems: displayItems.map(item => item.toObject()),
+    total: total.toObject(),
+    shippingOptions: shippingOptions.map(item => item.toObject()),
   }
   const options = {
     requestShipping: true,
+    requestPayerName: true,
+    requestPayerPhone: true,
   }
   const request = new PaymentRequest(methodData, details, options);
   console.log(request)

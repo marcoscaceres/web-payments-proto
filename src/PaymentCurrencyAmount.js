@@ -25,6 +25,12 @@ export default class PaymentCurrencyAmount {
   toString() {
     return privates.get(this).get("formatter").format(this.value);
   }
+  toObject(){
+    return {
+      currency: this.currency,
+      value: this.value,
+    };
+  }
   static parseAmount(fullAmount) {
     const [, currency, value] = currencySplitter.exec(fullAmount);
     return new PaymentCurrencyAmount(currency, value);
@@ -35,4 +41,4 @@ export default class PaymentCurrencyAmount {
   static isPositive(value) {
     return PaymentCurrencyAmount.isValid(value) && value[0] !== "\u002D";
   }
-};
+}

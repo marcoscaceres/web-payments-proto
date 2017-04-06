@@ -19,4 +19,10 @@ export default class DisplayItem extends Localizable {
   get amount() {
     return privates.get(this).get("amount");
   }
+  toObject() {
+    return Object.assign(super.toObject(), {
+      label: this.label,
+      amount: this.amount.toObject(),
+    });
+  }
 }

@@ -63,11 +63,17 @@ class PaymentRequest extends EventTarget(eventListeners) {
       }
     }
     // Process shipping options
-    const { selectedShippingOption, shippingOptions } = processShippingOptions(details)
+    const {
+      selectedShippingOption,
+      shippingOptions
+    } = processShippingOptions(details)
     details.shippingOptions = shippingOptions;
 
     // Process payment details modifiers
-    const { modifiers, serializedModifierData } = processPaymentDetailsModifiers(details);
+    const {
+      modifiers,
+      serializedModifierData
+    } = processPaymentDetailsModifiers(details);
     details.modifiers = modifiers;
     internalSlots.set(this, new Map([
       ["[[details]]", details],
@@ -98,7 +104,9 @@ class PaymentRequest extends EventTarget(eventListeners) {
 
   //readonly attribute PaymentShippingType ? shippingType;
   get shippingType() {
-    const { shippingType } = internalSlots.get(this).get("[[options]]");
+    const {
+      shippingType
+    } = internalSlots.get(this).get("[[options]]");
     return shippingType ? shippingType : null;
   }
 
@@ -108,10 +116,16 @@ class PaymentRequest extends EventTarget(eventListeners) {
     if (slots.get("[[state]]") !== "created") {
       throw new DOMException("Payment request was already used", "InvalidStateError");
     }
+    if (!window.top.document.hasFocus()){
+      throw new DOMException("Top window must be focused to call .show()", "SecurityError");
+    }
     slots.set("[[state]]", "interactive");
-    
-    return new Promise(async (resolve, reject ) => {
-      slots.set("[[acceptPromise]]", {resolve, reject} );
+
+    return new Promise(async (resolve, reject) => {
+      slots.set("[[acceptPromise]]", {
+        resolve,
+        reject
+      });
       const supported = Array
         .from(slots.get("[[serializedMethodData]]").keys())
         .reduce((accumulator, method) => accumulator.concat(method), [])
@@ -119,7 +133,13 @@ class PaymentRequest extends EventTarget(eventListeners) {
       if (!supported.length) {
         return reject(new DOMException("No supported payment methods found.", "NotSupportedError"));
       }
-      const { displayItems, total, shippingOptions } = slots.get("[[details]]");
+      const {
+        displayItems,
+        total,
+        shippingOptions
+      } = slots.get("[[details]]");
+
+      const options = slots.get("[[options]]");
 
       paymentSheet.addEventListener("abort", () => {
         userAbortsPayment(this);
@@ -134,16 +154,16 @@ class PaymentRequest extends EventTarget(eventListeners) {
         slots.set("[[shippingAddress]]", ev.detail.shippingAddress);
         paymentRequestUpdated(this, "shippingaddresschange");
       });
-   
+
       paymentSheet.addEventListener("acceptpayment", ev => {
         userAcceptsThePaymentRequest(this, ev.detail)
-      } )
-
+      });
       const response = await paymentSheet.open({
         displayItems,
-        total,
+        options,
         shippingOptions,
         supported,
+        total,
       });
       return resolve(response);
     });
@@ -153,13 +173,13 @@ class PaymentRequest extends EventTarget(eventListeners) {
   async abort() {
     // TODO: add develper feedback about error to spec.
     const slots = internalSlots.get(this);
-    if(slots.get("[[state]]") !== "interactive"){
+    if (slots.get("[[state]]") !== "interactive") {
       throw new DOMException("Payment request was already consumed", "InvalidStateError");
     }
-    return new Promise(async(resolve, reject)=>{
-      try{
+    return new Promise(async(resolve, reject) => {
+      try {
         await paymentSheet.requestClose("abort");
-      } catch(err){
+      } catch (err) {
         const invalidStateErr = new DOMException("Could not abort at this time", "InvalidStateError")
         reject(invalidStateErr);
         return;
@@ -177,32 +197,32 @@ class PaymentRequest extends EventTarget(eventListeners) {
   // Promise <boolean> canMakePayment();
   async canMakePayment() {
     const slots = internalSlots.get(this);
-    if(slots.get("[[state]]") !== "interactive"){
+    if (slots.get("[[state]]") !== "interactive") {
       throw new DOMException("Payment request was already consumed", "InvalidStateError");
     }
     // Optionally, at the user agent's discretion, return a promise rejected with a "QuotaExceededError" DOMException.
     return Array
-        .from(slots.get("[[serializedMethodData]]").keys())
-        .reduce((accumulator, method) => accumulator.concat(method), [])
-        .some(PaymentMethodChooser.supports);
+      .from(slots.get("[[serializedMethodData]]").keys())
+      .reduce((accumulator, method) => accumulator.concat(method), [])
+      .some(PaymentMethodChooser.supports);
   }
 }
 
-function userAcceptsThePaymentRequest(request, detail){
+function userAcceptsThePaymentRequest(request, detail) {
   const slots = internalSlots.get(request);
-  if(slots.get("[[updating]]")){
+  if (slots.get("[[updating]]")) {
     console.assert(false, "this should never happen");
     return;
   }
-  if(slots.get("[[state]]" !== "interactive")){
+  if (slots.get("[[state]]" !== "interactive")) {
     console.assert(false, "The user agent user interface should ensure that this never occurs.");
     return;
   }
   const options = slots.get("[[options]]");
-  if(options.requestShipping){
-    if(request.shippingAddress === null || request.shippingOption === null){
+  if (options.requestShipping) {
+    if (request.shippingAddress === null || request.shippingOption === null) {
       assert(false, "This should never occur.");
-      return;  
+      return;
     }
   }
   const response = new PaymentResponse(request, details);
@@ -210,13 +230,13 @@ function userAcceptsThePaymentRequest(request, detail){
   slots.get("[[acceptPromise]]").resolve(response);
 }
 
-async function userAbortsPayment(request){
+async function userAbortsPayment(request) {
   const slots = internalSlots.get(request);
-  if(slots.get("[[updating]]")){
+  if (slots.get("[[updating]]")) {
     console.assert(false, "this should never happen");
     return;
   }
-  if(slots.get("[[state]]" !== "interactive")){
+  if (slots.get("[[state]]" !== "interactive")) {
     console.assert(false, "The user agent user interface should ensure that this never occurs.");
     return;
   }
@@ -226,13 +246,13 @@ async function userAbortsPayment(request){
   slots.get("[[acceptPromise]]").reject(err);
 }
 
-function paymentRequestUpdated(request, eventName){
+function paymentRequestUpdated(request, eventName) {
   const slots = internalSlots.get(request);
-  if(slots.get("[[updating]]")){
+  if (slots.get("[[updating]]")) {
     console.assert(false, "this should never happen");
     return;
   }
-  if(slots.get("[[state]]" !== "interactive")){
+  if (slots.get("[[state]]" !== "interactive")) {
     console.assert(false, "The user agent user interface should ensure that this never occurs.");
     return;
   }
@@ -240,14 +260,20 @@ function paymentRequestUpdated(request, eventName){
   request.dispatchEvent(updateEvent);
 }
 
-function processPaymentDetailsModifiers({ modifiers: originalModifiers }) {
+function processPaymentDetailsModifiers({
+  modifiers: originalModifiers
+}) {
   if (!originalModifiers) {
     return [];
   }
   let serializedModifierData = [];
   let modifiers = originalModifiers.concat();
   for (const modifier of modifiers) {
-    const { total, additionalDisplayItems, data } = modifier;
+    const {
+      total,
+      additionalDisplayItems,
+      data
+    } = modifier;
     if (total) {
       if (!PaymentCurrencyAmount.isValid(total.amount.value)) {
         throw new TypeError("A modifier monetary value is invalid.");
@@ -267,15 +293,24 @@ function processPaymentDetailsModifiers({ modifiers: originalModifiers }) {
     serializedModifierData.push(serializedData);
     delete modifier.data;
   }
-  return { modifiers, serializedModifierData };
+  return {
+    modifiers,
+    serializedModifierData
+  };
 }
 
-function processShippingOptions({ shippingOptions }) {
+function processShippingOptions({
+  shippingOptions
+}) {
   if (!shippingOptions) {
     return [];
   }
   const areValid = shippingOptions.every(
-    ({ amount: { value } }) => PaymentCurrencyAmount.isValid(value)
+    ({
+      amount: {
+        value
+      }
+    }) => PaymentCurrencyAmount.isValid(value)
   );
   if (!areValid) {
     throw new TypeError("One of the ShippingOption monetary values is invalid.");
@@ -293,7 +328,9 @@ function processShippingOptions({ shippingOptions }) {
   const selected = Array
     .from(options)
     .reverse()
-    .find(({ selected }) => selected);
+    .find(({
+      selected
+    }) => selected);
   return {
     shippingOptions: Array.from(options),
     selectedShippingOption: selected ? selected.id : null
@@ -306,7 +343,11 @@ function makeInvertedPromise() {
     resolve = res;
     reject;
   });
-  return { promise, resolve, reject };
+  return {
+    promise,
+    resolve,
+    reject
+  };
 }
 
 window.PaymentRequest = PaymentRequest;

@@ -2,7 +2,8 @@ import hyperHTML from "hyperhtml/hyperhtml.js";
 import Countries from "../Countries";
 import EventTarget from "event-target-shim";
 import guid from "uuid/v4";
-import autofillDB from "../AutofillDB";
+import DataCollector from "./DataCollector";
+import db from "../AutofillDB";
 
 const privates = new WeakMap();
 
@@ -11,21 +12,28 @@ const addressTypes = new Set([
   "billing",
 ]);
 
-export default class AddressCollector extends EventTarget(["datacollected"]) {
+const schema = new Set([
+  "fullName",
+  "phoneNumber",
+  "streetAddress",
+  "addressLevel2",
+  "addressLevel1",
+  "postalCode",
+]);
+
+export default class AddressCollector extends DataCollector {
   constructor(addressType = "shipping", requestedFields) {
-    super();
+    super(schema);
     if (!addressTypes.has(addressType)) {
       throw new TypeError(`Invalid address type: ${addressType}`);
     }
     const priv = privates.set(this, new Map()).get(this);
-    const form = document.createElement("form");
-    form.classList.add(`data-collector-${addressType}-address`);
-    form.addEventListener("change", async () => {
+    this.form.classList.add(`data-collector-${addressType}-address`);
+    this.addEventListener("cancontinue", async () => {
       await this.save();
-      this.dispatchEvent(new CustomEvent("datacollected"));
     });
-    priv.set("form", form);
-    priv.set("render", hyperHTML.bind(form));
+    priv.set("addressType", addressType);
+    priv.set("render", hyperHTML.bind(this.form));
     priv.set("readyPromise", init(this));
   }
 
@@ -33,47 +41,89 @@ export default class AddressCollector extends EventTarget(["datacollected"]) {
     return privates.get(this).get("readyPromise");
   }
 
-  toData() {
-    const form = privates.get(this).get("form");
-    return Array
-      .from(new FormData(form).entries())
-      .filter(([key]) => key !== "saveDetails") // Not part of schema
-      .filter(([, value]) => value)
-      .reduce((accum, [key, value]) => {
-        accum[key] = value;
-        return accum
-      }, {});
+  get addressType(){
+    return privates.get(this).get("addressType");
   }
 
   async save() {
-    const priv = privates.get(this);
-    const formData = new FormData(priv.get("form"));
+    const formData = new FormData(this.form);
     if (formData.get("saveDetails") !== "on") {
       return;
     }
-    const currentData = priv.get("currentData");
-    const newData = Object.assign({}, currentData, {timeLastModified: Date.now()}, this.toData());
-    priv.set("currentData", newData);
+    console.log("Saving address data....");
+    const priv = privates.get(this);
+    const addressData = priv.get("addressData");
+    const newData = Object.assign({}, addressData, {timeLastModified: Date.now()}, this.toData());
+    priv.set("addressData", newData);
     console.log("Saving", newData);
     await db.addresses.put(newData);
     console.log("Saved done");
   }
 
-  render(newData) {
+  render(requestData) {
     const priv = privates.get(this);
     const render = priv.get("render");
-    const currentData = priv.get("currentData");
-    const data = Object.assign({}, currentData, newData);
-    priv.set("currentData", data);
+    const data = priv.get("addressData");
+    const { options: { requestPayerEmail, requestPayerName, requestPayerPhone, requestShipping} } = requestData;
+    const invalidHandler = function(ev){
+
+      //this.setCustomValidity("This is required.");
+      //this.form.submit();
+    }
     return render `
-        <input name="fullName" autocomplete="${data.addressType + " name"}" class="left-half" placeholder="Name" value="${data.fullName}" type="text">
-        <input name="phoneNumber" autocomplete="${data.addressType + " tel"}" type="tel" class="right-half" placeholder="Phone Number" value="${data.phoneNumber}" type="text">
-        <input name="streetAddress" autocomplete="${data.addressType + " street-address"}" class="full" placeholder="Address" value="${data.streetAddress}" type="text">
-        <input name="addressLevel2" autocomplete="${data.addressType + " address-level2"}" class="two-thirds" placeholder="City" value="${data.addressLevel1}">
-        <input name="addressLevel1" autocomplete="${data.addressType + " address-level1"}" placeholder="State" value="${data.state}" type="text"
-        >${Countries.asHTMLSelect("two-thirds", data.country)}<input
-          name="postalCode" autocomplete="${data.addressType + " postal-code"}" name="postalCode" placeholder="Post code" value="${data.postalCode}" type="text">
-        <label class="full"><input type="checkbox" name="saveDetails" checked> Save the address for faster checkout next time</label> 
+        <input
+          autocomplete="${this.addressType + " name"}"
+          class="left-half"
+          name="fullName"
+          oninvalid="${invalidHandler}"
+          placeholder="Name"
+          required="${requestPayerName}"
+          type="text"
+          value="${data.fullName}">
+        <input
+          autocomplete="${this.addressType + " tel"}"
+          class="right-half"
+          name="phoneNumber"
+          oninvalid="${invalidHandler}"
+          placeholder="Phone Number"
+          required="${requestPayerPhone}"
+          type="tel"
+          value="${data.phoneNumber}">
+        <input
+          autocomplete="${this.addressType + " street-address"}"
+          class="full"
+          name="streetAddres"
+          oninvalid="${invalidHandler}"
+          placeholder="Address"
+          required="${requestShipping}"
+          type="text"
+          value="${data.streetAddress}">
+        <input
+          autocomplete="${this.addressType + " address-level2"}"
+          class="two-thirds"
+          name="addressLevel"
+          oninvalid="${invalidHandler}"
+          placeholder="City"
+          required="${requestShipping}"
+          type="text"
+          value="${data.addressLevel1}">
+        <input
+          autocomplete="${this.addressType + " address-level1"}"
+          name="addressLevel1"
+          oninvalid="${invalidHandler}"
+          placeholder="State"
+          required="${requestShipping}"
+          type="text"
+          value="${data.state}">${Countries.asHTMLSelect("two-thirds", data.country, "country", requestShipping ? "required" : null)}<input
+          autocomplete="${this.addressType + " postal-code"}"
+          name="postalCode"
+          placeholder="Post code"
+          required="${requestShipping}"
+          type="text"
+          value="${data.postalCode}">
+        <label class="full">
+          <input type="checkbox" name="saveDetails" checked> Save the address for faster checkout next time
+        </label>
     `;
   }
 }
@@ -85,7 +135,7 @@ async function init(dataCollector) {
   }
   const count = await db.addresses.count();
   if (!count) {
-    const defaultData = {
+    const addressData = {
       guid: guid(),
       organization: "",
       fullName: "",
@@ -101,9 +151,9 @@ async function init(dataCollector) {
       timeLastModified: Date.now(),
       timesUsed: 0,
     };
-    priv.set("currentData", defaultData);
+    priv.set("addressData", addressData);
     return;
   }
   const lastSavedData = await db.addresses.orderBy('timeLastUsed').first();
-  priv.set("currentData", lastSavedData);
+  priv.set("addressData", lastSavedData);
 }

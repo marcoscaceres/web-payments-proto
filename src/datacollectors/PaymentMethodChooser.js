@@ -1,5 +1,5 @@
 import hyperHTML from "hyperhtml/hyperhtml.js";
-import EventTarget from "event-target-shim";
+import DataCollector from "./DataCollector";
 const privates = new WeakMap();
 
 const defaultMethods = [{
@@ -16,25 +16,17 @@ const defaultMethods = [{
   }, ],
 }];
 
-export default class PaymentMethodChooser extends EventTarget(["datacollected"]) {
+const schema = new Set([
+  "payment-method",
+]);
+
+export default class PaymentMethodChooser extends DataCollector {
   constructor(paymentMethods = defaultMethods) {
-    super();
+    super(schema);
     const priv = privates.set(this, new Map()).get(this);
-    const form = document.createElement("form");
-    form.classList.add("payment-method-chooser");
-    form.onsubmit = () => {
-      return false;
-    };
-    form.addEventListener("change", () => {
-      this.dispatchEvent(new CustomEvent("datacollected"));
-    });
-    priv.set("form", form);
-    priv.set("renderer", hyperHTML.bind(form));
+    this.form.classList.add("payment-method-chooser");
+    priv.set("renderer", hyperHTML.bind(this.form));
     priv.set("paymentMethods", paymentMethods);
-  }
-  toFormData() {
-    const form = privates.get(this).get("form");
-    return new FormData(form);
   }
   render() {
     const priv = privates.get(this);
@@ -43,8 +35,10 @@ export default class PaymentMethodChooser extends EventTarget(["datacollected"])
     if (!paymentMethods.length) {
       return renderer `<h2>No payment methods available.</h2>`;
     }
-    const buttons = paymentMethods.map(method => toRadio(method, this));
-    return renderer `<div id="payment-methods-buttons">${buttons}</div>`;
+    return renderer `
+    <div id="payment-methods-buttons">${
+      paymentMethods.map(method => toRadio(method, this))
+    }</div>`;
   }
   static supports(method) {
     return defaultMethods.some(({
@@ -54,27 +48,24 @@ export default class PaymentMethodChooser extends EventTarget(["datacollected"])
 }
 
 function toRadio(paymentMethod, controller) {
-  const {
-    name,
-    icons
-  } = paymentMethod;
+  const { name, icons } = paymentMethod;
   const keyHandler = ev => {
-    if(ev.keyCode === 32 || ev.keyCode === 13 ){
+    if (ev.keyCode === 32 || ev.keyCode === 13) {
       ev.currentTarget.setAttribute("aria-checked", "true");
       ev.currentTarget.querySelector("input").checked = true;
       ev.currentTarget.querySelector("input").form.dispatchEvent(new Event("change"));
+      ev.preventDefault(); // Prevents space bar from scrolling the web page.
     }
   };
   const srcset = icons.map(toSrcset);
-  const img = toImage(srcset, name);
   const frag = hyperHTML.wire()
-      
-  `<label onkeypress="${keyHandler}" role="radio" aria-checked="false"><input name="payment-method" type="radio">${img}</label>`;
+  `
+    <label onkeypress="${keyHandler}" role="radio" aria-checked="false">
+    <input required name="payment-method" type="radio">${toImage(srcset, name)}</label>`;
   return frag;
 }
 // Either a srcset or just a src
 function toImage(srcset, alt) {
-
   return hyperHTML.wire()
   `<img
       tabindex="0"
@@ -83,10 +74,7 @@ function toImage(srcset, alt) {
       width="195" height="80">`;
 }
 
-function toSrcset({
-  src,
-  sizes
-}) {
+function toSrcset({ src, sizes }) {
   return sizes.split(" ")
     .map(size => size.split("x")[0] + "w")
     .reduce((collector, width) => {

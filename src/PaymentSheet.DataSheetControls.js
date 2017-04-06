@@ -17,16 +17,19 @@ export default class DataSheetControls extends EventTarget(["cancel", "continue"
     this.addEventListener("continue", ()=>{
       dataSheet.dispatchEvent(new CustomEvent("continue"));
     });
+    priv.set("dataSheet", dataSheet);
   }
   activate(){
-    privates.get(this).set("canContinue", true);
-    this.render();
+    const priv = privates.get(this);
+    priv.set("canContinue", true);
+    this.render(priv.get("dataSheet").buttonLabels);
   }
   deactivate(){
-    privates.get(this).set("canContinue", false);
-    this.render();
+    const priv = privates.get(this);
+    priv.set("canContinue", false);
+    this.render(priv.get("dataSheet").buttonLabels);
   }
-  render() {
+  render({cancelLabel, proceedLabel} = {cancelLabel: "Cancel", proceedLabel: "Continue"}) {
     const priv = privates.get(this);
     const renderer = priv.get("renderer");
     const cancelHandler = () => {
@@ -39,10 +42,10 @@ export default class DataSheetControls extends EventTarget(["cancel", "continue"
     const canContinue = !priv.get("canContinue");
     return renderer`
       <button class="cancel" onclick="${cancelHandler}">
-        Cancel
+        ${cancelLabel}
       </button>
       <button class="continue" onclick="${continueHandler}" disabled="${canContinue}">
-        Continue
+        ${proceedLabel}
       </button>
     `;
   }

@@ -1,6 +1,7 @@
 import hyperHTML from "hyperhtml/hyperhtml.js";
-const privates = new WeakMap();
 import EventTarget from "event-target-shim";
+import PaymentCurrencyAmount from "./PaymentCurrencyAmount";
+const privates = new WeakMap();
 
 export default class ShippingOptions extends EventTarget(["shippingoptionchange"]) {
   constructor() {
@@ -17,13 +18,13 @@ export default class ShippingOptions extends EventTarget(["shippingoptionchange"
     }
     const priv = privates.get(this);
     const renderer = priv.get("renderer");
-    const output = toOutput(shippingOptions.find(({ selected }) => selected))
+    const output = toOutput(shippingOptions.find(({ selected }) => selected));
     const changeHandler = (ev) => {
       const option = ev.target.item(ev.target.selectedIndex); 
       output.value = option.dataset.value;
       const event = new CustomEvent("shippingoptionchange", {detail: {shippingOption: option.value}});
       this.dispatchEvent(event);
-    }
+    };
     const html = renderer `
     <tr>
       <td>Shipping: <select onchange="${changeHandler}">${shippingOptions.map(toOption)}</select></td>
@@ -34,11 +35,14 @@ export default class ShippingOptions extends EventTarget(["shippingoptionchange"
 }
 
 function toOption(shippingOption) {
-  const { id, selected, label, dir, lang } = shippingOption;
+  const { id, selected, label, dir, lang, amount: { currency, value } } = shippingOption;
+  const shippingAmount = new PaymentCurrencyAmount(currency, value).toString();
   const option = hyperHTML.wire(shippingOption)`<option
       name="shippingOption"
-      value="${id}" data-value="${shippingOption.amount.toString()}">
-      <span dir="${dir}" lang="${lang}">${label}</span> ${shippingOption.amount.toString()}</option>`;  
+      value="${id}" data-value="${shippingAmount}">
+      <span dir="${dir}" lang="${lang}">
+        ${label}
+      </span> ${shippingAmount}</option>`;
   if(selected){
     option.selected = true;
   }

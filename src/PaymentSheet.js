@@ -12,6 +12,7 @@ import ShippingOptions from "./PaymentSheet.ShippingOptions";
 import Total from "./PaymentSheet.Total";
 import DataSheetManager from "./DataSheetManager";
 import CreditCardCollector from "./datacollectors/CreditCardCollector";
+import db from "./AutofillDB";
 const privates = new WeakMap();
 
 const eventListeners = [
@@ -82,12 +83,12 @@ class PaymentSheet extends EventTarget(eventListeners) {
     const dataSheetManager = new DataSheetManager(sheets);
     priv.set("dataSheetManager", dataSheetManager);
     dataSheetManager.addEventListener("next", () => {
-      console.log("showing next...")
-      this.render();
+      console.log("showing next...");
+      this.render(privates.get(this).get("requestData"));
     });
 
     dataSheetManager.addEventListener("done", () => {
-      console.log("we are done...")
+      console.log("we are done...");
       this.render();
     });
   }
@@ -102,6 +103,9 @@ class PaymentSheet extends EventTarget(eventListeners) {
 
   async abort() {
     console.log("aborting");
+    if(db.isOpen()){
+      await db.close();
+    }
     const priv = privates.get(this);
     priv.get("dataSheetManager").reset();
     const event = new CustomEvent("abort");
@@ -111,10 +115,10 @@ class PaymentSheet extends EventTarget(eventListeners) {
 
   async open(requestData) {
     const priv = privates.get(this);
+    priv.set("requestData", requestData);
     await this.ready;
     const dialog = priv.get("dialog");
-    priv.set("requestData", requestData);
-    this.render();
+    this.render(requestData);
     dialog.showModal();
     await this.done;
   }
@@ -146,9 +150,8 @@ class PaymentSheet extends EventTarget(eventListeners) {
     dialog.close();
   }
 
-  render() {
+  render(requestData) {
     const priv = privates.get(this);
-    const requestData = priv.get("requestData");
     const renderer = priv.get("renderer");
     const topWidgets = priv.get("topWidgets");
     const host = priv.get("host-widget");
@@ -159,7 +162,7 @@ class PaymentSheet extends EventTarget(eventListeners) {
       <img src="./payment-sheet/images/logo-payment.png" alt="">Firefox Web Payment
     </h1>
     <section id="payment-sheet-top-section">${topWidgets.map(widget => widget.render(requestData))}</section>
-    <section>${currentSheet ? currentSheet.render() : "" }</section>
+    <section>${currentSheet ? currentSheet.render(requestData) : "" }</section>
     <section id="payment-sheet-bottom" hidden="${dataSheetsManager.done}">${host.render(window.location)}<section>`;
   }
 }

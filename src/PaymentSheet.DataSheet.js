@@ -13,21 +13,28 @@ export default class DataSheet extends EventTarget(["abort"]) {
     priv.set("heading", heading);
     priv.set("renderer", hyperHTML.bind(containerElem));
     const controlButtons = new Controls(this);
-    dataCollector.addEventListener("datacollected", () => {
-      console.log("something changes");
+
+    dataCollector.addEventListener("cancontinue", () => {
+      console.log("can continue");
       controlButtons.activate();
     });
+
+    dataCollector.addEventListener("invalid", () => {
+      console.log("invalid, disable");
+      controlButtons.deactivate();
+    });
+
     priv.set("controlButtons", controlButtons);
   }
-  render() {
+  render(requestData) {
     const priv = privates.get(this);
     const dataCollector = priv.get("dataCollector");
     const renderer = priv.get("renderer");
     const heading = priv.get("heading");
     const controlButtons = priv.get("controlButtons");
     return renderer `<h2 hidden="${!heading}">${heading}</h2>
-    <section>${dataCollector.render()}</section>
-    <section>${controlButtons.render()}</section>`;
+    <section>${dataCollector.render(requestData)}</section>
+    <section>${controlButtons.render(dataCollector.buttonLabels)}</section>`;
   }
   get containerElem() {
     return privates.get(this).get("containerElem");

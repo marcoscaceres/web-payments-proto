@@ -12,4 +12,10 @@ export default class Localizable {
   get dir() {
     return privates.get(this).get("dir");
   }
+  toObject(){
+    return {
+      dir: this.dir,
+      lang: this.lang,
+    };
+  }
 }

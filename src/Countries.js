@@ -259,11 +259,12 @@ export default class Countries {
     return countries.get(key);
   }
  
-  static asHTMLSelect(cssClass="", selected="", name="country"){
+  static asHTMLSelect(cssClass="", selected="", name="country", required="no"){
     const select = document.createElement("select");
     select.classList.add(cssClass); 
     select.name = name;
     select.autocomplete = "country";
+    select.required = required === "required";
     const renderer = hyperHTML.bind(select);
     return renderer`${Countries.asHTMLOptions(selected)}`;
   }

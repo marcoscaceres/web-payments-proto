@@ -1,4 +1,5 @@
 import hyperHTML from "hyperhtml/hyperhtml.js";
+import PaymentCurrencyAmount from "./PaymentCurrencyAmount";
 const privates = new WeakMap();
 
 export default class LineItems {
@@ -20,11 +21,16 @@ export default class LineItems {
 }
 
 function toTR(lineItem) {
-  const { label, dir, lang, amount } = lineItem;
+  const { label, dir, lang, amount: {currency, value} } = lineItem;
+  const itemCost = new PaymentCurrencyAmount(currency, value).toString();
   return hyperHTML.wire(lineItem)
   `<tr>
-     <td lang="${lang}" dir="${dir}">${label}</td>
-     <td>${amount.toString()}</td>
+     <td lang="${lang}" dir="${dir}">
+      ${label}
+    </td>
+    <td>
+     ${itemCost}
+    </td>
   </tr>
   `;
 }
