@@ -6,33 +6,13 @@ import autofillDB from "../AutofillDB";
 
 const privates = new WeakMap();
 
-//", , , 
-// , , country, tel, email,
-// timeCreated, timeLastUsed, timeLastModified, timesUsed",
-
-const defaultData = Object.freeze({
-  guid: "",
-  organization: "",
-  fullName: "",
-  phoneNumber: "",
-  addressLevel1: "",
-  addressLevel2: "",
-  state: "",
-  country: "US",
-  postalCode: "",
-  timeCreated: "",
-  timeLastUsed: "",
-  timeLastModified: "",
-  timesUsed: 0,
-});
-
 const addressTypes = new Set([
   "shipping",
   "billing",
 ]);
 
 export default class AddressCollector extends EventTarget(["datacollected"]) {
-  constructor(addressType = "shipping", initialData = defaultData) {
+  constructor(addressType = "shipping", requestedFields) {
     super();
     if (!addressTypes.has(addressType)) {
       throw new TypeError(`Invalid address type: ${addressType}`);
@@ -40,22 +20,12 @@ export default class AddressCollector extends EventTarget(["datacollected"]) {
     const priv = privates.set(this, new Map()).get(this);
     const form = document.createElement("form");
     form.classList.add(`data-collector-${addressType}-address`);
-    form.addEventListener("change", async() => {
+    form.addEventListener("change", async () => {
       await this.save();
       this.dispatchEvent(new CustomEvent("datacollected"));
     });
     priv.set("form", form);
     priv.set("render", hyperHTML.bind(form));
-    // Merge data
-    const currentData = {
-      guid: guid(),
-      timeCreated: Date.now(),
-      timeLastModified: Date.now(),
-      timeLastUsed: Date.now(),
-      addressType
-    };
-    priv.set("currentData", Object.assign({}, initialData, currentData));
-    let readyResolver, readyRejector;
     priv.set("readyPromise", init(this));
   }
 
@@ -82,9 +52,9 @@ export default class AddressCollector extends EventTarget(["datacollected"]) {
       return;
     }
     const currentData = priv.get("currentData");
-    const newData = Object.assign({}, currentData, this.toData());
+    const newData = Object.assign({}, currentData, {timeLastModified: Date.now()}, this.toData());
     priv.set("currentData", newData);
-    console.log("Sving", newData);
+    console.log("Saving", newData);
     await db.addresses.put(newData);
     console.log("Saved done");
   }
@@ -96,19 +66,18 @@ export default class AddressCollector extends EventTarget(["datacollected"]) {
     const data = Object.assign({}, currentData, newData);
     priv.set("currentData", data);
     return render `
-        <input name="fullName" class="left-half" autocomplete="${data.addressType + " name"}" type="text" placeholder="Name" value="${data.fullName}">
-        <input class="right-half" autocomplete="${data.addressType + " tel"}" name="phoneNumber" type="tel" placeholder="Phone Number" value="${data.phoneNumber}">
-        <input class="full" autocomplete="${data.addressType + " address-level"}" name="addressLevel1" type="text" placeholder="Address" value="${data.addressLevel1}">
-        <input class="two-thirds" autocomplete="${data.addressType + " address-level"}" name="addressLevel2" type="text" placeholder="City" value="${data.addressLevel2}">
-        <input autocomplete="${data.addressType + " address-level"}" type="text" placeholder="State" value="${data.state}"
-        >${Countries.asHTMLSelect("two-thirds", data.country)}<input name="postalCode" autocomplete="postal-code" type="text" name="postalCode" placeholder="Post code" value="${data.postalCode}">
+        <input name="fullName" autocomplete="${data.addressType + " name"}" class="left-half" placeholder="Name" value="${data.fullName}" type="text">
+        <input name="phoneNumber" autocomplete="${data.addressType + " tel"}" type="tel" class="right-half" placeholder="Phone Number" value="${data.phoneNumber}" type="text">
+        <input name="streetAddress" autocomplete="${data.addressType + " street-address"}" class="full" placeholder="Address" value="${data.streetAddress}" type="text">
+        <input name="addressLevel2" autocomplete="${data.addressType + " address-level2"}" class="two-thirds" placeholder="City" value="${data.addressLevel1}">
+        <input name="addressLevel1" autocomplete="${data.addressType + " address-level1"}" placeholder="State" value="${data.state}" type="text"
+        >${Countries.asHTMLSelect("two-thirds", data.country)}<input
+          name="postalCode" autocomplete="${data.addressType + " postal-code"}" name="postalCode" placeholder="Post code" value="${data.postalCode}" type="text">
         <label class="full"><input type="checkbox" name="saveDetails" checked> Save the address for faster checkout next time</label> 
     `;
   }
 }
-//"&guid, organization, addressLevel1, addressLevel2, 
-// addressLevel1, postalCode, country, tel, email,
-// timeCreated, timeLastUsed, timeLastModified, timesUsed",
+
 async function init(dataCollector) {
   const priv = privates.get(dataCollector);
   if (!db.isOpen()) {
@@ -116,7 +85,23 @@ async function init(dataCollector) {
   }
   const count = await db.addresses.count();
   if (!count) {
-    console.log("database is empty");
+    const defaultData = {
+      guid: guid(),
+      organization: "",
+      fullName: "",
+      phoneNumber: "",
+      streetAddress: "",
+      addressLevel1: "",
+      addressLevel2: "",
+      state: "",
+      country: "US",
+      postalCode: "",
+      timeCreated: Date.now(),
+      timeLastUsed: Date.now(),
+      timeLastModified: Date.now(),
+      timesUsed: 0,
+    };
+    priv.set("currentData", defaultData);
     return;
   }
   const lastSavedData = await db.addresses.orderBy('timeLastUsed').first();
