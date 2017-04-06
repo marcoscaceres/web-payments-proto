@@ -34,7 +34,7 @@ export default class DataSheetControls extends EventTarget(["cancel", "previous"
     priv.set("canContinue", false);
     this.render(priv.get("dataSheet").buttonLabels);
   }
-  render({cancelLabel, proceedLabel} = {cancelLabel: "Cancel", proceedLabel: "Continue"}) {
+  render({cancelLabel, previousLabel, proceedLabel} = {cancelLabel: "Cancel", previousLabel: "Back", proceedLabel: "Continue"}) {
     const priv = privates.get(this);
     const renderer = priv.get("renderer");
     const cancelHandler = () => {
@@ -55,7 +55,7 @@ export default class DataSheetControls extends EventTarget(["cancel", "previous"
         ${cancelLabel}
       </button>
       <button class="previous" onclick="${previousHandler}" disabled="${canPrevious}">
-        Back
+        ${previousLabel}
       </button>
       <button class="continue" onclick="${continueHandler}" disabled="${canContinue}">
         ${proceedLabel}

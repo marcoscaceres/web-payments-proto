@@ -84,7 +84,7 @@ class PaymentSheet extends EventTarget(eventListeners) {
     priv.set("dataSheetManager", dataSheetManager);
     dataSheetManager.addEventListener("prev", () => {
       console.log("showing prev...");
-      this.render();
+      this.render(privates.get(this).get("requestData"));
     });
     dataSheetManager.addEventListener("next", () => {
       console.log("showing next...");
