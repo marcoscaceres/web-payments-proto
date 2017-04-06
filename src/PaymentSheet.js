@@ -30,7 +30,7 @@ const eventListeners = [
  *
  *  DataSheets
  *    [x] Payment Method Selector
- *  
+ *
  *  Bottom info
  *    [x] host information
  */
@@ -82,6 +82,10 @@ class PaymentSheet extends EventTarget(eventListeners) {
     sheets.forEach(sheet => sheet.addEventListener("abort", abortListener));
     const dataSheetManager = new DataSheetManager(sheets);
     priv.set("dataSheetManager", dataSheetManager);
+    dataSheetManager.addEventListener("prev", () => {
+      console.log("showing prev...");
+      this.render(privates.get(this).get("requestData"));
+    });
     dataSheetManager.addEventListener("next", () => {
       console.log("showing next...");
       this.render(privates.get(this).get("requestData"));
@@ -130,8 +134,8 @@ class PaymentSheet extends EventTarget(eventListeners) {
         // do sad animation here, wait for user input then close()
         break;
       case "abort":
-        // We should let the user know the page is trying to abort. 
-        // this has complications if they are filling out 
+        // We should let the user know the page is trying to abort.
+        // this has complications if they are filling out
         // autofill stuff.
         break;
       case "success":
