@@ -3786,7 +3786,7 @@ var db = new _dexie2.default("Autofill");
 
 db.version(1).stores({
   addresses: "&guid, organization, streetAddress, addressLevel1, addressLevel2, postalCode, country, tel, email, timeCreated, timeLastUsed, timeLastModified, timesUsed, type",
-  cards: "&card-number, name-on-card, expire-month, expire-year, valid-from-month, valid-from-year, billing-address-uuid"
+  cards: "&cardnumber, nameOnCard, expireMonth, expireYear, validFromMonth, validFromYear, billingAddressUuid"
 });
 
 window.db = db;
@@ -4061,7 +4061,6 @@ var PaymentSheet = function (_EventTarget) {
       promise: promise
     }));
     var dialog = document.createElement("dialog");
-    priv.set("ready", attatchDialog(dialog));
     dialog.id = "payment-sheet";
     var abortListener = function abortListener() {
       _this.abort();
@@ -4080,7 +4079,8 @@ var PaymentSheet = function (_EventTarget) {
     });
     priv.set("topWidgets", [new _PaymentSheet4.default(), shippingOptionsPicker, new _PaymentSheet8.default()]);
 
-    var sheets = [new _PaymentSheetDataSheet2.default("Choose your payment method:", new _PaymentMethodChooser2.default()), new _PaymentSheetDataSheet2.default("Shipping address", new _AddressCollector2.default("shipping")), new _PaymentSheetDataSheet2.default("", new _CreditCardCollector2.default())];
+    var addressCollector = new _AddressCollector2.default("shipping");
+    var sheets = [new _PaymentSheetDataSheet2.default("Choose your payment method:", new _PaymentMethodChooser2.default()), new _PaymentSheetDataSheet2.default("Shipping address", addressCollector), new _PaymentSheetDataSheet2.default("", new _CreditCardCollector2.default())];
 
     sheets.forEach(function (sheet) {
       return sheet.addEventListener("abort", abortListener);
@@ -4096,13 +4096,24 @@ var PaymentSheet = function (_EventTarget) {
       console.log("we are done...");
       _this.render();
     });
+    var ready = function () {
+      var _ref = _asyncToGenerator(function* () {
+        yield attatchDialog(dialog);
+        yield addressCollector.ready;
+      });
+
+      return function ready() {
+        return _ref.apply(this, arguments);
+      };
+    }();
+    priv.set("ready", ready());
     return _this;
   }
 
   _createClass(PaymentSheet, [{
     key: "abort",
     value: function () {
-      var _ref = _asyncToGenerator(function* () {
+      var _ref2 = _asyncToGenerator(function* () {
         console.log("aborting");
         if (_AutofillDB2.default.isOpen()) {
           yield _AutofillDB2.default.close();
@@ -4115,7 +4126,7 @@ var PaymentSheet = function (_EventTarget) {
       });
 
       function abort() {
-        return _ref.apply(this, arguments);
+        return _ref2.apply(this, arguments);
       }
 
       return abort;
@@ -4123,7 +4134,7 @@ var PaymentSheet = function (_EventTarget) {
   }, {
     key: "open",
     value: function () {
-      var _ref2 = _asyncToGenerator(function* (requestData) {
+      var _ref3 = _asyncToGenerator(function* (requestData) {
         var priv = privates.get(this);
         priv.set("requestData", requestData);
         yield this.ready;
@@ -4134,7 +4145,7 @@ var PaymentSheet = function (_EventTarget) {
       });
 
       function open(_x) {
-        return _ref2.apply(this, arguments);
+        return _ref3.apply(this, arguments);
       }
 
       return open;
@@ -4142,7 +4153,7 @@ var PaymentSheet = function (_EventTarget) {
   }, {
     key: "requestClose",
     value: function () {
-      var _ref3 = _asyncToGenerator(function* (reason) {
+      var _ref4 = _asyncToGenerator(function* (reason) {
         // We need to investigate how to show the different reasons for closing
         switch (reason) {
           case "fail":
@@ -4166,7 +4177,7 @@ var PaymentSheet = function (_EventTarget) {
       });
 
       function requestClose(_x2) {
-        return _ref3.apply(this, arguments);
+        return _ref4.apply(this, arguments);
       }
 
       return requestClose;
@@ -4174,13 +4185,13 @@ var PaymentSheet = function (_EventTarget) {
   }, {
     key: "close",
     value: function () {
-      var _ref4 = _asyncToGenerator(function* () {
+      var _ref5 = _asyncToGenerator(function* () {
         var dialog = privates.get(this).get("dialog");
         dialog.close();
       });
 
       function close() {
-        return _ref4.apply(this, arguments);
+        return _ref5.apply(this, arguments);
       }
 
       return close;
@@ -7606,8 +7617,7 @@ var init = function () {
         streetAddress: "",
         addressLevel1: "",
         addressLevel2: "",
-        state: "",
-        country: "US",
+        country: "",
         postalCode: "",
         timeCreated: Date.now(),
         timeLastUsed: Date.now(),
@@ -7626,7 +7636,7 @@ var init = function () {
   };
 }();
 
-var _templateObject = _taggedTemplateLiteral(["\n        <input\n          autocomplete=\"", "\"\n          class=\"left-half\"\n          name=\"fullName\"\n          oninvalid=\"", "\"\n          placeholder=\"Name\"\n          required=\"", "\"\n          type=\"text\"\n          value=\"", "\">\n        <input\n          autocomplete=\"", "\"\n          class=\"right-half\"\n          name=\"phoneNumber\"\n          oninvalid=\"", "\"\n          placeholder=\"Phone Number\"\n          required=\"", "\"\n          type=\"tel\"\n          value=\"", "\">\n        <input\n          autocomplete=\"", "\"\n          class=\"full\"\n          name=\"streetAddres\"\n          oninvalid=\"", "\"\n          placeholder=\"Address\"\n          required=\"", "\"\n          type=\"text\"\n          value=\"", "\">\n        <input\n          autocomplete=\"", "\"\n          class=\"two-thirds\"\n          name=\"addressLevel\"\n          oninvalid=\"", "\"\n          placeholder=\"City\"\n          required=\"", "\"\n          type=\"text\"\n          value=\"", "\">\n        <input\n          autocomplete=\"", "\"\n          name=\"addressLevel1\"\n          oninvalid=\"", "\"\n          placeholder=\"State\"\n          required=\"", "\"\n          type=\"text\"\n          value=\"", "\">", "<input\n          autocomplete=\"", "\"\n          name=\"postalCode\"\n          placeholder=\"Post code\"\n          required=\"", "\"\n          type=\"text\"\n          value=\"", "\">\n        <label class=\"full\">\n          <input type=\"checkbox\" name=\"saveDetails\" checked> Save the address for faster checkout next time\n        </label>\n    "], ["\n        <input\n          autocomplete=\"", "\"\n          class=\"left-half\"\n          name=\"fullName\"\n          oninvalid=\"", "\"\n          placeholder=\"Name\"\n          required=\"", "\"\n          type=\"text\"\n          value=\"", "\">\n        <input\n          autocomplete=\"", "\"\n          class=\"right-half\"\n          name=\"phoneNumber\"\n          oninvalid=\"", "\"\n          placeholder=\"Phone Number\"\n          required=\"", "\"\n          type=\"tel\"\n          value=\"", "\">\n        <input\n          autocomplete=\"", "\"\n          class=\"full\"\n          name=\"streetAddres\"\n          oninvalid=\"", "\"\n          placeholder=\"Address\"\n          required=\"", "\"\n          type=\"text\"\n          value=\"", "\">\n        <input\n          autocomplete=\"", "\"\n          class=\"two-thirds\"\n          name=\"addressLevel\"\n          oninvalid=\"", "\"\n          placeholder=\"City\"\n          required=\"", "\"\n          type=\"text\"\n          value=\"", "\">\n        <input\n          autocomplete=\"", "\"\n          name=\"addressLevel1\"\n          oninvalid=\"", "\"\n          placeholder=\"State\"\n          required=\"", "\"\n          type=\"text\"\n          value=\"", "\">", "<input\n          autocomplete=\"", "\"\n          name=\"postalCode\"\n          placeholder=\"Post code\"\n          required=\"", "\"\n          type=\"text\"\n          value=\"", "\">\n        <label class=\"full\">\n          <input type=\"checkbox\" name=\"saveDetails\" checked> Save the address for faster checkout next time\n        </label>\n    "]);
+var _templateObject = _taggedTemplateLiteral(["\n      <input\n        autocomplete=\"", "\"\n        class=\"left-half\"\n        name=\"fullName\"\n        oninvalid=\"", "\"\n        placeholder=\"Name\"\n        required=\"", "\"\n        type=\"text\"\n        value=\"", "\">\n      <input\n        autocomplete=\"", "\"\n        class=\"right-half\"\n        name=\"phoneNumber\"\n        oninvalid=\"", "\"\n        placeholder=\"Phone Number\"\n        required=\"", "\"\n        type=\"tel\"\n        value=\"", "\">\n      <input\n        autocomplete=\"", "\"\n        class=\"full\"\n        name=\"streetAddress\"\n        oninvalid=\"", "\"\n        placeholder=\"Address\"\n        required=\"", "\"\n        type=\"text\"\n        value=\"", "\">\n      <input\n        autocomplete=\"", "\"\n        class=\"two-thirds\"\n        name=\"addressLevel2\"\n        oninvalid=\"", "\"\n        placeholder=\"City\"\n        required=\"", "\"\n        type=\"text\"\n        value=\"", "\">\n      <input\n        autocomplete=\"", "\"\n        name=\"addressLevel1\"\n        oninvalid=\"", "\"\n        placeholder=\"State\"\n        required=\"", "\"\n        type=\"text\"\n        value=\"", "\">", "<input\n        autocomplete=\"", "\"\n        name=\"postalCode\"\n        placeholder=\"Post code\"\n        required=\"", "\"\n        type=\"text\"\n        value=\"", "\">\n      <label class=\"full\">\n        <input type=\"checkbox\" name=\"saveDetails\" checked> Save the address for faster checkout next time\n      </label>\n    "], ["\n      <input\n        autocomplete=\"", "\"\n        class=\"left-half\"\n        name=\"fullName\"\n        oninvalid=\"", "\"\n        placeholder=\"Name\"\n        required=\"", "\"\n        type=\"text\"\n        value=\"", "\">\n      <input\n        autocomplete=\"", "\"\n        class=\"right-half\"\n        name=\"phoneNumber\"\n        oninvalid=\"", "\"\n        placeholder=\"Phone Number\"\n        required=\"", "\"\n        type=\"tel\"\n        value=\"", "\">\n      <input\n        autocomplete=\"", "\"\n        class=\"full\"\n        name=\"streetAddress\"\n        oninvalid=\"", "\"\n        placeholder=\"Address\"\n        required=\"", "\"\n        type=\"text\"\n        value=\"", "\">\n      <input\n        autocomplete=\"", "\"\n        class=\"two-thirds\"\n        name=\"addressLevel2\"\n        oninvalid=\"", "\"\n        placeholder=\"City\"\n        required=\"", "\"\n        type=\"text\"\n        value=\"", "\">\n      <input\n        autocomplete=\"", "\"\n        name=\"addressLevel1\"\n        oninvalid=\"", "\"\n        placeholder=\"State\"\n        required=\"", "\"\n        type=\"text\"\n        value=\"", "\">", "<input\n        autocomplete=\"", "\"\n        name=\"postalCode\"\n        placeholder=\"Post code\"\n        required=\"", "\"\n        type=\"text\"\n        value=\"", "\">\n      <label class=\"full\">\n        <input type=\"checkbox\" name=\"saveDetails\" checked> Save the address for faster checkout next time\n      </label>\n    "]);
 
 var _hyperhtml = __webpack_require__(10);
 
@@ -7668,7 +7678,7 @@ var privates = new WeakMap();
 
 var addressTypes = new Set(["shipping", "billing"]);
 
-var schema = new Set(["fullName", "phoneNumber", "streetAddress", "addressLevel2", "addressLevel1", "postalCode"]);
+var schema = new Set(["addressLevel1", "addressLevel2", "country", "fullName", "phoneNumber", "postalCode", "streetAddress"]);
 
 var AddressCollector = function (_DataCollector) {
   _inherits(AddressCollector, _DataCollector);
@@ -7706,7 +7716,9 @@ var AddressCollector = function (_DataCollector) {
         console.log("Saving address data....");
         var priv = privates.get(this);
         var addressData = priv.get("addressData");
-        var newData = Object.assign({}, addressData, { timeLastModified: Date.now() }, this.toData());
+        var newData = Object.assign({}, addressData, this.toData(), {
+          timeLastModified: Date.now()
+        }, this.toData());
         priv.set("addressData", newData);
         console.log("Saving", newData);
         yield _AutofillDB2.default.addresses.put(newData);
@@ -7736,7 +7748,7 @@ var AddressCollector = function (_DataCollector) {
         //this.setCustomValidity("This is required.");
         //this.form.submit();
       };
-      return render(_templateObject, this.addressType + " name", invalidHandler, requestPayerName, data.fullName, this.addressType + " tel", invalidHandler, requestPayerPhone, data.phoneNumber, this.addressType + " street-address", invalidHandler, requestShipping, data.streetAddress, this.addressType + " address-level2", invalidHandler, requestShipping, data.addressLevel1, this.addressType + " address-level1", invalidHandler, requestShipping, data.state, _Countries2.default.asHTMLSelect("two-thirds", data.country, "country", requestShipping ? "required" : null), this.addressType + " postal-code", requestShipping, data.postalCode);
+      return render(_templateObject, this.addressType + " name", invalidHandler, requestPayerName, data.fullName, this.addressType + " tel", invalidHandler, requestPayerPhone, data.phoneNumber, this.addressType + " street-address", invalidHandler, requestShipping, data.streetAddress, this.addressType + " address-level2", invalidHandler, requestShipping, data.addressLevel2, this.addressType + " address-level1", invalidHandler, requestShipping, data.addressLevel1, _Countries2.default.asHTMLSelect("two-thirds", data.country, "country", requestShipping ? "required" : null), this.addressType + " postal-code", requestShipping, data.postalCode);
     }
   }, {
     key: "ready",

@@ -279,7 +279,7 @@
 }
 
 
-#payment-sheet input[type=text], #payment-sheet input[type=tel], #payment-sheet .data-collector-shipping-address select {
+#payment-sheet input[type=text], #payment-sheet input[type=tel], #payment-sheet select {
   -webkit-border-radius: 0;
   border-radius: 0;
   background-color: white;
@@ -287,12 +287,12 @@
 
 }
 
-#payment-sheet .data-collector-shipping-address input[type=text], #payment-sheet .data-collector-shipping-address input[type=tel] {
+#payment-sheet input[type=text], #payment-sheet input[type=tel] {
   justify-self: stetch;
   border: 1px solid rgb(188,188,188);
 }
 
-#payment-sheet .data-collector-shipping-address label {
+#payment-sheet label {
   vertical-align: bottom;
   font-size: .8em;
 }

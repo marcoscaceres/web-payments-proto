@@ -50,7 +50,6 @@ class PaymentSheet extends EventTarget(eventListeners) {
       promise
     }));
     const dialog = document.createElement("dialog");
-    priv.set("ready", attatchDialog(dialog));
     dialog.id = "payment-sheet";
     const abortListener = () => {
       this.abort();
@@ -73,9 +72,10 @@ class PaymentSheet extends EventTarget(eventListeners) {
       new Total(),
     ]);
 
+    const addressCollector = new AddressCollector("shipping");
     const sheets = [
       new DataSheet("Choose your payment method:", new PaymentMethodChooser()),
-      new DataSheet("Shipping address", new AddressCollector("shipping")),
+      new DataSheet("Shipping address", addressCollector),
       new DataSheet("", new CreditCardCollector()),
     ]
 
@@ -91,6 +91,11 @@ class PaymentSheet extends EventTarget(eventListeners) {
       console.log("we are done...");
       this.render();
     });
+    const ready = async () => {
+      await attatchDialog(dialog);
+      await addressCollector.ready;
+    }
+    priv.set("ready", ready());
   }
 
   get done() {
@@ -168,8 +173,8 @@ class PaymentSheet extends EventTarget(eventListeners) {
 }
 
 function attatchDialog(dialog) {
-  return new Promise((resolve) => {
-    const attachAndDone = () => {
+  return new Promise(resolve => {
+    var attachAndDone = () => {
       document.body.appendChild(dialog);
       dialogPolyfill.registerDialog(dialog);
       return resolve();

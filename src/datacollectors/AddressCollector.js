@@ -13,12 +13,13 @@ const addressTypes = new Set([
 ]);
 
 const schema = new Set([
+  "addressLevel1",
+  "addressLevel2",
+  "country",
   "fullName",
   "phoneNumber",
-  "streetAddress",
-  "addressLevel2",
-  "addressLevel1",
   "postalCode",
+  "streetAddress",
 ]);
 
 export default class AddressCollector extends DataCollector {
@@ -41,7 +42,7 @@ export default class AddressCollector extends DataCollector {
     return privates.get(this).get("readyPromise");
   }
 
-  get addressType(){
+  get addressType() {
     return privates.get(this).get("addressType");
   }
 
@@ -53,7 +54,9 @@ export default class AddressCollector extends DataCollector {
     console.log("Saving address data....");
     const priv = privates.get(this);
     const addressData = priv.get("addressData");
-    const newData = Object.assign({}, addressData, {timeLastModified: Date.now()}, this.toData());
+    const newData = Object.assign({}, addressData, this.toData(), {
+      timeLastModified: Date.now()
+    }, this.toData());
     priv.set("addressData", newData);
     console.log("Saving", newData);
     await db.addresses.put(newData);
@@ -64,66 +67,75 @@ export default class AddressCollector extends DataCollector {
     const priv = privates.get(this);
     const render = priv.get("render");
     const data = priv.get("addressData");
-    const { options: { requestPayerEmail, requestPayerName, requestPayerPhone, requestShipping} } = requestData;
-    const invalidHandler = function(ev){
+    const {
+      options: {
+        requestPayerEmail,
+        requestPayerName,
+        requestPayerPhone,
+        requestShipping
+      }
+    } = requestData;
+    const invalidHandler = function(ev) {
 
       //this.setCustomValidity("This is required.");
       //this.form.submit();
     }
     return render `
-        <input
-          autocomplete="${this.addressType + " name"}"
-          class="left-half"
-          name="fullName"
-          oninvalid="${invalidHandler}"
-          placeholder="Name"
-          required="${requestPayerName}"
-          type="text"
-          value="${data.fullName}">
-        <input
-          autocomplete="${this.addressType + " tel"}"
-          class="right-half"
-          name="phoneNumber"
-          oninvalid="${invalidHandler}"
-          placeholder="Phone Number"
-          required="${requestPayerPhone}"
-          type="tel"
-          value="${data.phoneNumber}">
-        <input
-          autocomplete="${this.addressType + " street-address"}"
-          class="full"
-          name="streetAddres"
-          oninvalid="${invalidHandler}"
-          placeholder="Address"
-          required="${requestShipping}"
-          type="text"
-          value="${data.streetAddress}">
-        <input
-          autocomplete="${this.addressType + " address-level2"}"
-          class="two-thirds"
-          name="addressLevel"
-          oninvalid="${invalidHandler}"
-          placeholder="City"
-          required="${requestShipping}"
-          type="text"
-          value="${data.addressLevel1}">
-        <input
-          autocomplete="${this.addressType + " address-level1"}"
-          name="addressLevel1"
-          oninvalid="${invalidHandler}"
-          placeholder="State"
-          required="${requestShipping}"
-          type="text"
-          value="${data.state}">${Countries.asHTMLSelect("two-thirds", data.country, "country", requestShipping ? "required" : null)}<input
-          autocomplete="${this.addressType + " postal-code"}"
-          name="postalCode"
-          placeholder="Post code"
-          required="${requestShipping}"
-          type="text"
-          value="${data.postalCode}">
-        <label class="full">
-          <input type="checkbox" name="saveDetails" checked> Save the address for faster checkout next time
-        </label>
+      <input
+        autocomplete="${this.addressType + " name"}"
+        class="left-half"
+        name="fullName"
+        oninvalid="${invalidHandler}"
+        placeholder="Name"
+        required="${requestPayerName}"
+        type="text"
+        value="${data.fullName}">
+      <input
+        autocomplete="${this.addressType + " tel"}"
+        class="right-half"
+        name="phoneNumber"
+        oninvalid="${invalidHandler}"
+        placeholder="Phone Number"
+        required="${requestPayerPhone}"
+        type="tel"
+        value="${data.phoneNumber}">
+      <input
+        autocomplete="${this.addressType + " street-address"}"
+        class="full"
+        name="streetAddress"
+        oninvalid="${invalidHandler}"
+        placeholder="Address"
+        required="${requestShipping}"
+        type="text"
+        value="${data.streetAddress}">
+      <input
+        autocomplete="${this.addressType + " address-level2"}"
+        class="two-thirds"
+        name="addressLevel2"
+        oninvalid="${invalidHandler}"
+        placeholder="City"
+        required="${requestShipping}"
+        type="text"
+        value="${data.addressLevel2}">
+      <input
+        autocomplete="${this.addressType + " address-level1"}"
+        name="addressLevel1"
+        oninvalid="${invalidHandler}"
+        placeholder="State"
+        required="${requestShipping}"
+        type="text"
+        value="${data.addressLevel1}">${
+          Countries.asHTMLSelect("two-thirds", data.country, "country", requestShipping ? "required" : null)
+      }<input
+        autocomplete="${this.addressType + " postal-code"}"
+        name="postalCode"
+        placeholder="Post code"
+        required="${requestShipping}"
+        type="text"
+        value="${data.postalCode}">
+      <label class="full">
+        <input type="checkbox" name="saveDetails" checked> Save the address for faster checkout next time
+      </label>
     `;
   }
 }
@@ -143,8 +155,7 @@ async function init(dataCollector) {
       streetAddress: "",
       addressLevel1: "",
       addressLevel2: "",
-      state: "",
-      country: "US",
+      country: "",
       postalCode: "",
       timeCreated: Date.now(),
       timeLastUsed: Date.now(),
