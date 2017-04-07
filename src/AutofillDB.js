@@ -6,7 +6,7 @@ db
   .version(1)
   .stores({
     addresses: "&guid, organization, streetAddress, addressLevel1, addressLevel2, postalCode, country, tel, email, timeCreated, timeLastUsed, timeLastModified, timesUsed, type",
-    cards: "&cardnumber, nameOnCard, expireMonth, expireYear, validFromMonth, validFromYear, billingAddressUuid",
+    cards: "&ccNumber, ccName, ccExpMonth, ccExpYear, billingAddressUuid",
   });
 
 window.db = db;

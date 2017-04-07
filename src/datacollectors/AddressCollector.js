@@ -4,9 +4,9 @@ import EventTarget from "event-target-shim";
 import guid from "uuid/v4";
 import DataCollector from "./DataCollector";
 import db from "../AutofillDB";
+import PaymentAddress from "../PaymentAddress";
 
 const privates = new WeakMap();
-
 const addressTypes = new Set([
   "shipping",
   "billing",
@@ -17,6 +17,7 @@ const schema = new Set([
   "addressLevel2",
   "country",
   "fullName",
+  "guid",
   "phoneNumber",
   "postalCode",
   "streetAddress",
@@ -24,18 +25,18 @@ const schema = new Set([
 
 export default class AddressCollector extends DataCollector {
   constructor(addressType = "shipping", requestedFields) {
-    super(schema);
+    super(schema, "addresses");
     if (!addressTypes.has(addressType)) {
       throw new TypeError(`Invalid address type: ${addressType}`);
     }
     const priv = privates.set(this, new Map()).get(this);
     this.form.classList.add(`data-collector-${addressType}-address`);
-    this.addEventListener("cancontinue", async () => {
+    this.addEventListener("cancontinue", async() => {
       await this.save();
     });
     priv.set("addressType", addressType);
     priv.set("render", hyperHTML.bind(this.form));
-    priv.set("readyPromise", init(this));
+    priv.set("readyPromise", init.call(this));
   }
 
   get ready() {
@@ -46,27 +47,30 @@ export default class AddressCollector extends DataCollector {
     return privates.get(this).get("addressType");
   }
 
-  async save() {
-    const formData = new FormData(this.form);
-    if (formData.get("saveDetails") !== "on") {
-      return;
-    }
-    console.log("Saving address data....");
-    const priv = privates.get(this);
-    const addressData = priv.get("addressData");
-    const newData = Object.assign({}, addressData, this.toData(), {
-      timeLastModified: Date.now()
-    }, this.toData());
-    priv.set("addressData", newData);
-    console.log("Saving", newData);
-    await db.addresses.put(newData);
-    console.log("Saved done");
+  toPaymentAddress() {
+    const {
+      addressLevel1: region,
+      addressLevel2: city,
+      country,
+      //dependentLocality,
+      //languageCode,
+      //organization,
+      phoneNumber: phone,
+      postalCode,
+      fullName: recipient,
+      //sortingCode,
+    } = this.toObject();
+    return new PaymentAddress({
+      city, country, phone, postalCode, recipient, region
+    });
   }
 
   render(requestData) {
     const priv = privates.get(this);
     const render = priv.get("render");
-    const data = priv.get("addressData");
+    const {
+      data
+    } = this;
     const {
       options: {
         requestPayerEmail,
@@ -76,11 +80,14 @@ export default class AddressCollector extends DataCollector {
       }
     } = requestData;
     const invalidHandler = function(ev) {
-
       //this.setCustomValidity("This is required.");
       //this.form.submit();
     }
-    return render `
+    const renderResult = render `
+      <input 
+        type="hidden"
+        name="uuid"
+        value="${data.guid}">
       <input
         autocomplete="${this.addressType + " name"}"
         class="left-half"
@@ -137,17 +144,19 @@ export default class AddressCollector extends DataCollector {
         <input type="checkbox" name="saveDetails" checked> Save the address for faster checkout next time
       </label>
     `;
+    this.validate();
+    return renderResult;
   }
 }
 
-async function init(dataCollector) {
-  const priv = privates.get(dataCollector);
+// Private initializer
+async function init() {
   if (!db.isOpen()) {
     await db.open();
   }
   const count = await db.addresses.count();
   if (!count) {
-    const addressData = {
+    this.data = {
       guid: guid(),
       organization: "",
       fullName: "",
@@ -162,9 +171,7 @@ async function init(dataCollector) {
       timeLastModified: Date.now(),
       timesUsed: 0,
     };
-    priv.set("addressData", addressData);
     return;
   }
-  const lastSavedData = await db.addresses.orderBy('timeLastUsed').first();
-  priv.set("addressData", lastSavedData);
+  this.data = await db.addresses.orderBy('timeLastUsed').first();
 }

@@ -75,10 +75,12 @@ async function doPaymentRequest() {
     requestPayerPhone: true,
   }
   const request = new PaymentRequest(methodData, details, options);
-  console.log(request)
   
   request.onshippingoptionchange = (ev) => {
-    console.log("hmmm.", ev)
+    console.log("hmmm.... onshippingoptionchange", ev);
+  }
+  request.onshippingaddresschange = (ev) => {
+    console.log("hmmm.... onshippingaddresschange", ev);
   }
   request.show().then(processResponse).catch(err => console.log(err));
   return false;

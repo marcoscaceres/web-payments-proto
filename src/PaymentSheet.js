@@ -76,7 +76,7 @@ class PaymentSheet extends EventTarget(eventListeners) {
     const sheets = [
       new DataSheet("Choose your payment method:", new PaymentMethodChooser()),
       new DataSheet("Shipping address", addressCollector),
-      new DataSheet("", new CreditCardCollector()),
+      new DataSheet("", new CreditCardCollector(addressCollector)),
     ]
 
     sheets.forEach(sheet => sheet.addEventListener("abort", abortListener));

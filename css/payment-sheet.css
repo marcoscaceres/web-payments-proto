@@ -17,7 +17,18 @@
 
   to {
     transform: rotate(90deg);
-    translate: 0px 4px;
+    translate: 0px 2px;
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    height: 0px;
+  }
+  100% {
+    opacity: 1;
+    height: 20px; 
   }
 }
 
@@ -166,6 +177,10 @@
   font-weight: lighter;
 }
 
+#payment-sheet summary{
+  list-style-type: none;
+}
+
 #payment-sheet summary:focus {
   outline: none;
 }
@@ -181,8 +196,17 @@
  animation-direction: alternate;
 }
 
+
 #payment-sheet details[open] {
   color:rgb(0,150,246);
+}
+
+#payment-sheet details[open] table {
+  animation-name: slideDown;
+  animation-duration: 200ms;
+  animation-timing-function: ease-in;
+  height: 0px;
+  overflow:hidden;
 }
 
 #payment-sheet details[open] > summary::before {
@@ -226,7 +250,6 @@
   -webkit-appearance: none;
   border: thin solid rgb(171,171,171);
   text-align: left;
-  font-size: .9em;
 }
 
 #payment-sheet-total output {
@@ -278,27 +301,18 @@
   grid-column-end: 4;
 }
 
-
 #payment-sheet input[type=text], #payment-sheet input[type=tel], #payment-sheet select {
   -webkit-border-radius: 0;
   border-radius: 0;
   background-color: white;
-  padding: .2cm;
-
-}
-
-#payment-sheet input[type=text], #payment-sheet input[type=tel] {
-  justify-self: stetch;
   border: 1px solid rgb(188,188,188);
+  padding: .2cm;
+  justify-self: stetch;
 }
 
 #payment-sheet label {
   vertical-align: bottom;
   font-size: .8em;
-}
-
-#payment-sheet label {
-  margin-top: .3cm;
 }
 
 #payment-sheet input[type="checkbox"] {
@@ -370,11 +384,8 @@
   grid-column-end: 3;
 }
 
-#payment-sheet label {
-  font-size: .5em;
-}
+
 
 #payment-sheet input:required:invalid {
   border: thin solid red;
-
 }
