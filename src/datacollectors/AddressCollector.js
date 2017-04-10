@@ -25,17 +25,12 @@ const schema = new Set([
 
 export default class AddressCollector extends DataCollector {
   constructor(addressType = "shipping", requestedFields) {
-    super(schema, "addresses");
+    super(schema, [`data-collector-${addressType}-address`], "addresses");
     if (!addressTypes.has(addressType)) {
       throw new TypeError(`Invalid address type: ${addressType}`);
     }
     const priv = privates.set(this, new Map()).get(this);
-    this.form.classList.add(`data-collector-${addressType}-address`);
-    this.addEventListener("cancontinue", async() => {
-      await this.save();
-    });
     priv.set("addressType", addressType);
-    priv.set("render", hyperHTML.bind(this.form));
     priv.set("readyPromise", init.call(this));
   }
 
@@ -45,6 +40,11 @@ export default class AddressCollector extends DataCollector {
 
   get addressType() {
     return privates.get(this).get("addressType");
+  }
+
+  async save() {
+    this.data.timeLastModified = Date.now();
+    await super.save();
   }
 
   toPaymentAddress() {
@@ -61,13 +61,16 @@ export default class AddressCollector extends DataCollector {
       //sortingCode,
     } = this.toObject();
     return new PaymentAddress({
-      city, country, phone, postalCode, recipient, region
+      city,
+      country,
+      phone,
+      postalCode,
+      recipient,
+      region
     });
   }
 
   render(requestData) {
-    const priv = privates.get(this);
-    const render = priv.get("render");
     const {
       data
     } = this;
@@ -79,11 +82,10 @@ export default class AddressCollector extends DataCollector {
         requestShipping
       }
     } = requestData;
-    const invalidHandler = function(ev) {
-      //this.setCustomValidity("This is required.");
-      //this.form.submit();
+    const invalidHandler = function() {
+      this.setCustomValidity("This is required.");
     }
-    const renderResult = render `
+    return this.renderer `
       <input 
         type="hidden"
         name="uuid"
@@ -144,8 +146,6 @@ export default class AddressCollector extends DataCollector {
         <input type="checkbox" name="saveDetails" checked> Save the address for faster checkout next time
       </label>
     `;
-    this.validate();
-    return renderResult;
   }
 }
 
@@ -157,18 +157,18 @@ async function init() {
   const count = await db.addresses.count();
   if (!count) {
     this.data = {
-      guid: guid(),
-      organization: "",
-      fullName: "",
-      phoneNumber: "",
-      streetAddress: "",
       addressLevel1: "",
       addressLevel2: "",
       country: "",
+      fullName: "",
+      guid: guid(),
+      organization: "",
+      phoneNumber: "",
       postalCode: "",
+      streetAddress: "",
       timeCreated: Date.now(),
-      timeLastUsed: Date.now(),
       timeLastModified: Date.now(),
+      timeLastUsed: Date.now(),
       timesUsed: 0,
     };
     return;

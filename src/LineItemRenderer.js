@@ -37,6 +37,8 @@ function toDefListItem(paymentItem) {
     <dt>
       ${paymentItem.label}
     </dt>
-    <dd>${formatter.format(value)}</dd>
+    <dd>
+      ${formatter.format(value)}
+    </dd>
   `;
 }

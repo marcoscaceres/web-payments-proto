@@ -19,23 +19,20 @@ const buttonLabels = Object.freeze({
 
 export default class CreditCardCollector extends DataCollector {
   constructor(addressCollector) {
-    super(schema, "creditcards");
+    super(schema, ["credit-card-collector"], "creditcards");
     const priv = privates.set(this, new Map()).get(this);
-    this.form.classList.add("credit-card-collector");
-    priv.set("renderer", hyperHTML.bind(this.form));
     priv.set("addressCollector", addressCollector);
   }
-  get buttonLabels(){
-    // abstract - override as needed with object
+
+  get buttonLabels() {
     return buttonLabels;
   }
 
   render(newData) {
     const priv = privates.get(this);
-    const renderer = priv.get("renderer");
     const paymentAddress = priv.get("addressCollector").toPaymentAddress();
     const shippingAddress = new AddressFormat().format(paymentAddress, "html");
-    return renderer`
+    return this.renderer `
       <section class="credit-card-details">
         <h3 class="fullspan">Enter payment details</h3>
         <input type="text" inputmode="numeric" class="fullspan" placeholder="Card Number" name="ccnumber" required autocomplete="cc-number" maxlength="19" pattern="[0-9]{13,16}">
@@ -48,7 +45,7 @@ export default class CreditCardCollector extends DataCollector {
           Save the credit card (CVV will not be saved)
         </label> 
       </section>
-      <section>
+      <section class="billing-address-info">
         <h3>Enter billing address</h3>
         <div>
           <label>

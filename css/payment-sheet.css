@@ -35,7 +35,6 @@
 #payment-sheet {
   font-size: 1em;
   padding: 0;
-  width: 550px;
   top: 0;
   overflow: hidden;
   box-shadow: 0px 0px 35px -4px rgba(138, 138, 138, 0.77);
@@ -358,34 +357,34 @@
   -webkit-appearance: none;
 }
 
+#payment-sheet #payment-sheet-data-sheet {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 550px;
+}
+
 #payment-sheet .credit-card-collector {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr; 
   grid-gap: .3cm;
 }
 
 #payment-sheet .credit-card-collector h3 {
   font-size: 1em;
   font-weight: normal;
-}
-
-#payment-sheet #payment-sheet-shipping-options {
-  padding: .3cm .4cm;
+  margin: 0;
 }
 
 #payment-sheet .credit-card-details {
   display: grid;
-  grid-gap: .3cm .3cm;
-  grid-template-columns: 1fr 1fr;
+  grid-column-start: 1;
+  grid-column-end: 2;  
+  grid-gap: .3cm;
+
 }
+
 
 #payment-sheet .credit-card-details .fullspan {
   grid-column-start: 1;
-  grid-column-end: 3;
-}
-
-
-
-#payment-sheet input:required:invalid {
-  border: thin solid red;
+  grid-column-end: 4;
 }

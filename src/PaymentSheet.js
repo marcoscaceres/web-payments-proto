@@ -77,23 +77,23 @@ class PaymentSheet extends EventTarget(eventListeners) {
       new DataSheet("Choose your payment method:", new PaymentMethodChooser()),
       new DataSheet("Shipping address", addressCollector),
       new DataSheet("", new CreditCardCollector(addressCollector)),
-    ]
+    ];
 
     sheets.forEach(sheet => sheet.addEventListener("abort", abortListener));
     const dataSheetManager = new DataSheetManager(sheets);
     priv.set("dataSheetManager", dataSheetManager);
     dataSheetManager.addEventListener("next", () => {
       console.log("showing next...");
-      this.render(privates.get(this).get("requestData"));
+      this.render();
     });
 
     dataSheetManager.addEventListener("done", () => {
       console.log("we are done...");
       this.render();
     });
-    const ready = async () => {
+    const ready = async() => {
       await attatchDialog(dialog);
-      await addressCollector.ready;
+      await Promise.all(sheets.map(sheet => sheet.ready));
     }
     priv.set("ready", ready());
   }
@@ -108,7 +108,7 @@ class PaymentSheet extends EventTarget(eventListeners) {
 
   async abort() {
     console.log("aborting");
-    if(db.isOpen()){
+    if (db.isOpen()) {
       await db.close();
     }
     const priv = privates.get(this);
@@ -123,7 +123,7 @@ class PaymentSheet extends EventTarget(eventListeners) {
     priv.set("requestData", requestData);
     await this.ready;
     const dialog = priv.get("dialog");
-    this.render(requestData);
+    this.render();
     dialog.showModal();
     await this.done;
   }
@@ -155,20 +155,29 @@ class PaymentSheet extends EventTarget(eventListeners) {
     dialog.close();
   }
 
-  render(requestData) {
+  async render(requestData = privates.get(this).get("requestData")) {
     const priv = privates.get(this);
     const renderer = priv.get("renderer");
     const topWidgets = priv.get("topWidgets");
     const host = priv.get("host-widget");
     const dataSheetsManager = priv.get("dataSheetManager");
     const currentSheet = dataSheetsManager.active;
-    return renderer `
+    renderer `
     <h1>
       <img src="./payment-sheet/images/logo-payment.png" alt="">Firefox Web Payment
     </h1>
-    <section id="payment-sheet-top-section">${topWidgets.map(widget => widget.render(requestData))}</section>
-    <section>${currentSheet ? currentSheet.render(requestData) : "" }</section>
-    <section id="payment-sheet-bottom" hidden="${dataSheetsManager.done}">${host.render(window.location)}<section>`;
+    <section id="payment-sheet-top-section">${
+      topWidgets.map(widget => widget.render(requestData))
+    }</section>
+    <section id="payment-sheet-data-sheet">${
+      currentSheet ? currentSheet.render(requestData) : ""
+    }</section>
+    <section id="payment-sheet-bottom" hidden="${dataSheetsManager.done}">${
+      host.render(window.location)
+    }<section>`;
+    if (currentSheet) {
+      await currentSheet.validate();
+    }
   }
 }
 

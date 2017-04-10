@@ -22,20 +22,22 @@ const schema = new Set([
 
 export default class PaymentMethodChooser extends DataCollector {
   constructor(paymentMethods = defaultMethods) {
-    super(schema);
+    super(schema, ["payment-method-chooser"]);
     const priv = privates.set(this, new Map()).get(this);
-    this.form.classList.add("payment-method-chooser");
-    priv.set("renderer", hyperHTML.bind(this.form));
     priv.set("paymentMethods", paymentMethods);
   }
+
   render() {
     const priv = privates.get(this);
     const paymentMethods = priv.get("paymentMethods");
-    const renderer = priv.get("renderer");
     if (!paymentMethods.length) {
-      return renderer `<h2>No payment methods available.</h2>`;
+      return this.renderer`
+        <h2>
+          No payment methods available.
+        </h2>
+      `;
     }
-    return renderer `
+    return this.renderer`
     <div id="payment-methods-buttons">${
       paymentMethods.map(method => toRadio(method, this))
     }</div>`;

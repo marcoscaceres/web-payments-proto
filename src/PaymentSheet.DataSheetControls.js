@@ -1,46 +1,44 @@
 import hyperHTML from "hyperhtml/hyperhtml.js";
 import EventTarget from "event-target-shim";
 
+const defaultLabels = Object.freeze({
+  cancelLabel: "Cancel",
+  proceedLabel: "Continue",
+});
+
 const privates = new WeakMap();
 
 export default class DataSheetControls extends EventTarget(["cancel", "continue"]) {
-  constructor(dataSheet) {
+  constructor(labels = defaultLabels) {
     super();
     const priv = privates.set(this, new Map()).get(this);
-    priv.set("canContinue", false);
     const containerElement = document.createElement("section");
     containerElement.classList.add("paysheet-controls");
+    priv.set("canContinue", false);
+    priv.set("labels", labels);
     priv.set("renderer", hyperHTML.bind(containerElement));
-    this.addEventListener("cancel", ()=>{
-      dataSheet.dispatchEvent(new CustomEvent("abort"));
-    });
-    this.addEventListener("continue", ()=>{
-      dataSheet.dispatchEvent(new CustomEvent("continue"));
-    });
-    priv.set("dataSheet", dataSheet);
   }
-  activate(){
+  activate() {
     const priv = privates.get(this);
     priv.set("canContinue", true);
-    this.render(priv.get("dataSheet").buttonLabels);
+    this.render();
   }
-  deactivate(){
+  deactivate() {
     const priv = privates.get(this);
     priv.set("canContinue", false);
-    this.render(priv.get("dataSheet").buttonLabels);
+    this.render();
   }
-  render({cancelLabel, proceedLabel} = {cancelLabel: "Cancel", proceedLabel: "Continue"}) {
+  render({ cancelLabel, proceedLabel } = privates.get(this).get("labels")) {
     const priv = privates.get(this);
     const renderer = priv.get("renderer");
     const cancelHandler = () => {
       this.dispatchEvent(new CustomEvent("cancel"));
     };
     const continueHandler = () => {
-      console.log("next!");
       this.dispatchEvent(new CustomEvent("continue"));
     };
     const canContinue = !priv.get("canContinue");
-    return renderer`
+    return renderer `
       <button class="cancel" onclick="${cancelHandler}">
         ${cancelLabel}
       </button>

@@ -280,7 +280,11 @@ export default class Countries {
 
 function toHTMLOption(entry, isSelected = false) {  
   const [code, { name }] = entry;
-  const option = hyperHTML.wire(entry)`<option value="${code}">${name}</option>`;
+  const option = hyperHTML.wire(entry)`
+    <option value="${code}">
+      ${name} 
+    </option>
+  `;
   option.selected = isSelected;
   return option;
 }

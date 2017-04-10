@@ -15,7 +15,11 @@ export default class Host {
     let result;
     try {
       let host = new URL(url).host;
-      return renderer `<p>Requested by <span>${host}</span></p>`;
+      return renderer `<p>Requested by 
+          <span>
+            ${host}
+          </span>
+        </p>`;
     } catch (err) {
       return renderer `<p class="payment-sheet-error">Invalid URL!!!!</p>`;
     }
