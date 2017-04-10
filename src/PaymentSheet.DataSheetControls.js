@@ -39,10 +39,10 @@ export default class DataSheetControls extends EventTarget(["cancel", "continue"
     };
     const canContinue = !priv.get("canContinue");
     return renderer `
-      <button class="cancel" onclick="${cancelHandler}">
+      <button type="button" class="cancel" onclick="${cancelHandler}">
         ${cancelLabel}
       </button>
-      <button class="continue" onclick="${continueHandler}" disabled="${canContinue}">
+      <button type="submit" class="continue" onclick="${continueHandler}" disabled="${canContinue}">
         ${proceedLabel}
       </button>
     `;

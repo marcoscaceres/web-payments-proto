@@ -1,9 +1,8 @@
 import hyperHTML from "hyperhtml/hyperhtml";
 import db from "../AutofillDB";
 const privates = new WeakMap();
-const ready =  Promise.resolve();
-const buttonLabels = Object.freeze({ 
-  proceedLabel: "Continue", 
+const buttonLabels = Object.freeze({
+  proceedLabel: "Continue",
   cancelLabel: "Cancel",
 });
 /**
@@ -20,7 +19,7 @@ const buttonLabels = Object.freeze({
  * @see "datacollectors" folder. 
  */
 export default class DataCollector {
-  constructor(schema, classList=[], tableName = "") {
+  constructor(schema, classList = [], tableName = "", initialData = null) {
     const priv = privates.set(this, new Map()).get(this);
     const section = document.createElement("section");
     classList.forEach(name => section.classList.add(name));
@@ -29,15 +28,16 @@ export default class DataCollector {
     priv.set("schema", schema);
     priv.set("section", section);
     priv.set("tableName", tableName);
+    priv.set("ready", init.call(this, tableName, initialData));
   }
 
-  get renderer(){
+  get renderer() {
     return privates.get(this).get("renderer");
   }
 
-  get ready(){
+  get ready() {
     // Abstract, override as needed.
-    return ready;
+    return privates.get(this).set("ready");
   }
 
   set data(value) {
@@ -92,4 +92,24 @@ export default class DataCollector {
     // abstract - override as needed with object 
     return buttonLabels;
   }
+}
+
+async function init(tableName, initialData) {
+  if (!tableName) {
+    return;
+  }
+  if (!db.isOpen()) {
+    await db.open();
+  }
+  const count = await db[tableName].count();
+  if (!count) {
+    this.data = Object.assign({}, initialData, {
+      timeCreated: Date.now(),
+      timeLastModified: Date.now(),
+      timeLastUsed: Date.now(),
+      timesUsed: 0,
+    });
+    return;
+  }
+  this.data = await db[tableName].orderBy('timeLastUsed').first();
 }

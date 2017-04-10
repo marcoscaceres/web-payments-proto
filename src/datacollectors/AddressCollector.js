@@ -23,19 +23,27 @@ const schema = new Set([
   "streetAddress",
 ]);
 
+function makeInitialData(){
+  const obj = {
+    guid: guid(),
+  };
+  return Array
+    .from(schema)
+    .reduce((obj, propName) =>{
+      obj[propName] = "";
+      return obj; 
+    }, obj);
+}
+
 export default class AddressCollector extends DataCollector {
   constructor(addressType = "shipping", requestedFields) {
-    super(schema, [`data-collector-${addressType}-address`], "addresses");
+    const initialData =  makeInitialData();
+    super(schema, [`data-collector-${addressType}-address`], "addresses", initialData);
     if (!addressTypes.has(addressType)) {
       throw new TypeError(`Invalid address type: ${addressType}`);
     }
     const priv = privates.set(this, new Map()).get(this);
     priv.set("addressType", addressType);
-    priv.set("readyPromise", init.call(this));
-  }
-
-  get ready() {
-    return privates.get(this).get("readyPromise");
   }
 
   get addressType() {
@@ -83,7 +91,7 @@ export default class AddressCollector extends DataCollector {
       }
     } = requestData;
     const invalidHandler = function() {
-      this.setCustomValidity("This is required.");
+      //this.setCustomValidity("This is required.");
     }
     return this.renderer `
       <input 
@@ -147,31 +155,4 @@ export default class AddressCollector extends DataCollector {
       </label>
     `;
   }
-}
-
-// Private initializer
-async function init() {
-  if (!db.isOpen()) {
-    await db.open();
-  }
-  const count = await db.addresses.count();
-  if (!count) {
-    this.data = {
-      addressLevel1: "",
-      addressLevel2: "",
-      country: "",
-      fullName: "",
-      guid: guid(),
-      organization: "",
-      phoneNumber: "",
-      postalCode: "",
-      streetAddress: "",
-      timeCreated: Date.now(),
-      timeLastModified: Date.now(),
-      timeLastUsed: Date.now(),
-      timesUsed: 0,
-    };
-    return;
-  }
-  this.data = await db.addresses.orderBy('timeLastUsed').first();
 }

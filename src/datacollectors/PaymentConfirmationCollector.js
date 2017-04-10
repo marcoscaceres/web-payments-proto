@@ -5,17 +5,11 @@ import db from "../AutofillDB";
 
 const privates = new WeakMap();
 
-const schema = new Set([
-  "cardholderName",
-  "cardNumber",
-  "cardSecurityCode",
-  "expiryMonth",
-  "expiryYear",
-]);
+const schema = new Set([]);
 
 const buttonLabels = Object.freeze({
   cancelLabel: "Cancel",
-  proceedLabel: "Preview",
+  proceedLabel: "Pay",
 });
 
 function makeInitialData(){
@@ -27,9 +21,9 @@ function makeInitialData(){
     }, {});
 }
 
-export default class CreditCardCollector extends DataCollector {
-  constructor(addressCollector) {
-    super(schema, ["credit-card-collector"], "cards", makeInitialData());
+export default class PaymentConfirmationCollector extends DataCollector {
+  constructor(addressCollector, creditCardCollector) {
+    super(schema, ["payment-preview-collector"]);
     const priv = privates.set(this, new Map()).get(this);
     priv.set("addressCollector", addressCollector);
   }
@@ -46,7 +40,6 @@ export default class CreditCardCollector extends DataCollector {
       expiryMonth,
       expiryYear,
     } = this.toObject();
-    
   }
 
   render(newData) {

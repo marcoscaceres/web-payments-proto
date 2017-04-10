@@ -11,9 +11,11 @@ export default class DataSheet extends EventTarget(events) {
     super();
     const controlButtons = new Controls(dataCollector.buttonLabels);
     controlButtons.addEventListener("continue", ()=>{
-      console.log("...cont clicked...")
       this.dispatchEvent(new CustomEvent("continue"))
     });
+    controlButtons.addEventListener("cancel", ()=>{
+      this.dispatchEvent(new CustomEvent("abort"));
+    })
     const form = document.createElement("form");
     form.classList.add("payment-sheet-data-collector");
     form.addEventListener("change", this.validate.bind(this));
