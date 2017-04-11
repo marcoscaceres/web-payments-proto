@@ -147,7 +147,7 @@ export default class AddressCollector extends DataCollector {
         required="${requestShipping}"
         type="text"
         value="${data.addressLevel1}">${
-          Countries.asHTMLSelect("two-thirds", data.country, "country", requestShipping ? "required" : null)
+          Countries.asHTMLSelect("two-thirds", data.country || "US", "country", requestShipping ? "required" : null)
       }<input
         autocomplete="${this.addressType + " postal-code"}"
         name="postalCode"

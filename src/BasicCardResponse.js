@@ -88,7 +88,7 @@ export default class BasicCardResponse {
   /** 
    * Luhn algorithm
    *
-   * Used for validating credit card numbers
+   * Used for validating credit card numbers.
    * https://en.wikipedia.org/wiki/Luhn_algorithm
    * based on https://gist.github.com/DiegoSalazar/4075533
    */

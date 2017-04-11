@@ -259,7 +259,7 @@ export default class Countries {
     return Object.assign({}, countries.get(key));
   }
  
-  static asHTMLSelect(cssClass="", selected="", name="country", required="no"){
+  static asHTMLSelect(cssClass="", selected="US", name="country", required="no"){
     const select = document.createElement("select");
     select.classList.add(cssClass); 
     select.name = name;
@@ -278,13 +278,11 @@ export default class Countries {
   }
 }
 
-function toHTMLOption(entry, isSelected = false) {  
+function toHTMLOption(entry, selected) {  
   const [code, { name }] = entry;
-  const option = hyperHTML.wire(entry)`
-    <option value="${code}">
+  return hyperHTML.wire(entry)`
+    <option value="${code}" selected="${selected}">
       ${name} 
     </option>
   `;
-  option.selected = isSelected;
-  return option;
 }
