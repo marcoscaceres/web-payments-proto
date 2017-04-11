@@ -256,7 +256,7 @@ export default class Countries {
     throw new TypeError("No constructor - use statics");
   }
   static get(key){
-    return countries.get(key);
+    return Object.assign({}, countries.get(key));
   }
  
   static asHTMLSelect(cssClass="", selected="", name="country", required="no"){

@@ -42,6 +42,7 @@
   border-top: none;
   background-color: white;
   position: fixed;
+  min-width: 550px;
 }
 
 #payment-sheet>section {
@@ -360,7 +361,6 @@
 #payment-sheet #payment-sheet-data-sheet {
   display: grid;
   grid-template-columns: 1fr;
-  max-width: 550px;
 }
 
 #payment-sheet .credit-card-collector {
@@ -371,8 +371,7 @@
 
 #payment-sheet .credit-card-collector h3 {
   font-size: 1em;
-  font-weight: normal;
-  margin: 0;
+  font-weight: normal;  
 }
 
 #payment-sheet .credit-card-details {
@@ -380,7 +379,6 @@
   grid-column-start: 1;
   grid-column-end: 2;  
   grid-gap: .3cm;
-
 }
 
 
@@ -388,3 +386,35 @@
   grid-column-start: 1;
   grid-column-end: 4;
 }
+
+#payment-sheet .payment-sheet-billing-address {
+  font-size: .9em;
+
+  margin-left: .5cm;
+}
+
+#payment-sheet .payment-sheet-billing-address div {
+  margin-top: .1cm
+}
+
+#payment-sheet .payment-confirmation-collector p {
+  margin: 0;
+  font-size: .9em;
+}
+
+#payment-sheet .payment-confirmation-collector img {
+  vertical-align: middle;
+}
+
+#payment-sheet .payment-confirmation-collector .ccdigits:before {
+  content: "**** **** **** ";
+}
+
+#payment-sheet .payment-confirmation-collector h3 {
+  font-weight: lighter;
+  font-size: 1em;
+  color: rgb(74, 74, 74);
+  margin-top: .5cm;
+  margin-bottom: .2cm;
+}
+

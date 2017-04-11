@@ -1,4 +1,5 @@
 import hyperHTML from "hyperhtml/hyperhtml.js";
+import Countries from "../Countries";
 /**
 interface PaymentAddress {
     serializer = {attribute};
@@ -23,6 +24,7 @@ export default class Addressformat {
 
   format(paymentAddress, outputFormat="text"){
     let result; 
+    const { name: countryName } = Countries.get(paymentAddress.country);
     switch(outputFormat){
     case "html": {
       result = hyperHTML.wire(paymentAddress)`
@@ -30,16 +32,16 @@ export default class Addressformat {
             ${paymentAddress.addressLine.join(" ")}
           </div>
           <div>
-            ${paymentAddress.city}, ${paymentAddress.region} ${paymentAddress.country}
+            ${paymentAddress.city}, ${paymentAddress.region}
           </div>
           <div>
-            ${paymentAddress.postalCode}
+             ${countryName.toLocaleUpperCase()} ${paymentAddress.postalCode}
           </div>
         `;
       break;
     }
     default:
-      result = `${paymentAddress.addressLine.join(" ")}\n${paymentAddress.city}, ${paymentAddress.region} ${paymentAddress.country}`;
+      result = `${paymentAddress.addressLine.join(" ")} ${paymentAddress.city}, ${paymentAddress.region} ${countryName}`;
     }
     return result;
   }

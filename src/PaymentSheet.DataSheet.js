@@ -26,6 +26,11 @@ export default class DataSheet extends EventTarget(events) {
     priv.set("form", form);
     priv.set("heading", heading);
     priv.set("renderer", hyperHTML.bind(form));
+    priv.set("ready", Promise.resolve(dataCollector.ready));
+  }
+
+  get ready(){
+    return privates.get(this).get("ready");
   }
 
   get isValid() {

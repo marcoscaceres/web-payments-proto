@@ -1,7 +1,10 @@
 //import "../css/payment-sheet.css";
 import "dialog-polyfill/dialog-polyfill.css";
 import AddressCollector from "./datacollectors/AddressCollector";
+import CreditCardCollector from "./datacollectors/CreditCardCollector";
 import DataSheet from "./PaymentSheet.DataSheet.js";
+import DataSheetManager from "./DataSheetManager";
+import db from "./AutofillDB";
 import dialogPolyfill from "dialog-polyfill/dialog-polyfill";
 import EventTarget from "event-target-shim";
 import Host from "./PaymentSheet.Host";
@@ -10,16 +13,14 @@ import LineItems from "./PaymentSheet.LineItems";
 import PaymentMethodChooser from "./datacollectors/PaymentMethodChooser";
 import ShippingOptions from "./PaymentSheet.ShippingOptions";
 import Total from "./PaymentSheet.Total";
-import DataSheetManager from "./DataSheetManager";
-import CreditCardCollector from "./datacollectors/CreditCardCollector";
-import db from "./AutofillDB";
-const privates = new WeakMap();
+import PaymentConfirmationCollector from "./datacollectors/PaymentConfirmationCollector";
 
-const eventListeners = [
+const privates = new WeakMap();
+const eventListeners = Object.freeze([
   "shippingoptionchange",
   "shippingaddresschange",
   "abort",
-];
+]);
 /**
  * Payment Sheet a HTMLDialogElement that is composed of two section:
  *  Top section:
@@ -34,7 +35,6 @@ const eventListeners = [
  *  Bottom info
  *    [x] host information
  */
-
 class PaymentSheet extends EventTarget(eventListeners) {
   constructor() {
     super();
@@ -43,7 +43,7 @@ class PaymentSheet extends EventTarget(eventListeners) {
     const promise = new Promise((resolve, reject) => {
       Object.assign(donePromise, {
         resolve,
-        reject
+        reject,
       });
     });
     priv.set("done", Object.assign(donePromise, {
@@ -73,10 +73,13 @@ class PaymentSheet extends EventTarget(eventListeners) {
     ]);
 
     const addressCollector = new AddressCollector("shipping");
+    const creditCardCollector = new CreditCardCollector(addressCollector);
+    const paymentConfirmationCollector = new PaymentConfirmationCollector(addressCollector, creditCardCollector);
     const sheets = [
       new DataSheet("Choose your payment method:", new PaymentMethodChooser()),
-      new DataSheet("Shipping address", addressCollector),
-      new DataSheet("", new CreditCardCollector(addressCollector)),
+      new DataSheet("Shipping address:", addressCollector),
+      new DataSheet("", creditCardCollector),
+      new DataSheet("", paymentConfirmationCollector),
     ];
 
     sheets.forEach(sheet => sheet.addEventListener("abort", abortListener));
@@ -91,7 +94,7 @@ class PaymentSheet extends EventTarget(eventListeners) {
       console.log("we are done...");
       this.render();
     });
-    const ready = async() => {
+    const ready = async () => {
       await attatchDialog(dialog);
       await Promise.all(sheets.map(sheet => sheet.ready));
     }

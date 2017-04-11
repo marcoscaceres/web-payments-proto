@@ -11,6 +11,36 @@ const members = new Map([
   ["expiryYear", toString],
 ]);
 
+const ccTypes = new Map([
+  ["American Express", [34, 37]],
+  ["CARDGUARD EAD BG ILS", [5392]],
+  ["China UnionPay", [62]],
+  ["Dankort", [5019]],
+  ["Diners Club", [
+    [300, 305], 309, 36, [38, 39]
+  ]],
+  ["Discover Card", [6011, [622126, 622925],
+    [644, 649], 65
+  ]],
+  ["JCB", [
+    [3528, 3589]
+  ]],
+  ["Maestro", [50, [56, 58], 6]],
+  ["MasterCard", [
+    [2221, 2720],
+    [51, 55]
+  ]],
+  ["MIR", [
+    [2200, 2204]
+  ]],
+  ["UATP", [1]],
+  ["Verve", [
+    [506099, 506198],
+    [650002, 650027]
+  ]],
+  ["Visa", [4]],
+]);
+
 export default class BasicCardResponse {
   constructor(details) {
     const priv = privates.set(this, new Map()).get(this);
@@ -55,4 +85,60 @@ export default class BasicCardResponse {
   get billingAddress() {
     return privates.get(this).get("billingAddress");
   }
+  /** 
+   * Luhn algorithm
+   *
+   * Used for validating credit card numbers
+   * https://en.wikipedia.org/wiki/Luhn_algorithm
+   * based on https://gist.github.com/DiegoSalazar/4075533
+   */
+  static isValid(ccNumber) {
+    if (/^\d+$/.test(ccNumber) === false) {
+      return false;
+    }
+    let nCheck = 0;
+    let nDigit = 0;
+    let bEven = false;
+    var value = ccNumber.replace(/\D/g, "");
+    for (var n = value.length - 1; n >= 0; n--) {
+      var cDigit = value.charAt(n);
+      nDigit = parseInt(cDigit, 10);
+
+      if (bEven) {
+        if ((nDigit *= 2) > 9) nDigit -= 9;
+      }
+
+      nCheck += nDigit;
+      bEven = !bEven;
+    }
+    return (nCheck % 10) === 0;
+  }
+
+  static getCardNetwork(ccNumber) {
+    const found = Array
+      .from(
+        ccTypes.entries()
+      ).find(([, startValues]) => {
+        return startValues
+          .find(
+            startValue => Array.isArray(startValue) ? inRange(ccNumber, startValue) : ccNumber.startsWith(startValue)
+          );
+      });
+    return found ? found[0] : "";
+  }
 }
+
+function inRange(ccNumber, [start, end]) {
+  if (start > end) {
+    throw RangeError("start greater than end?");
+  }
+  while (start <= end) {
+    if (ccNumber.startsWith(String(start))) {
+      return true;
+    }
+    start++;
+  }
+  return false;
+}
+
+window.pp = BasicCardResponse;

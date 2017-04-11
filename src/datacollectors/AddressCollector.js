@@ -51,12 +51,15 @@ export default class AddressCollector extends DataCollector {
   }
 
   async save() {
-    this.data.timeLastModified = Date.now();
+    const { data } = this;
+    data.addressLine = [].concat(data.streetAddress);
+    data.timeLastModified = Date.now();
     await super.save();
   }
 
   toPaymentAddress() {
     const {
+      streetAddress,
       addressLevel1: region,
       addressLevel2: city,
       country,
@@ -68,7 +71,9 @@ export default class AddressCollector extends DataCollector {
       fullName: recipient,
       //sortingCode,
     } = this.toObject();
+    const addressLine = [streetAddress];
     return new PaymentAddress({
+      addressLine,
       city,
       country,
       phone,
