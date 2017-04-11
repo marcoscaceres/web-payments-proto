@@ -273,16 +273,16 @@ export default class Countries {
     return Array
       .from(countries.entries())
       .map(
-        ([code, details]) => toHTMLOption([code, details], code === selected)
+        ([code, details]) => toHTMLOption([code, details], selected)
       );
   }
 }
 
-function toHTMLOption(entry, selected) {  
+function toHTMLOption(entry, selected) {
   const [code, { name }] = entry;
+  const isSelected = code === selected;
   return hyperHTML.wire(entry)`
-    <option value="${code}" selected="${selected}">
+  <option value="${code}" selected="${isSelected}">
       ${name} 
-    </option>
-  `;
+  </option>`;
 }
