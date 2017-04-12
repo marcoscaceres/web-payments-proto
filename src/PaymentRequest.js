@@ -121,7 +121,7 @@ class PaymentRequest extends EventTarget(eventListeners) {
     }
     slots.set("[[state]]", "interactive");
 
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async(resolve, reject) => {
       slots.set("[[acceptPromise]]", {
         resolve,
         reject
@@ -146,6 +146,7 @@ class PaymentRequest extends EventTarget(eventListeners) {
       });
 
       paymentSheet.addEventListener("shippingoptionchange", ev => {
+        console.log("shippingoptionchange event");
         slots.set("[[selectedShippingOption]]", ev.detail.shippingOption);
         paymentRequestUpdated(this, "shippingoptionchange");
       });
@@ -155,19 +156,18 @@ class PaymentRequest extends EventTarget(eventListeners) {
         paymentRequestUpdated(this, "shippingaddresschange");
       });
 
-      paymentSheet.addEventListener("acceptpayment", ev => {
-        userAcceptsThePaymentRequest(this, ev.detail);
-      }, {
-        once: true
-      });
-      const response = await paymentSheet.open({
-        displayItems,
-        options,
-        shippingOptions,
-        supported,
-        total,
-      });
-      return resolve(response);
+      try {
+        const detail = await paymentSheet.open({
+          displayItems,
+          options,
+          shippingOptions,
+          supported,
+          total,
+        });
+        userAcceptsThePaymentRequest(this, detail);
+      } catch (err) {
+        reject(err);
+      }
     });
   }
 
@@ -213,7 +213,7 @@ class PaymentRequest extends EventTarget(eventListeners) {
 function userAcceptsThePaymentRequest(request, detail) {
   const slots = internalSlots.get(request);
   if (slots.get("[[updating]]")) {
-    console.assert(false, "this should never happen");
+    console.assert(false, "This should never happen");
     return;
   }
   if (slots.get("[[state]]" !== "interactive")) {
@@ -223,11 +223,11 @@ function userAcceptsThePaymentRequest(request, detail) {
   const options = slots.get("[[options]]");
   if (options.requestShipping) {
     if (request.shippingAddress === null || request.shippingOption === null) {
-      assert(false, "This should never occur.");
+      console.assert(false, "This should never occur.");
       return;
     }
   }
-  const response = new PaymentResponse(request, details);
+  const response = new PaymentResponse(request, options, detail);
   slots.set("[[state]]", "closed");
   slots.get("[[acceptPromise]]").resolve(response);
 }
@@ -235,7 +235,7 @@ function userAcceptsThePaymentRequest(request, detail) {
 async function userAbortsPayment(request) {
   const slots = internalSlots.get(request);
   if (slots.get("[[updating]]")) {
-    console.assert(false, "this should never happen");
+    console.assert(false, "This should never happen");
     return;
   }
   if (slots.get("[[state]]" !== "interactive")) {
@@ -251,7 +251,7 @@ async function userAbortsPayment(request) {
 function paymentRequestUpdated(request, eventName) {
   const slots = internalSlots.get(request);
   if (slots.get("[[updating]]")) {
-    console.assert(false, "this should never happen");
+    console.assert(false, "This should never happen");
     return;
   }
   if (slots.get("[[state]]" !== "interactive")) {

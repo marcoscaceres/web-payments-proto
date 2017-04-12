@@ -4,15 +4,17 @@ const privates = new WeakMap();
 
 const defaultMethods = [{
   name: "basic-card",
+  value: "visa",
   icons: [{
     src: "./payment-sheet/images/visa.svg",
-    sizes: "256x256"
+    sizes: "256x256",
   }, ],
 }, {
   name: "https://paypal.com",
+  value: "paypal",
   icons: [{
     src: "./payment-sheet/images/paypal.svg",
-    sizes: "256x256"
+    sizes: "256x256",
   }, ],
 }];
 
@@ -39,7 +41,7 @@ export default class PaymentMethodChooser extends DataCollector {
     }
     return this.renderer`
     <div id="payment-methods-buttons">${
-      paymentMethods.map(method => toRadio(method, this))
+      paymentMethods.map(method => toRadio(method))
     }</div>`;
   }
   static supports(method) {
@@ -49,8 +51,8 @@ export default class PaymentMethodChooser extends DataCollector {
   }
 }
 
-function toRadio(paymentMethod, controller) {
-  const { name, icons } = paymentMethod;
+function toRadio(paymentMethod) {
+  const { name, icons, value } = paymentMethod;
   const keyHandler = ev => {
     if (ev.keyCode === 32 || ev.keyCode === 13) {
       ev.currentTarget.setAttribute("aria-checked", "true");
@@ -60,20 +62,23 @@ function toRadio(paymentMethod, controller) {
     }
   };
   const srcset = icons.map(toSrcset);
-  const frag = hyperHTML.wire()
+  const frag = hyperHTML.wire(paymentMethod)
   `
     <label onkeypress="${keyHandler}" role="radio" aria-checked="false">
-    <input required name="payment-method" type="radio">${toImage(srcset, name)}</label>`;
+    <input required value="${value}" name="payment-method" type="radio">${toImage({srcset, name})}</label>`;
   return frag;
 }
 // Either a srcset or just a src
-function toImage(srcset, alt) {
-  return hyperHTML.wire()
+function toImage(details) {
+  const {srcset, alt} = details;
+  return hyperHTML.wire(details)
   `<img
-      tabindex="0"
-      alt="${alt}"
-      srcset="${srcset.join(" ")}"
-      width="195" height="80">`;
+     tabindex="0"
+     alt="${alt}"
+     srcset="${srcset.join(" ")}"
+     width="195" 
+     height="80">
+  `;
 }
 
 function toSrcset({ src, sizes }) {

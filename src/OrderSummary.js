@@ -87,5 +87,11 @@ async function doPaymentRequest() {
 }
 
 function processResponse(r){
-
+  setTimeout(async () => {
+    await r.complete("success");
+    document
+      .querySelectorAll(".main-stuff")
+      .forEach(elem => elem.setAttribute("hidden", true));
+    document.querySelector("#payment-complete").removeAttribute("hidden");
+  }, 4000);
 }

@@ -48,11 +48,14 @@ export default class CreditCardCollector extends DataCollector {
     const paymentAddress = priv.get("addressCollector").toPaymentAddress();
     const shippingAddress = new AddressFormat().format(paymentAddress, "html");
     const year = new Date().getFullYear();
-    const keyUpHandler = ({
-      target: input
-    }) => {
-      const eventType = input.validity.valid && input.form.checkValidity() ? "datacollected" : "invaliddata";
-      this.dispatchEvent(new CustomEvent(eventType));
+    const keyUpHandler = ({ target: input }) => {
+      let event;
+      if(input.validity.valid && input.form.checkValidity()){
+        event = new CustomEvent("datacollected", {detail: this.toObject()});
+      } else {
+        event = new CustomEvent("invaliddata");
+      }
+      this.dispatchEvent(event);
     };
     const {
       cardholderName,
@@ -63,7 +66,7 @@ export default class CreditCardCollector extends DataCollector {
     return this.renderer `
       <section class="credit-card-details">
         <h3 class="fullspan">Enter payment details</h3>
-        <input 
+        <input
           autocomplete="cc-number"
           inputmode="numeric"
           class="fullspan"
@@ -75,7 +78,7 @@ export default class CreditCardCollector extends DataCollector {
           required
           type="text"
           value="${cardNumber}">
-        <input 
+        <input
           type="text"
           class="fullspan"
           name="cardholderName"

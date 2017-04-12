@@ -76,18 +76,20 @@ export default class DataCollector extends EventTarget(["datacollected", "invali
   async save() {
     const priv = privates.get(this);
     const tableName = priv.get("tableName");
-    if (!tableName) {
-      return; // nothing to do
+    if (tableName) {
+      const formData = new FormData(this.form);
+      if (formData.get("saveDetails") !== "on") {
+        return;
+      }
+      const dataToSave = Object.assign({}, this.data, this.toObject());
+      if (!db.isOpen()) {
+        await db.open();
+      }
+      await db[tableName].put(dataToSave);
     }
-    const formData = new FormData(this.form);
-    if (formData.get("saveDetails") !== "on") {
-      return;
-    }
-    const dataToSave = Object.assign({}, this.data, this.toObject());
-    if (!db.isOpen()) {
-      await db.open();
-    }
-    await db[tableName].put(dataToSave);
+    this.dispatchEvent(new CustomEvent("datacollected", {
+      detail: this.toObject()
+    }));
   }
 
   get buttonLabels() {

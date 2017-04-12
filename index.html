@@ -7,8 +7,8 @@
 <body>
 <main id="shop">
 <h1>Shopping</h1>
-<h2>Shopping Cart</h2>
-<form>
+<h2 class="main-stuff">Shopping Cart</h2>
+<form class="main-stuff">
   <section id="inventory-table">
     <!-- dynamically filled -->
   </section>
@@ -16,6 +16,15 @@
     <!-- dynamically filled -->
   </aside>
 </form>
+<section id="payment-complete" hidden>
+  <h1>Thank you for your order</h1>
+  <p>Your order number is: 00482156131</p>
+  <ul>
+    <li><a href="#">View receipt</a></li>
+    <li><a href="#">Print receipt</a></li>
+    <li><a href="#">Keep shopping</a></li>
+  </ul>
+</section>
 </main>
 <script>
   document.querySelector("form").addEventListener("submit", ev => {

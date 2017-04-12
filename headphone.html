@@ -1,28 +1,41 @@
 <!doctype html>
 <meta charset="utf-8">
 <script src="build/bundle.js"></script>
-<link rel="stylesheet" href="css/headphone.css">
 <link rel="stylesheet" href="css/payment-sheet.css">
+<link rel="stylesheet" href="css/headphone.css">
 <title>Headphones.com</title>
-<body id="shop">
-<header>
-  <h1>Headphones</h1>
-  <nav>
-    <ul>
-      <li><a href="#">Headphones</a></li>
-      <li><a href="#">Speakers</a></li>
-      <li><a href="#">Better with headphone.com</a></li>
-      <li><a href="#">Local shop</a></li>
-      <li><a href="#">Support</a></li>
-    </ul>
-  </nav>
-</header>
-<main>
-  <section id="inventory-table">
-    <h1>Cart Items</h1>
-    <!-- dynamically filled -->
-  </section>
-  <aside id="order-summary">
-    <!-- dynamically filled -->
-  </aside>
-</main>
+
+<body>
+  <div id="shop">
+    <header>
+      <h1>Headphones</h1>
+      <nav>
+        <ul>
+          <li><a href="#">Headphones</a></li>
+          <li><a href="#">Speakers</a></li>
+          <li><a href="#">Better with headphone.com</a></li>
+          <li><a href="#">Local shop</a></li>
+          <li><a href="#">Support</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main>
+      <section id="inventory-table" class="main-stuff">
+        <h1>Cart Items</h1>
+        <!-- dynamically filled -->
+      </section>
+      <aside id="order-summary" class="main-stuff">
+        <!-- dynamically filled -->
+      </aside>
+
+      <section id="payment-complete" hidden>
+        <h1>Thank you for your order</h1>
+        <p>Your order number is: 00482156131</p>
+        <ul>
+          <li><a href="#">View receipt</a></li>
+          <li><a href="#">Print receipt</a></li>
+          <li><a href="#">Keep shopping</a></li>
+        </ul>
+      </section>
+    </main>
+  </div>

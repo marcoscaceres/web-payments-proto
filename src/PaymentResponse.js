@@ -1,6 +1,6 @@
 import paymentSheet from "./PaymentSheet.js";
 
-const PaymentComplete = Object.freeze([
+const PaymentCompleteEnum = Object.freeze([
   "fail",
   "success",
   "unknown",
@@ -9,8 +9,8 @@ const PaymentComplete = Object.freeze([
 const internalSlots = new WeakMap();
 
 export default class PaymentResponse {
-  constructor(request, responseDetail){
-    const {requestShipping, requestPayerName, requestPayerPhone} = requestSlots.get("[[options]]");
+  constructor(request, requestOptions, responseDetail){
+    const { requestShipping, requestPayerName, requestPayerPhone } = requestOptions;
     internalSlots.set(this, new Map([
       ["[[completeCalled]]", false],
       ["[[details]]", Object.assign({}, responseDetail.details)],
@@ -19,7 +19,7 @@ export default class PaymentResponse {
       ["[[payerName]]", requestPayerName ? responseDetail.payerName : null],
       ["[[payerPhone]]", requestPayerPhone ? responseDetail.payerPhone : null],
       ["[[shippingAddress]]", requestShipping ? responseDetail.shippingAddress : null],
-      ["[[shippingOption]]", requested.selectedShippingOption],
+      ["[[shippingOption]]", request.selectedShippingOption],
     ]));
     // Set the details attribute value of response to an object containing 
     // the payment method specific message that will be used by the merchant 
@@ -65,7 +65,7 @@ export default class PaymentResponse {
 
   //Promise<void> complete(optional PaymentComplete result = "unknown");
   async complete(result = "unknown"){
-    if(!PaymentComplete.has(result)){
+    if(!PaymentCompleteEnum.includes(result)){
       throw new TypeError("Invalid argument value: " + result);
     }
     const slots = internalSlots.get(this);
@@ -78,7 +78,16 @@ export default class PaymentResponse {
 
   //serializer = { attribute };
   toJSON(){
-    
+    return JSON.stringify({
+      requestId: this.requestId,
+      methodName: this.methodName,
+      details: this.details,
+      shippingAddress: this.shippingAddress,
+      shippingOption: this.shippingOption,
+      payerName: this.payerName,
+      payerEmail: this.payerEmail,
+      payerPhone: this.payerPhone,
+    });
   }
 };
 

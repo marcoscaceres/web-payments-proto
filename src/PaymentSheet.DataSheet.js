@@ -20,9 +20,6 @@ export default class DataSheet extends EventTarget(events) {
     form.classList.add("payment-sheet-data-collector");
     form.addEventListener("change", this.validate.bind(this));
     form.addEventListener("submit", e => e.preventDefault());
-    dataCollector.addEventListener("datacollected", async () => {
-      await this.validate()
-    });
     dataCollector.addEventListener("invaliddata", async () => {
       await this.validate()
     });
@@ -33,6 +30,10 @@ export default class DataSheet extends EventTarget(events) {
     priv.set("heading", heading);
     priv.set("renderer", hyperHTML.bind(form));
     priv.set("ready", Promise.resolve(dataCollector.ready));
+  }
+
+  get collectedData(){
+    return privates.get(this).get("dataCollector").toObject();
   }
 
   get ready() {

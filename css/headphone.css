@@ -13,7 +13,11 @@ html, body, header, main {
   grid-template-columns: 1fr minmax(320px, 78em) 1fr;
 }
 
-main {
+#shop .main-stuff[hidden] {
+  display: none;
+}
+
+#shop main {
   font-size: .9em;
   font-family: Arial, Helvetica, sans-serif;
   grid-column-start: 2;
@@ -22,23 +26,23 @@ main {
   grid-template-columns: 80% 20%;
 }
 
-main > h1{
+#shop main > h1{
   padding-top: 2cm;
   padding-bottom: 1cm;
   font-weight: lighter;
 }
 
-main a:link {
+#shop main a:link {
   color: rgb(4,168,226);
   text-decoration: none;
 }
 
-main li {
+#shop main li {
   list-style-type: none;
   padding: .2cm 0;
 }
 
-main p {
+#shop main p {
   font-size: 1.1em;
   margin: 1cm 0;
 }
@@ -145,7 +149,7 @@ main p {
   text-align: right;
 }
 
-.itemSizes {
+#shop .itemSizes {
   display: none;
 }
 
@@ -163,7 +167,7 @@ main p {
   text-align: right;
 }
 
-aside h3, #order-summary:not(.tax-line) .line-items {
+#shop aside h3, #order-summary:not(.tax-line) .line-items {
   display: none;
 }
 

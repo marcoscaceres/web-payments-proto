@@ -14,6 +14,7 @@ import PaymentMethodChooser from "./datacollectors/PaymentMethodChooser";
 import ShippingOptions from "./PaymentSheet.ShippingOptions";
 import Total from "./PaymentSheet.Total";
 import PaymentConfirmationCollector from "./datacollectors/PaymentConfirmationCollector";
+import AwaitPaymentResponse from "./PaymentSheet.AwaitPaymentResponse";
 
 const privates = new WeakMap();
 const eventListeners = Object.freeze([
@@ -39,16 +40,6 @@ class PaymentSheet extends EventTarget(eventListeners) {
   constructor() {
     super();
     const priv = privates.set(this, new Map()).get(this);
-    const donePromise = {};
-    const promise = new Promise((resolve, reject) => {
-      Object.assign(donePromise, {
-        resolve,
-        reject,
-      });
-    });
-    priv.set("done", Object.assign(donePromise, {
-      promise
-    }));
     const dialog = document.createElement("dialog");
     dialog.id = "payment-sheet";
     const abortListener = () => {
@@ -66,17 +57,26 @@ class PaymentSheet extends EventTarget(eventListeners) {
     shippingOptionsPicker.addEventListener("shippingoptionchange", ev => {
       this.dispatchEvent(ev);
     })
-    priv.set("topWidgets", [
-      new LineItems(),
-      shippingOptionsPicker,
-      new Total(),
-    ]);
-
+    priv.set("topWidgets", new Map([
+      ["lineItems", {widget: new LineItems(), active: true}],
+      ["shippingOptionsPicker", {widget: shippingOptionsPicker, active: true}],
+      ["total", {widget: new Total(), active: true}],
+      ["awaitPaymentResponse", {widget: new AwaitPaymentResponse(), active: false}],
+    ]));
+    const paymentChooder = new PaymentMethodChooser();
     const addressCollector = new AddressCollector("shipping");
+    addressCollector.addEventListener("datacollected", () => {
+      const opts = {
+        detail: {
+          shippingAddress: addressCollector.toPaymentAddress()
+        }
+      };
+      this.dispatchEvent(new CustomEvent("shippingaddresschange", opts));
+    });
     const creditCardCollector = new CreditCardCollector(addressCollector);
     const paymentConfirmationCollector = new PaymentConfirmationCollector(addressCollector, creditCardCollector);
     const sheets = [
-      new DataSheet("Choose your payment method:", new PaymentMethodChooser()),
+      new DataSheet("Choose your payment method:", paymentChooder),
       new DataSheet("Shipping address:", addressCollector),
       new DataSheet("", creditCardCollector),
       new DataSheet("", paymentConfirmationCollector),
@@ -90,9 +90,15 @@ class PaymentSheet extends EventTarget(eventListeners) {
       this.render();
     });
 
-    dataSheetManager.addEventListener("done", () => {
-      console.log("we are done...");
+    dataSheetManager.addEventListener("done", ({ detail: collectedData }) => {
+      // Show just the waiting spinner... 
+      const topWidgets = priv.get("topWidgets");
+      Array
+        .from(topWidgets.values())
+        .forEach(obj => obj.active = false)
+      topWidgets.get("awaitPaymentResponse").active = true;
       this.render();
+      priv.get("sessionPromise").resolve(collectedData);
     });
     const ready = async() => {
       await attatchDialog(dialog);
@@ -101,16 +107,16 @@ class PaymentSheet extends EventTarget(eventListeners) {
     priv.set("ready", ready());
   }
 
-  get done() {
-    return privates.get(this).get("done").promise;
+  get sessionDone() {
+    return privates.get(this).get("sessionPromise").promise;
   }
 
   get ready() {
     return privates.get(this).get("ready");
   }
 
-  async abort() {
-    console.log("aborting");
+  async abort(reason) {
+    console.log("aborting", reason);
     if (db.isOpen()) {
       await db.close();
     }
@@ -119,20 +125,26 @@ class PaymentSheet extends EventTarget(eventListeners) {
     const event = new CustomEvent("abort");
     await this.close();
     this.dispatchEvent(event);
+    priv.get("sessionPromise").reject(new DOMException(reason, "AbortError"));
   }
 
   async open(requestData) {
     const priv = privates.get(this);
     if (priv.get("isShowing")) {
-      throw new DOMException("Operation aborted", "AbortError");
+      throw new DOMException("Sheet is already showing", "AbortError");
     }
     priv.set("requestData", requestData);
     priv.set("isShowing", true);
+    startPaymentSession(this);
     await this.ready;
     const dialog = priv.get("dialog");
     this.render();
     dialog.showModal();
-    await this.done;
+    try {
+      return await this.sessionDone; // collected data is returned
+    } catch (err) {
+      throw err;
+    }
   }
 
   async requestClose(reason) {
@@ -158,9 +170,11 @@ class PaymentSheet extends EventTarget(eventListeners) {
   }
 
   async close() {
-    const dialog = privates.get(this).get("dialog");
+    const priv = privates.get(this);
+    const dialog = priv.get("dialog");
     dialog.close();
     priv.set("isShowing", false);
+    priv.get("sessionPromise").resolve();
   }
 
   async render(requestData = privates.get(this).get("requestData")) {
@@ -175,12 +189,15 @@ class PaymentSheet extends EventTarget(eventListeners) {
       <img src="./payment-sheet/images/logo-payment.png" alt="">Firefox Web Payment
     </h1>
     <section id="payment-sheet-top-section">${
-      topWidgets.map(widget => widget.render(requestData))
+      Array
+        .from(topWidgets.values())
+        .filter(({active})=> active)
+        .map(({widget}) => widget.render(requestData))
     }</section>
-    <section id="payment-sheet-data-sheet">${
+    <section id="payment-sheet-data-sheet" hidden="${currentSheet ? false : true}">${
       currentSheet ? currentSheet.render(requestData) : ""
     }</section>
-    <section id="payment-sheet-bottom" hidden="${dataSheetsManager.done}">${
+    <section id="payment-sheet-bottom">${
       host.render(window.location)
     }<section>`;
     if (currentSheet) {
@@ -202,6 +219,18 @@ function attatchDialog(dialog) {
     }
     window.addEventListener("DOMContentLoaded", attachAndDone);
   });
+}
+
+function startPaymentSession(paymentSheet) {
+  const priv = privates.get(paymentSheet);
+  const invertedPromise = {};
+  invertedPromise.promise = new Promise((resolve, reject) => {
+    Object.assign(invertedPromise, {
+      resolve,
+      reject,
+    });
+  });
+  priv.set("sessionPromise", invertedPromise);
 }
 
 const paymentSheet = new PaymentSheet();

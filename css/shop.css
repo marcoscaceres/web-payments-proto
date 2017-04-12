@@ -9,6 +9,10 @@ body {
   grid-template-columns: 75% 25%;
 }
 
+#shop .main-stuff[hidden] {
+  display: none;
+}
+
 #shop h1,
 #shop h2,
 #shop h3 {
@@ -149,4 +153,8 @@ body {
 
 #shop dl.shipping-options {
   margin-bottom: 1cm; 
+}
+
+#payment-complete {
+  margin-top: 50px;
 }
