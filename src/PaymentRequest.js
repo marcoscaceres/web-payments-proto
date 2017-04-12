@@ -116,7 +116,7 @@ class PaymentRequest extends EventTarget(eventListeners) {
     if (slots.get("[[state]]") !== "created") {
       throw new DOMException("Payment request was already used", "InvalidStateError");
     }
-    if (!window.top.document.hasFocus()){
+    if (!window.top.document.hasFocus()) {
       throw new DOMException("Top window must be focused to call .show()", "SecurityError");
     }
     slots.set("[[state]]", "interactive");
@@ -156,7 +156,9 @@ class PaymentRequest extends EventTarget(eventListeners) {
       });
 
       paymentSheet.addEventListener("acceptpayment", ev => {
-        userAcceptsThePaymentRequest(this, ev.detail)
+        userAcceptsThePaymentRequest(this, ev.detail);
+      }, {
+        once: true
       });
       const response = await paymentSheet.open({
         displayItems,

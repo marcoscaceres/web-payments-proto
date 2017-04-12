@@ -10,16 +10,22 @@ export default class DataSheet extends EventTarget(events) {
   constructor(heading, dataCollector) {
     super();
     const controlButtons = new Controls(dataCollector.buttonLabels);
-    controlButtons.addEventListener("continue", ()=>{
-      this.dispatchEvent(new CustomEvent("continue"))
+    controlButtons.addEventListener("continue", () => {
+      this.dispatchEvent(new CustomEvent("continue"));
     });
-    controlButtons.addEventListener("cancel", ()=>{
+    controlButtons.addEventListener("cancel", () => {
       this.dispatchEvent(new CustomEvent("abort"));
     })
     const form = document.createElement("form");
     form.classList.add("payment-sheet-data-collector");
     form.addEventListener("change", this.validate.bind(this));
     form.addEventListener("submit", e => e.preventDefault());
+    dataCollector.addEventListener("datacollected", async () => {
+      await this.validate()
+    });
+    dataCollector.addEventListener("invaliddata", async () => {
+      await this.validate()
+    });
     const priv = privates.set(this, new Map()).get(this);
     priv.set("controlButtons", controlButtons);
     priv.set("dataCollector", dataCollector);
@@ -29,7 +35,7 @@ export default class DataSheet extends EventTarget(events) {
     priv.set("ready", Promise.resolve(dataCollector.ready));
   }
 
-  get ready(){
+  get ready() {
     return privates.get(this).get("ready");
   }
 

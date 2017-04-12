@@ -48,27 +48,39 @@ export default class CreditCardCollector extends DataCollector {
     const paymentAddress = priv.get("addressCollector").toPaymentAddress();
     const shippingAddress = new AddressFormat().format(paymentAddress, "html");
     const year = new Date().getFullYear();
-    const { cardholderName, cardNumber, expiryMonth, expiryYear } = this.data;
+    const keyUpHandler = ({
+      target: input
+    }) => {
+      const eventType = input.validity.valid && input.form.checkValidity() ? "datacollected" : "invaliddata";
+      this.dispatchEvent(new CustomEvent(eventType));
+    };
+    const {
+      cardholderName,
+      cardNumber,
+      expiryMonth,
+      expiryYear
+    } = this.data;
     return this.renderer `
       <section class="credit-card-details">
         <h3 class="fullspan">Enter payment details</h3>
         <input 
-          type="text" 
-          onchange="${validateCCNumber}"
-          inputmode="numeric" class="fullspan" 
-          placeholder="Card Number" 
-          name="cardNumber" 
-          required 
           autocomplete="cc-number"
-          maxlength="19" 
+          inputmode="numeric"
+          class="fullspan"
+          maxlength="19"
+          name="cardNumber"
+          onchange="${validateCCNumber}"
           pattern="[0-9]{13,16}"
+          placeholder="Card Number"
+          required
+          type="text"
           value="${cardNumber}">
         <input 
-          type="text" 
-          class="fullspan" 
+          type="text"
+          class="fullspan"
           name="cardholderName"
-          required 
-          placeholder="Name on card" 
+          required
+          placeholder="Name on card"
           autocomplete="cc-name"
           value="${cardholderName}">
         <select name="expiryMonth" placehoder="exp.MM" maxlength="2">${
@@ -77,13 +89,16 @@ export default class CreditCardCollector extends DataCollector {
         <select name="expiryYear" placehoder="exp.YY" maxlength="2">${
           makeOptionsRange(year, year + 10, parseInt(expiryYear, 10))
         }</select>
-        <input 
-          type="text" 
-          name="cardSecurityCode" 
+        <input
+          inputmode="numeric"
+          maxlength="4"
+          minlength="3"
+          name="cardSecurityCode"
+          onkeyup="${keyUpHandler}"
           placeholder="CVV"
           required
           size="4"
-          maxlength="4">
+          type="text">
         <label class="fullspan">
           <input type="checkbox" name="saveDetails" checked>
           Save the credit card (CVV will not be saved)
@@ -101,7 +116,9 @@ export default class CreditCardCollector extends DataCollector {
   }
 }
 
-function validateCCNumber({ target: inputElement }) {
+function validateCCNumber({
+  target: inputElement
+}) {
   if (BasicCardResponse.isValid(inputElement.value)) {
     inputElement.setCustomValidity("");
     return;
@@ -109,7 +126,7 @@ function validateCCNumber({ target: inputElement }) {
   inputElement.setCustomValidity("Invalid credit card number");
 }
 
-function makeOptionsRange(start, end, selected=null) {
+function makeOptionsRange(start, end, selected = null) {
   const options = [];
   if (start > end) {
     let newEnd = start;
@@ -118,7 +135,8 @@ function makeOptionsRange(start, end, selected=null) {
   }
   while (start <= end) {
     const isSelected = selected === start;
-    options.push(hyperHTML.wire()`
+    options.push(hyperHTML.wire()
+      `
       <option value="${start}" selected="${isSelected}">
         ${start}
       </option>

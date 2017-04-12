@@ -1,5 +1,6 @@
 import hyperHTML from "hyperhtml/hyperhtml";
 import db from "../AutofillDB";
+import EventTarget from "event-target-shim";
 const privates = new WeakMap();
 const buttonLabels = Object.freeze({
   proceedLabel: "Continue",
@@ -18,8 +19,9 @@ const buttonLabels = Object.freeze({
  * 
  * @see "datacollectors" folder. 
  */
-export default class DataCollector {
+export default class DataCollector extends EventTarget(["datacollected", "invaliddata"]) {
   constructor(schema, classList = [], tableName = "", initialData = null) {
+    super();
     const priv = privates.set(this, new Map()).get(this);
     const section = document.createElement("section");
     classList.forEach(name => section.classList.add(name));

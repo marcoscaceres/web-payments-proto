@@ -58,7 +58,7 @@ class PaymentSheet extends EventTarget(eventListeners) {
 
     priv.set("dialog", dialog);
     priv.set("renderer", hyperHTML.bind(dialog));
-    priv.set("state", "closed");
+    priv.set("isShowing", false);
 
     // WIDGETS
     priv.set("host-widget", new Host());
@@ -94,7 +94,7 @@ class PaymentSheet extends EventTarget(eventListeners) {
       console.log("we are done...");
       this.render();
     });
-    const ready = async () => {
+    const ready = async() => {
       await attatchDialog(dialog);
       await Promise.all(sheets.map(sheet => sheet.ready));
     }
@@ -123,7 +123,11 @@ class PaymentSheet extends EventTarget(eventListeners) {
 
   async open(requestData) {
     const priv = privates.get(this);
+    if (priv.get("isShowing")) {
+      throw new DOMException("Operation aborted", "AbortError");
+    }
     priv.set("requestData", requestData);
+    priv.set("isShowing", true);
     await this.ready;
     const dialog = priv.get("dialog");
     this.render();
@@ -138,8 +142,8 @@ class PaymentSheet extends EventTarget(eventListeners) {
         // do sad animation here, wait for user input then close()
         break;
       case "abort":
-        // We should let the user know the page is trying to abort. 
-        // this has complications if they are filling out 
+        // We should let the user know the page is trying to abort.
+        // this has complications if they are filling out
         // autofill stuff.
         break;
       case "success":
@@ -156,6 +160,7 @@ class PaymentSheet extends EventTarget(eventListeners) {
   async close() {
     const dialog = privates.get(this).get("dialog");
     dialog.close();
+    priv.set("isShowing", false);
   }
 
   async render(requestData = privates.get(this).get("requestData")) {
