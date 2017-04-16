@@ -81,6 +81,7 @@ export default class CreditCardCollector extends DataCollector {
           value="${cardNumber}">
         <input
           type="text"
+          minlength="1"
           class="fullspan"
           name="cardholderName"
           required

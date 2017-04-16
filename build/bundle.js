@@ -5454,6 +5454,7 @@ const eventListeners = Object.freeze([
 class PaymentSheet extends __WEBPACK_IMPORTED_MODULE_7_event_target_shim___default()(eventListeners) {
   constructor() {
     super();
+    console.log("Creating payment sheet");
     const priv = privates.set(this, new Map()).get(this);
     initDialog.call(this);
 
@@ -5492,7 +5493,7 @@ class PaymentSheet extends __WEBPACK_IMPORTED_MODULE_7_event_target_shim___defau
   /**
    * Abort showing the sheet.
    *  
-   * @param {String} reason 
+   * @param {CustomEvent} ev 
    */
   async abort(reason) {
     console.log("aborting", reason);
@@ -5502,13 +5503,17 @@ class PaymentSheet extends __WEBPACK_IMPORTED_MODULE_7_event_target_shim___defau
     const priv = privates.get(this);
     priv.get("dataSheetManager").reset();
     const event = new CustomEvent("abort");
+    priv.get("sessionPromise").reject(new DOMException(reason, "AbortError"));
     await this.close();
     this.dispatchEvent(event);
-    priv.get("sessionPromise").reject(new DOMException(reason, "AbortError"));
   }
 
   async open(requestData) {
     const priv = privates.get(this);
+    const dialog = priv.get("dialog");
+    if (!dialog.isConnected) {
+      await attatchDialog(dialog);
+    }
     if (priv.get("isShowing")) {
       throw new DOMException("Sheet is already showing", "AbortError");
     }
@@ -5518,7 +5523,6 @@ class PaymentSheet extends __WEBPACK_IMPORTED_MODULE_7_event_target_shim___defau
     await this.ready;
     const dataSheetManager = priv.get("dataSheetManager");
     dataSheetManager.update(requestData);
-    const dialog = priv.get("dialog");
     this.render(requestData);
     dialog.showModal();
     try {
@@ -5529,6 +5533,7 @@ class PaymentSheet extends __WEBPACK_IMPORTED_MODULE_7_event_target_shim___defau
   }
 
   async requestClose(reason) {
+    const priv = privates.get(this);
     // We need to investigate how to show the different reasons for closing
     switch (reason) {
       case "fail":
@@ -5541,6 +5546,7 @@ class PaymentSheet extends __WEBPACK_IMPORTED_MODULE_7_event_target_shim___defau
         break;
       case "success":
         // do a success animation here
+        priv.get("sessionPromise").resolve();
         break;
       case "unknown": // unknown reason
         break;
@@ -5553,9 +5559,16 @@ class PaymentSheet extends __WEBPACK_IMPORTED_MODULE_7_event_target_shim___defau
   async close() {
     const priv = privates.get(this);
     const dialog = priv.get("dialog");
-    dialog.close();
+    if (!dialog.hasAttribute("open")) {
+      dialog.setAttribute("open", "");
+    }
+    try {
+      dialog.close();
+    } catch (err) {
+      console.warn("Dialog didn't close correctly", err);
+    }
+    dialog.remove();
     priv.set("isShowing", false);
-    priv.get("sessionPromise").resolve();
   }
 
   async render(requestData = privates.get(this).get("requestData")) {
@@ -5587,8 +5600,11 @@ class PaymentSheet extends __WEBPACK_IMPORTED_MODULE_7_event_target_shim___defau
 function initDialog() {
   const priv = privates.get(this);
   const dialog = document.createElement("dialog");
+  __WEBPACK_IMPORTED_MODULE_6_dialog_polyfill_dialog_polyfill___default.a.registerDialog(dialog);
   dialog.id = "payment-sheet";
-  dialog.addEventListener("cancel", this.abort.bind(this));
+  dialog.addEventListener("cancel", () => {
+    this.abort("User aborted.");
+  });
   priv.set("dialog", dialog);
   priv.set("renderer", __WEBPACK_IMPORTED_MODULE_9_hyperhtml_hyperhtml_js___default.a.bind(dialog));
   priv.set("isShowing", false);
@@ -5598,7 +5614,6 @@ function attatchDialog(dialog) {
   return new Promise(resolve => {
     var attachAndDone = () => {
       document.body.appendChild(dialog);
-      __WEBPACK_IMPORTED_MODULE_6_dialog_polyfill_dialog_polyfill___default.a.registerDialog(dialog);
       return resolve();
     };
     if (document.readyState === "complete") {
@@ -5622,20 +5637,23 @@ function startPaymentSession(paymentSheet) {
 }
 
 async function init() {
+  console.log("Initializing PaymentSheet");
   const priv = privates.get(this);
   const paymentChooser = await new __WEBPACK_IMPORTED_MODULE_11__datacollectors_PaymentMethodChooser__["a" /* default */]().ready;
+  console.log("paymentChooser READY!");
   const addressCollector = await new __WEBPACK_IMPORTED_MODULE_1__datacollectors_AddressCollector__["a" /* default */]("shipping").ready;
+  console.log("AddressCollector READY!");
   addressCollector.addEventListener("shippingaddresschange", ev => {
     this.dispatchEvent(ev);
   });
   const creditCardCollector = await new __WEBPACK_IMPORTED_MODULE_2__datacollectors_CreditCardCollector__["a" /* default */](
     addressCollector
   ).ready;
+  console.log("creditCardCollector READY!");
   const paymentConfirmationCollector = await new __WEBPACK_IMPORTED_MODULE_14__datacollectors_PaymentConfirmationCollector__["a" /* default */](
     addressCollector,
     creditCardCollector
   ).ready;
-
   const sheets = [
     new __WEBPACK_IMPORTED_MODULE_3__PaymentSheet_DataSheet_js__["a" /* default */]("Choose your payment method:", paymentChooser, {
       userMustChoose: true,
@@ -5645,8 +5663,11 @@ async function init() {
     new __WEBPACK_IMPORTED_MODULE_3__PaymentSheet_DataSheet_js__["a" /* default */]("", paymentConfirmationCollector, { userMustChoose: true }),
   ];
   sheets.forEach(sheet =>
-    sheet.addEventListener("abort", this.abort.bind(this)));
-  const dataSheetManager = new __WEBPACK_IMPORTED_MODULE_4__DataSheetManager__["a" /* default */](sheets);
+    sheet.addEventListener("abort", () => {
+      this.abort("User aborted.");
+    }));
+  const dataSheetManager = await new __WEBPACK_IMPORTED_MODULE_4__DataSheetManager__["a" /* default */](sheets).ready;
+  console.log("dataSheetManager READY!");
   priv.set("dataSheetManager", dataSheetManager);
   dataSheetManager.addEventListener("update", () => {
     console.log("showing new sheet...");
@@ -5662,10 +5683,6 @@ async function init() {
     priv.get("sessionPromise").resolve(collectedData);
   });
 
-  await Promise.all([
-    dataSheetManager.ready,
-    attatchDialog(priv.get("dialog")),
-  ]);
   return this;
 }
 
@@ -19224,9 +19241,12 @@ class DataSheetManager extends __WEBPACK_IMPORTED_MODULE_0_event_target_shim___d
         };
         this.dispatchEvent(new CustomEvent("update", opts));
       }));
-    const readyPromise = Promise.all(dataSheets.map(sheet => sheet.ready)).then(
-      this.reset.bind(this)
-    );
+    const readyPromise = Promise.all(
+      dataSheets.map(sheet => sheet.ready)
+    ).then(() => {
+      this.reset();
+      return this;
+    });
     priv.set("ready", readyPromise);
   }
 
@@ -20227,7 +20247,9 @@ class DataSheet extends __WEBPACK_IMPORTED_MODULE_2_event_target_shim___default(
       this.dispatchEvent(new CustomEvent("continue"));
     });
     controlButtons.addEventListener("cancel", () => {
-      this.dispatchEvent(new CustomEvent("abort"));
+      this.dispatchEvent(
+        new CustomEvent("abort", { detail: { reason: "User aborted." } })
+      );
     });
     const form = document.createElement("form");
     form.classList.add("payment-sheet-data-collector");
@@ -21051,6 +21073,7 @@ class CreditCardCollector extends __WEBPACK_IMPORTED_MODULE_1__DataCollector__["
           value="${cardNumber}">
         <input
           type="text"
+          minlength="1"
           class="fullspan"
           name="cardholderName"
           required

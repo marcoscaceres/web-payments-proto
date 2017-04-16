@@ -12,7 +12,9 @@ export default class DataSheet extends EventTarget(["abort"]) {
       this.dispatchEvent(new CustomEvent("continue"));
     });
     controlButtons.addEventListener("cancel", () => {
-      this.dispatchEvent(new CustomEvent("abort"));
+      this.dispatchEvent(
+        new CustomEvent("abort", { detail: { reason: "User aborted." } })
+      );
     });
     const form = document.createElement("form");
     form.classList.add("payment-sheet-data-collector");

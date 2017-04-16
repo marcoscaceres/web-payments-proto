@@ -18,9 +18,12 @@ export default class DataSheetManager extends EventTarget(["done", "update"]) {
         };
         this.dispatchEvent(new CustomEvent("update", opts));
       }));
-    const readyPromise = Promise.all(dataSheets.map(sheet => sheet.ready)).then(
-      this.reset.bind(this)
-    );
+    const readyPromise = Promise.all(
+      dataSheets.map(sheet => sheet.ready)
+    ).then(() => {
+      this.reset();
+      return this;
+    });
     priv.set("ready", readyPromise);
   }
 
