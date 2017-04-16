@@ -1,11 +1,13 @@
 import hyperHTML from "hyperhtml/hyperhtml";
 import db from "../AutofillDB";
 import EventTarget from "event-target-shim";
+//import FormData from "formdata-polyfill";
 const privates = new WeakMap();
 const buttonLabels = Object.freeze({
   proceedLabel: "Continue",
   cancelLabel: "Cancel",
 });
+
 /**
  * @class DataCollector
  * 
@@ -19,7 +21,8 @@ const buttonLabels = Object.freeze({
  * 
  * @see "datacollectors" folder. 
  */
-export default class DataCollector extends EventTarget(["datacollected", "invaliddata"]) {
+export default class DataCollector
+  extends EventTarget(["datacollected", "invaliddata", "needsmodification"]) {
   constructor(schema, classList = [], tableName = "", initialData = null) {
     super();
     const priv = privates.set(this, new Map()).get(this);
@@ -38,8 +41,7 @@ export default class DataCollector extends EventTarget(["datacollected", "invali
   }
 
   get ready() {
-    // Abstract, override as needed.
-    return privates.get(this).set("ready");
+    return privates.get(this).get("ready");
   }
 
   set data(value) {
@@ -54,19 +56,28 @@ export default class DataCollector extends EventTarget(["datacollected", "invali
     return privates.get(this).get("section").closest("form");
   }
 
+  get dataSheet() {
+    return privates.get(this).get("dataSheet");
+  }
+
+  set dataSheet(dataSheet) {
+    return privates.get(this).set("dataSheet", dataSheet);
+  }
+
   toObject() {
     const priv = privates.get(this);
     const schema = priv.get("schema");
     const form = this.form;
-    // We filter the data related to this DataCollector, as per the given schema. 
-    return Array
-      .from(new FormData(form).entries())
+    // We filter the data related to this DataCollector, as per the given schema.
+    return Array.from(new FormData(form).entries())
       .filter(([key]) => schema.has(key))
-      .filter(([, value]) => value)
-      .reduce((accum, [key, value]) => {
-        accum[key] = value;
-        return accum;
-      }, {});
+      .reduce(
+        (accum, [key, value]) => {
+          accum[key] = value;
+          return accum;
+        },
+        {}
+      );
   }
 
   /**
@@ -87,33 +98,40 @@ export default class DataCollector extends EventTarget(["datacollected", "invali
       }
       await db[tableName].put(dataToSave);
     }
-    this.dispatchEvent(new CustomEvent("datacollected", {
-      detail: this.toObject()
-    }));
+    const ev = new CustomEvent("datacollected", {
+      detail: this.toObject(),
+    });
+    this.dispatchEvent(ev);
   }
 
   get buttonLabels() {
-    // abstract - override as needed with object 
+    // abstract - override as needed with object
     return buttonLabels;
   }
 }
-
+/**
+ * Intialize either from default data or from database
+ * 
+ * @this DataCollector
+ * @param {String} tableName 
+ * @param {Object} initialData 
+ */
 async function init(tableName, initialData) {
-  if (!tableName) {
-    return;
+  if (tableName) {
+    if (!db.isOpen()) {
+      await db.open();
+    }
+    const count = await db[tableName].count();
+    if (!count) {
+      this.data = Object.assign({}, initialData, {
+        timeCreated: Date.now(),
+        timeLastModified: Date.now(),
+        timeLastUsed: Date.now(),
+        timesUsed: 0,
+      });
+    } else {
+      this.data = await db[tableName].orderBy("timeLastUsed").first();
+    }
   }
-  if (!db.isOpen()) {
-    await db.open();
-  }
-  const count = await db[tableName].count();
-  if (!count) {
-    this.data = Object.assign({}, initialData, {
-      timeCreated: Date.now(),
-      timeLastModified: Date.now(),
-      timeLastUsed: Date.now(),
-      timesUsed: 0,
-    });
-    return;
-  }
-  this.data = await db[tableName].orderBy('timeLastUsed').first();
+  return this;
 }

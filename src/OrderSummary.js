@@ -15,8 +15,7 @@ export default class OrderSummary {
 
   sumTotal() {
     const sections = privates.get(this).get("sections");
-    const sum = Array
-      .from(sections)
+    const sum = Array.from(sections)
       .map(section => section.displayItems)
       .reduce((accumulator, item) => accumulator.concat(item), [])
       .map(({ amount: { value } }) => parseInt(value, 10))
@@ -31,7 +30,7 @@ export default class OrderSummary {
     const renderer = privates.get(this).get("renderer");
     const clickHandler = doPaymentRequest.bind(this);
     const sectionElems = sections.map(section => section.containerElem);
-    renderer `
+    renderer`
       <h3>Order summary</h3>
       <section>${sectionElems}</section>
       <div id="button-container">
@@ -47,51 +46,57 @@ function makeSplitter(condition) {
     const bucket = condition(item) ? left : right;
     bucket.push(item);
     return accumulator;
-  }
+  };
 }
 
 async function doPaymentRequest() {
   const sections = privates.get(this).get("sections");
-  const typeSplitter = makeSplitter(item => item instanceof PaymentShippingOption);
-  const { left: shippingOptions, right: displayItems } = Array
-    .from(sections)
+  const typeSplitter = makeSplitter(
+    item => item instanceof PaymentShippingOption
+  );
+  const { left: shippingOptions, right: displayItems } = Array.from(sections)
     .map(section => section.displayItems)
     .reduce((accumulator, items) => accumulator.concat(items), [])
     .reduce(typeSplitter, undefined);
   const total = this.sumTotal();
-  const methodData = [{
-    supportedMethods: ["basic-card"],
-  }];
+  const methodData = [
+    {
+      supportedMethods: ["basic-card"],
+    },
+  ];
   const id = `super-store-order-${String(Math.random()).substr(2)}`;
   const details = {
     id,
     displayItems: displayItems.map(item => item.toObject()),
     total: total.toObject(),
     shippingOptions: shippingOptions.map(item => item.toObject()),
-  }
+  };
   const options = {
     requestShipping: true,
     requestPayerName: true,
     requestPayerPhone: true,
-  }
+  };
   const request = new PaymentRequest(methodData, details, options);
-  
-  request.onshippingoptionchange = (ev) => {
+
+  request.onshippingoptionchange = ev => {
     console.log("hmmm.... onshippingoptionchange", ev);
-  }
-  request.onshippingaddresschange = (ev) => {
+  };
+  request.onshippingaddresschange = ev => {
     console.log("hmmm.... onshippingaddresschange", ev);
-  }
+  };
   request.show().then(processResponse).catch(err => console.log(err));
   return false;
 }
 
-function processResponse(r){
-  setTimeout(async () => {
-    await r.complete("success");
-    document
-      .querySelectorAll(".main-stuff")
-      .forEach(elem => elem.setAttribute("hidden", true));
-    document.querySelector("#payment-complete").removeAttribute("hidden");
-  }, 4000);
+function processResponse(r) {
+  setTimeout(
+    async () => {
+      await r.complete("success");
+      document
+        .querySelectorAll(".main-stuff")
+        .forEach(elem => elem.setAttribute("hidden", true));
+      document.querySelector("#payment-complete").removeAttribute("hidden");
+    },
+    2000
+  );
 }

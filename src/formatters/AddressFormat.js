@@ -18,15 +18,13 @@ interface PaymentAddress {
  */
 
 export default class Addressformat {
-  constructor(locales, options = {}){
+  constructor(locales, options = {}) {}
 
-  }
-
-  format(paymentAddress, outputFormat="text"){
-    let result; 
+  format(paymentAddress, outputFormat = "text") {
+    let result;
     const { name: countryName } = Countries.get(paymentAddress.country);
-    switch(outputFormat){
-    case "html": {
+    switch (outputFormat) {
+    case "html":
       result = hyperHTML.wire(paymentAddress)`
           <div>
             ${paymentAddress.addressLine.join(" ")}
@@ -39,14 +37,11 @@ export default class Addressformat {
           </div>
         `;
       break;
-    }
     default:
       result = `${paymentAddress.addressLine.join(" ")} ${paymentAddress.city}, ${paymentAddress.region} ${countryName}`;
     }
     return result;
   }
 
-  static supportedLocalesOf(locales, options = {}){
-
-  }
+  static supportedLocalesOf(locales, options = {}) {}
 }

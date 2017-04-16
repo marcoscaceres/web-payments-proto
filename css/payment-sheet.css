@@ -32,7 +32,13 @@
   }
 }
 
+
 #payment-sheet {
+  --blue: rgb(0, 148, 251);
+  --default-pad: .2cm;
+  --default-margin: .3cm;
+  --default-text: rgb(74,74,74); 
+  color: --default-text;
   font-family: sans-serif;
   width: 10px;
   font-size: 1em;
@@ -166,7 +172,7 @@
 }
 
 #payment-sheet #payment-methods-buttons label>input:checked+img {
-  border-color: rgb(46, 167, 252);
+  border-color: var(--blue);
 }
 
 #payment-sheet-host {
@@ -257,8 +263,13 @@
 }
 
 #payment-sheet-total output {
-  color:rgb(0,150,246);
+  color: var(--blue);
   font-size: 1.2em;
+}
+
+#payment-sheet-total output .currency-code {
+  color: var(--default-text);
+  font-size: .8em;
 }
 
 #payment-sheet #line-items-list {
@@ -315,7 +326,6 @@
 }
 
 #payment-sheet label {
-  vertical-align: bottom;
   font-size: .8em;
 }
 
@@ -418,11 +428,22 @@
 }
 
 #payment-sheet .payment-confirmation-collector h3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   font-weight: lighter;
   font-size: 1em;
   color: rgb(74, 74, 74);
   margin-top: .5cm;
   margin-bottom: .2cm;
+
+}
+
+#payment-sheet .payment-confirmation-collector h3 button {
+  border: none;
+  background-color: transparent;
+  text-transform: uppercase;
+  justify-self: start;
+  color: var(--blue);
 }
 
 #payment-sheet .await-payment-response {
@@ -447,3 +468,6 @@
   font-weight: lighter;
 }
 
+#payment-sheet #payment-sheet-shipping-options {
+  margin-top: var(--default-margin);
+}

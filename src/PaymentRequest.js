@@ -1,8 +1,8 @@
-import uuid from 'uuid/v4';
+import uuid from "uuid/v4";
 import EventTarget from "event-target-shim";
 import paymentSheet from "./PaymentSheet.js";
 import PaymentCurrencyAmount from "./PaymentCurrencyAmount";
-import PaymentMethodChooser from "./datacollectors/PaymentMethodChooser"
+import PaymentMethodChooser from "./datacollectors/PaymentMethodChooser";
 import PaymentRequestUpdateEvent from "./PaymentRequestUpdateEvent";
 import PaymentResponse from "./PaymentResponse";
 const defaultPaymentOptions = Object.freeze({
@@ -15,13 +15,14 @@ const defaultPaymentOptions = Object.freeze({
 
 const attributes = new WeakMap();
 const internalSlots = new WeakMap();
-const eventListeners = [
-  "shippingoptionchange",
-  "shippingaddresschange",
-];
+const eventListeners = ["shippingoptionchange", "shippingaddresschange"];
 
 class PaymentRequest extends EventTarget(eventListeners) {
-  constructor(originalMethodData, originalDetails, originalOptions = defaultPaymentOptions) {
+  constructor(
+    originalMethodData,
+    originalDetails,
+    originalOptions = defaultPaymentOptions
+  ) {
     super();
     if (typeof originalOptions !== "object") {
       throw TypeError("invalid options argument");
@@ -41,10 +42,17 @@ class PaymentRequest extends EventTarget(eventListeners) {
     }
     for (const paymentMethod of methodData) {
       if (paymentMethod.supportedMethods.length === 0) {
-        throw new TypeError("Each payment method needs to include at least one payment method identifier");
+        throw new TypeError(
+          "Each payment method needs to include at least one payment method identifier"
+        );
       }
-      let serializedData = paymentMethod.data ? JSON.strigify(paymentMethod.data) : null;
-      serializedMethodData.set(paymentMethod.supportedMethods.concat(), serializedData);
+      let serializedData = paymentMethod.data
+        ? JSON.strigify(paymentMethod.data)
+        : null;
+      serializedMethodData.set(
+        paymentMethod.supportedMethods.concat(),
+        serializedData
+      );
     }
 
     // Process the total:
@@ -65,26 +73,29 @@ class PaymentRequest extends EventTarget(eventListeners) {
     // Process shipping options
     const {
       selectedShippingOption,
-      shippingOptions
-    } = processShippingOptions(details)
+      shippingOptions,
+    } = processShippingOptions(details);
     details.shippingOptions = shippingOptions;
 
     // Process payment details modifiers
     const {
       modifiers,
-      serializedModifierData
+      serializedModifierData,
     } = processPaymentDetailsModifiers(details);
     details.modifiers = modifiers;
-    internalSlots.set(this, new Map([
-      ["[[details]]", details],
-      ["[[options]]", options],
-      ["[[serializedMethodData]]", serializedMethodData],
-      ["[[serializedModifierData]]", serializedModifierData],
-      ["[[state]]", "created"],
-      ["[[updating]]", false],
-      ["[[shippingAddress]]", null],
-      ["[[selectedShippingOption]]", selectedShippingOption],
-    ]));
+    internalSlots.set(
+      this,
+      new Map([
+        ["[[details]]", details],
+        ["[[options]]", options],
+        ["[[serializedMethodData]]", serializedMethodData],
+        ["[[serializedModifierData]]", serializedModifierData],
+        ["[[state]]", "created"],
+        ["[[updating]]", false],
+        ["[[shippingAddress]]", null],
+        ["[[selectedShippingOption]]", selectedShippingOption],
+      ])
+    );
   }
 
   //readonly attribute DOMString id;
@@ -105,7 +116,7 @@ class PaymentRequest extends EventTarget(eventListeners) {
   //readonly attribute PaymentShippingType ? shippingType;
   get shippingType() {
     const {
-      shippingType
+      shippingType,
     } = internalSlots.get(this).get("[[options]]");
     return shippingType ? shippingType : null;
   }
@@ -114,29 +125,39 @@ class PaymentRequest extends EventTarget(eventListeners) {
   show() {
     const slots = internalSlots.get(this);
     if (slots.get("[[state]]") !== "created") {
-      throw new DOMException("Payment request was already used", "InvalidStateError");
+      throw new DOMException(
+        "Payment request was already used",
+        "InvalidStateError"
+      );
     }
     if (!window.top.document.hasFocus()) {
-      throw new DOMException("Top window must be focused to call .show()", "SecurityError");
+      throw new DOMException(
+        "Top window must be focused to call .show()",
+        "SecurityError"
+      );
     }
     slots.set("[[state]]", "interactive");
 
-    return new Promise(async(resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       slots.set("[[acceptPromise]]", {
         resolve,
-        reject
+        reject,
       });
-      const supported = Array
-        .from(slots.get("[[serializedMethodData]]").keys())
+      const supported = Array.from(slots.get("[[serializedMethodData]]").keys())
         .reduce((accumulator, method) => accumulator.concat(method), [])
         .filter(PaymentMethodChooser.supports);
       if (!supported.length) {
-        return reject(new DOMException("No supported payment methods found.", "NotSupportedError"));
+        return reject(
+          new DOMException(
+            "No supported payment methods found.",
+            "NotSupportedError"
+          )
+        );
       }
       const {
         displayItems,
         total,
-        shippingOptions
+        shippingOptions,
       } = slots.get("[[details]]");
 
       const options = slots.get("[[options]]");
@@ -176,20 +197,29 @@ class PaymentRequest extends EventTarget(eventListeners) {
     // TODO: add develper feedback about error to spec.
     const slots = internalSlots.get(this);
     if (slots.get("[[state]]") !== "interactive") {
-      throw new DOMException("Payment request was already consumed", "InvalidStateError");
+      throw new DOMException(
+        "Payment request was already consumed",
+        "InvalidStateError"
+      );
     }
-    return new Promise(async(resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       try {
         await paymentSheet.requestClose("abort");
       } catch (err) {
-        const invalidStateErr = new DOMException("Could not abort at this time", "InvalidStateError")
+        const invalidStateErr = new DOMException(
+          "Could not abort at this time",
+          "InvalidStateError"
+        );
         reject(invalidStateErr);
         return;
       }
       // Set the value of the internal slot request.[[\state]] to "closed".
       slots.set("[[\state]]", "closed");
       // Reject the promise request.[[\acceptPromise]] with an "AbortError" DOMException.
-      const abortErr = new DOMException("Payment request was aborted", "AbortError");
+      const abortErr = new DOMException(
+        "Payment request was aborted",
+        "AbortError"
+      );
       slots.get("[[\acceptPromise]]").reject(abortErr);
       // Resolve promise with undefined.
       resolve(undefined);
@@ -200,11 +230,13 @@ class PaymentRequest extends EventTarget(eventListeners) {
   async canMakePayment() {
     const slots = internalSlots.get(this);
     if (slots.get("[[state]]") !== "interactive") {
-      throw new DOMException("Payment request was already consumed", "InvalidStateError");
+      throw new DOMException(
+        "Payment request was already consumed",
+        "InvalidStateError"
+      );
     }
     // Optionally, at the user agent's discretion, return a promise rejected with a "QuotaExceededError" DOMException.
-    return Array
-      .from(slots.get("[[serializedMethodData]]").keys())
+    return Array.from(slots.get("[[serializedMethodData]]").keys())
       .reduce((accumulator, method) => accumulator.concat(method), [])
       .some(PaymentMethodChooser.supports);
   }
@@ -213,17 +245,23 @@ class PaymentRequest extends EventTarget(eventListeners) {
 function userAcceptsThePaymentRequest(request, detail) {
   const slots = internalSlots.get(request);
   if (slots.get("[[updating]]")) {
-    console.assert(false, "This should never happen");
+    console.assert(false, "This should never happen: in [[updating]] state");
     return;
   }
   if (slots.get("[[state]]" !== "interactive")) {
-    console.assert(false, "The user agent user interface should ensure that this never occurs.");
+    console.assert(
+      false,
+      "The user agent user interface should ensure that this never occurs."
+    );
     return;
   }
   const options = slots.get("[[options]]");
   if (options.requestShipping) {
     if (request.shippingAddress === null || request.shippingOption === null) {
-      console.assert(false, "This should never occur.");
+      console.assert(
+        false,
+        "Either shippingAddress or shippingOption was null"
+      );
       return;
     }
   }
@@ -239,7 +277,10 @@ async function userAbortsPayment(request) {
     return;
   }
   if (slots.get("[[state]]" !== "interactive")) {
-    console.assert(false, "The user agent user interface should ensure that this never occurs.");
+    console.assert(
+      false,
+      "The user agent user interface should ensure that this never occurs."
+    );
     return;
   }
   await Promise.resolve(); // spin the event loop
@@ -255,16 +296,21 @@ function paymentRequestUpdated(request, eventName) {
     return;
   }
   if (slots.get("[[state]]" !== "interactive")) {
-    console.assert(false, "The user agent user interface should ensure that this never occurs.");
+    console.assert(
+      false,
+      "The user agent user interface should ensure that this never occurs."
+    );
     return;
   }
   const updateEvent = new PaymentRequestUpdateEvent(name);
   request.dispatchEvent(updateEvent);
 }
 
-function processPaymentDetailsModifiers({
-  modifiers: originalModifiers
-}) {
+function processPaymentDetailsModifiers(
+  {
+    modifiers: originalModifiers,
+  }
+) {
   if (!originalModifiers) {
     return [];
   }
@@ -274,7 +320,7 @@ function processPaymentDetailsModifiers({
     const {
       total,
       additionalDisplayItems,
-      data
+      data,
     } = modifier;
     if (total) {
       if (!PaymentCurrencyAmount.isValid(total.amount.value)) {
@@ -287,7 +333,9 @@ function processPaymentDetailsModifiers({
     if (additionalDisplayItems) {
       for (const item of additionalDisplayItems) {
         if (PaymentCurrencyAmount.isValid(item.amount.value)) {
-          throw new TypeError("Invalid monetary value in additionalDisplayItems");
+          throw new TypeError(
+            "Invalid monetary value in additionalDisplayItems"
+          );
         }
       }
     }
@@ -297,25 +345,27 @@ function processPaymentDetailsModifiers({
   }
   return {
     modifiers,
-    serializedModifierData
+    serializedModifierData,
   };
 }
 
-function processShippingOptions({
-  shippingOptions
-}) {
+function processShippingOptions(
+  {
+    shippingOptions,
+  }
+) {
   if (!shippingOptions) {
     return [];
   }
-  const areValid = shippingOptions.every(
-    ({
-      amount: {
-        value
-      }
-    }) => PaymentCurrencyAmount.isValid(value)
-  );
+  const areValid = shippingOptions.every(({
+    amount: {
+      value,
+    },
+  }) => PaymentCurrencyAmount.isValid(value));
   if (!areValid) {
-    throw new TypeError("One of the ShippingOption monetary values is invalid.");
+    throw new TypeError(
+      "One of the ShippingOption monetary values is invalid."
+    );
   }
   const options = new Set(shippingOptions);
   const seenIDs = new Set();
@@ -327,15 +377,16 @@ function processShippingOptions({
     seenIDs.add(option.id);
   }
   // find last selected
-  const selected = Array
-    .from(options)
-    .reverse()
-    .find(({
-      selected
-    }) => selected);
+  const selected = Array.from(options).reverse().find(
+    (
+      {
+        selected,
+      }
+    ) => selected
+  );
   return {
     shippingOptions: Array.from(options),
-    selectedShippingOption: selected ? selected.id : null
+    selectedShippingOption: selected ? selected.id : null,
   };
 }
 
@@ -348,7 +399,7 @@ function makeInvertedPromise() {
   return {
     promise,
     resolve,
-    reject
+    reject,
   };
 }
 

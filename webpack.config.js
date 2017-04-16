@@ -1,6 +1,6 @@
 module.exports = {
   entry: ["babel-polyfill", "./src/index.js"],
-  //devtool: "inline-source-map",
+  //devtool: "source-map",
   output: {
     path: __dirname,
     filename: "./build/bundle.js"
@@ -15,7 +15,7 @@ module.exports = {
     }, {
       test: /\.js?$/,
       exclude: /node_modules/,
-      //loaders: ["babel-loader"],
+      loaders: ["babel-loader"],
     }]
   }
 };

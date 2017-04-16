@@ -4,31 +4,35 @@
 <link rel="stylesheet" href="css/shop.css">
 <link rel="stylesheet" href="css/payment-sheet.css">
 <title>Shop</title>
+
 <body>
-<main id="shop">
-<h1>Shopping</h1>
-<h2 class="main-stuff">Shopping Cart</h2>
-<form class="main-stuff">
-  <section id="inventory-table">
-    <!-- dynamically filled -->
-  </section>
-  <aside id="order-summary">
-    <!-- dynamically filled -->
-  </aside>
-</form>
-<section id="payment-complete" hidden>
-  <h1>Thank you for your order</h1>
-  <p>Your order number is: 00482156131</p>
-  <ul>
-    <li><a href="#">View receipt</a></li>
-    <li><a href="#">Print receipt</a></li>
-    <li><a href="#">Keep shopping</a></li>
-  </ul>
-</section>
-</main>
-<script>
-  document.querySelector("form").addEventListener("submit", ev => {
-    ev.preventDefault();
-    return false;
-  });
-</script>
+  <main id="shop">
+    <h1>Shopping</h1>
+    <h2 class="main-stuff">Shopping Cart</h2>
+    <form class="main-stuff">
+      <section id="inventory-table">
+        <!-- dynamically filled -->
+      </section>
+      <aside id="order-summary">
+        <!-- dynamically filled -->
+      </aside>
+    </form>
+    <section id="payment-complete" hidden>
+      <h1>Thank you for your order</h1>
+      <p>Your order number is: 00482156131</p>
+      <ul>
+        <li><a href="#">View receipt</a></li>
+        <li><a href="#">Print receipt</a></li>
+        <li><a href="#">Keep shopping</a></li>
+      </ul>
+    </section>
+  </main>
+  <script>
+    document.querySelector("form").addEventListener("submit", ev => {
+      ev.preventDefault();
+      return false;
+    });
+  </script>
+  <p>
+    <small>Please use credit card number: 4222222222222</small>
+  </p>

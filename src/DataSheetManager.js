@@ -1,14 +1,33 @@
 import EventTarget from "event-target-shim";
 const privates = new WeakMap();
 
-export default class DataSheetManager extends EventTarget(["done", "next"]) {
+export default class DataSheetManager extends EventTarget(["done", "update"]) {
   constructor(dataSheets) {
     super();
     const priv = privates.set(this, new Map()).get(this);
     priv.set("dataSheets", dataSheets.concat());
-    this.reset();
-    dataSheets.forEach(sheet => sheet.addEventListener("continue", continueHandler.bind(this)));
+    dataSheets.forEach(sheet =>
+      sheet.addEventListener("continue", continueHandler.bind(this)));
+    dataSheets.forEach(sheet =>
+      sheet.addEventListener("requestdisplay", ev => {
+        this.active = ev.detail.sheet;
+        const opts = {
+          detail: {
+            activeSheet: ev.detail.sheet,
+          },
+        };
+        this.dispatchEvent(new CustomEvent("update", opts));
+      }));
+    const readyPromise = Promise.all(dataSheets.map(sheet => sheet.ready)).then(
+      this.reset.bind(this)
+    );
+    priv.set("ready", readyPromise);
   }
+
+  get ready() {
+    return privates.get(this).get("ready");
+  }
+
   get active() {
     return privates.get(this).get("active");
   }
@@ -20,23 +39,34 @@ export default class DataSheetManager extends EventTarget(["done", "next"]) {
   }
   reset() {
     const priv = privates.get(this);
-    this.active = priv.get("dataSheets")[0];
+    const sheets = priv.get("dataSheets");
+    sheets.forEach(sheet => sheet.reset());
+    // find the first invalid sheet
+    this.active = sheets.find(sheet => !sheet.isValid) ||
+      sheets[sheets.length - 1];
+  }
+  update(requestData) {
+    const priv = privates.get(this);
+    const dataSheets = priv.get("dataSheets");
+    dataSheets.forEach(sheet => sheet.render(requestData));
   }
 }
 
 function continueHandler() {
   const priv = privates.get(this);
   const dataSheets = priv.get("dataSheets");
-  const index = dataSheets.findIndex(item => item === this.active) + 1;
-  const activeSheet = dataSheets[index];
+  const activeSheet = dataSheets
+    .slice(dataSheets.findIndex(sheet => sheet === this.active) + 1)
+    .find(sheet => !sheet.isValid || sheet.userMustChoose);
+
   if (activeSheet) {
     this.active = activeSheet;
     const opts = {
       detail: {
-        activeSheet
-      }
+        activeSheet,
+      },
     };
-    this.dispatchEvent(new CustomEvent("next", opts));
+    this.dispatchEvent(new CustomEvent("update", opts));
     return;
   }
   // We are done! Gather all collected data
@@ -45,7 +75,7 @@ function continueHandler() {
     .map(sheet => sheet.collectedData)
     .reduce((accum, obj) => Object.assign(accum, obj), {});
   const opts = {
-    detail: collectedData
+    detail: collectedData,
   };
   this.dispatchEvent(new CustomEvent("done", opts));
 }

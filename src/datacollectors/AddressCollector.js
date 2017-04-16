@@ -7,11 +7,7 @@ import db from "../AutofillDB";
 import PaymentAddress from "../PaymentAddress";
 
 const privates = new WeakMap();
-const addressTypes = new Set([
-  "shipping",
-  "billing",
-]);
-
+const addressTypes = new Set(["shipping", "billing"]);
 const schema = new Set([
   "addressLevel1",
   "addressLevel2",
@@ -22,28 +18,59 @@ const schema = new Set([
   "postalCode",
   "streetAddress",
 ]);
+const defaultRequestData = Object.freeze({
+  options: {
+    requestPayerEmail: false,
+    requestPayerName: false,
+    requestPayerPhone: false,
+    requestShipping: false,
+  },
+});
 
-function makeInitialData(){
+function makeInitialData() {
   const obj = {
     guid: guid(),
   };
-  return Array
-    .from(schema)
-    .reduce((obj, propName) =>{
+  return Array.from(schema).reduce(
+    (obj, propName) => {
       obj[propName] = "";
-      return obj; 
-    }, obj);
+      return obj;
+    },
+    obj
+  );
 }
 
 export default class AddressCollector extends DataCollector {
   constructor(addressType = "shipping", requestedFields) {
-    const initialData =  makeInitialData();
-    super(schema, [`data-collector-${addressType}-address`], "addresses", initialData);
+    const initialData = makeInitialData();
+    super(
+      schema,
+      [`data-collector-${addressType}-address`],
+      "addresses",
+      initialData
+    );
     if (!addressTypes.has(addressType)) {
       throw new TypeError(`Invalid address type: ${addressType}`);
     }
     const priv = privates.set(this, new Map()).get(this);
     priv.set("addressType", addressType);
+    priv.set("didNotifyAddressChange", false);
+    this.addEventListener("datacollected", this.notifyAddressChange.bind(this));
+  }
+
+  notifyAddressChange() {
+    const priv = privates.get(this);
+    const opts = {
+      detail: {
+        shippingAddress: this.toPaymentAddress(),
+      },
+    };
+    this.dispatchEvent(new CustomEvent("shippingaddresschange", opts));
+    priv.set("didNotifyAddressChange", true);
+  }
+
+  get didNotifyAddressChange() {
+    return privates.get(this).get("didNotifyAddressChange");
   }
 
   get addressType() {
@@ -79,26 +106,23 @@ export default class AddressCollector extends DataCollector {
       phone,
       postalCode,
       recipient,
-      region
+      region,
     });
   }
 
-  render(requestData) {
+  render(requestData = defaultRequestData) {
     const {
-      data
+      data,
     } = this;
     const {
       options: {
         requestPayerEmail,
         requestPayerName,
         requestPayerPhone,
-        requestShipping
-      }
+        requestShipping,
+      },
     } = requestData;
-    const invalidHandler = function() {
-      //this.setCustomValidity("This is required.");
-    }
-    return this.renderer `
+    return this.renderer`
       <input 
         type="hidden"
         name="uuid"
@@ -107,7 +131,6 @@ export default class AddressCollector extends DataCollector {
         autocomplete="${this.addressType + " name"}"
         class="left-half"
         name="fullName"
-        oninvalid="${invalidHandler}"
         placeholder="Name"
         required="${requestPayerName}"
         type="text"
@@ -116,7 +139,6 @@ export default class AddressCollector extends DataCollector {
         autocomplete="${this.addressType + " tel"}"
         class="right-half"
         name="phoneNumber"
-        oninvalid="${invalidHandler}"
         placeholder="Phone Number"
         required="${requestPayerPhone}"
         type="tel"
@@ -125,7 +147,6 @@ export default class AddressCollector extends DataCollector {
         autocomplete="${this.addressType + " street-address"}"
         class="full"
         name="streetAddress"
-        oninvalid="${invalidHandler}"
         placeholder="Address"
         required="${requestShipping}"
         type="text"
@@ -134,7 +155,6 @@ export default class AddressCollector extends DataCollector {
         autocomplete="${this.addressType + " address-level2"}"
         class="two-thirds"
         name="addressLevel2"
-        oninvalid="${invalidHandler}"
         placeholder="City"
         required="${requestShipping}"
         type="text"
@@ -142,13 +162,10 @@ export default class AddressCollector extends DataCollector {
       <input
         autocomplete="${this.addressType + " address-level1"}"
         name="addressLevel1"
-        oninvalid="${invalidHandler}"
         placeholder="State"
         required="${requestShipping}"
         type="text"
-        value="${data.addressLevel1}">${
-          Countries.asHTMLSelect("two-thirds", data.country || "US", "country", requestShipping ? "required" : null)
-      }<input
+        value="${data.addressLevel1}">${Countries.asHTMLSelect("two-thirds", data.country || "US", "country", requestShipping ? "required" : null)}<input
         autocomplete="${this.addressType + " postal-code"}"
         name="postalCode"
         placeholder="Post code"

@@ -4,6 +4,7 @@ import EventTarget from "event-target-shim";
 const defaultLabels = Object.freeze({
   cancelLabel: "Cancel",
   proceedLabel: "Continue",
+  nextSheet: null,
 });
 
 const privates = new WeakMap();
@@ -28,7 +29,7 @@ export default class DataSheetControls extends EventTarget(["cancel", "continue"
     priv.set("canContinue", false);
     this.render();
   }
-  render({ cancelLabel, proceedLabel } = privates.get(this).get("labels")) {
+  render({ cancelLabel, proceedLabel, nextSheet } = privates.get(this).get("labels")) {
     const priv = privates.get(this);
     const renderer = priv.get("renderer");
     const cancelHandler = () => {

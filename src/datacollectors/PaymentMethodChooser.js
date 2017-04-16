@@ -2,29 +2,36 @@ import hyperHTML from "hyperhtml/hyperhtml.js";
 import DataCollector from "./DataCollector";
 const privates = new WeakMap();
 
-const defaultMethods = [{
-  name: "basic-card",
-  value: "visa",
-  icons: [{
-    src: "./payment-sheet/images/visa.svg",
-    sizes: "256x256",
-  }, ],
-}, {
-  name: "https://paypal.com",
-  value: "paypal",
-  icons: [{
-    src: "./payment-sheet/images/paypal.svg",
-    sizes: "256x256",
-  }, ],
-}];
+const defaultMethods = [
+  {
+    name: "basic-card",
+    value: "visa",
+    icons: [
+      {
+        src: "./payment-sheet/images/visa.svg",
+        sizes: "256x256",
+      },
+    ],
+  },
+  {
+    name: "https://paypal.com",
+    value: "paypal",
+    icons: [
+      {
+        src: "./payment-sheet/images/paypal.svg",
+        sizes: "256x256",
+      },
+    ],
+  },
+];
 
-const schema = new Set([
-  "payment-method",
-]);
+const schema = new Set(["payment-method"]);
 
 export default class PaymentMethodChooser extends DataCollector {
   constructor(paymentMethods = defaultMethods) {
-    super(schema, ["payment-method-chooser"]);
+    super(schema, ["payment-method-chooser"], null, {
+      "payment-method": "visa",
+    });
     const priv = privates.set(this, new Map()).get(this);
     priv.set("paymentMethods", paymentMethods);
   }
@@ -39,15 +46,13 @@ export default class PaymentMethodChooser extends DataCollector {
         </h2>
       `;
     }
+    const radioButtons = paymentMethods.map(method => toRadio(method));
     return this.renderer`
-    <div id="payment-methods-buttons">${
-      paymentMethods.map(method => toRadio(method))
-    }</div>`;
+      <div id="payment-methods-buttons">${radioButtons}</div>
+    `;
   }
   static supports(method) {
-    return defaultMethods.some(({
-      name
-    }) => method === name);
+    return defaultMethods.some(({ name }) => name === method);
   }
 }
 
@@ -57,22 +62,22 @@ function toRadio(paymentMethod) {
     if (ev.keyCode === 32 || ev.keyCode === 13) {
       ev.currentTarget.setAttribute("aria-checked", "true");
       ev.currentTarget.querySelector("input").checked = true;
-      ev.currentTarget.querySelector("input").form.dispatchEvent(new Event("change"));
+      ev.currentTarget
+        .querySelector("input")
+        .form.dispatchEvent(new Event("change"));
       ev.preventDefault(); // Prevents space bar from scrolling the web page.
     }
   };
   const srcset = icons.map(toSrcset);
-  const frag = hyperHTML.wire(paymentMethod)
-  `
+  const img = toImage({ srcset, name });
+  return hyperHTML.wire(paymentMethod)`
     <label onkeypress="${keyHandler}" role="radio" aria-checked="false">
-    <input required value="${value}" name="payment-method" type="radio">${toImage({srcset, name})}</label>`;
-  return frag;
+    <input required value="${value}" required name="payment-method" type="radio">${img}</label>`;
 }
 // Either a srcset or just a src
 function toImage(details) {
-  const {srcset, alt} = details;
-  return hyperHTML.wire(details)
-  `<img
+  const { srcset, alt } = details;
+  return hyperHTML.wire(details)`<img
      tabindex="0"
      alt="${alt}"
      srcset="${srcset.join(" ")}"
@@ -82,12 +87,16 @@ function toImage(details) {
 }
 
 function toSrcset({ src, sizes }) {
-  return sizes.split(" ")
+  return sizes
+    .split(" ")
     .map(size => size.split("x")[0] + "w")
-    .reduce((collector, width) => {
-      collector.push(`${src} ${width}`);
-      return collector;
-    }, [])
+    .reduce(
+      (collector, width) => {
+        collector.push(`${src} ${width}`);
+        return collector;
+      },
+      []
+    )
     .sort()
     .join();
 }

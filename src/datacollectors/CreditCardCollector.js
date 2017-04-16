@@ -19,12 +19,13 @@ const buttonLabels = Object.freeze({
 });
 
 function makeInitialData() {
-  return Array
-    .from(schema)
-    .reduce((obj, propName) => {
+  return Array.from(schema).reduce(
+    (obj, propName) => {
       obj[propName] = "";
       return obj;
-    }, {});
+    },
+    {}
+  );
 }
 
 export default class CreditCardCollector extends DataCollector {
@@ -50,8 +51,8 @@ export default class CreditCardCollector extends DataCollector {
     const year = new Date().getFullYear();
     const keyUpHandler = ({ target: input }) => {
       let event;
-      if(input.validity.valid && input.form.checkValidity()){
-        event = new CustomEvent("datacollected", {detail: this.toObject()});
+      if (input.validity.valid && input.form.checkValidity()) {
+        event = new CustomEvent("datacollected", { detail: this.toObject() });
       } else {
         event = new CustomEvent("invaliddata");
       }
@@ -61,9 +62,9 @@ export default class CreditCardCollector extends DataCollector {
       cardholderName,
       cardNumber,
       expiryMonth,
-      expiryYear
+      expiryYear,
     } = this.data;
-    return this.renderer `
+    return this.renderer`
       <section class="credit-card-details">
         <h3 class="fullspan">Enter payment details</h3>
         <input
@@ -86,12 +87,8 @@ export default class CreditCardCollector extends DataCollector {
           placeholder="Name on card"
           autocomplete="cc-name"
           value="${cardholderName}">
-        <select name="expiryMonth" placehoder="exp.MM" maxlength="2">${
-          makeOptionsRange(1,12, parseInt(expiryMonth, 10))
-        }</select>
-        <select name="expiryYear" placehoder="exp.YY" maxlength="2">${
-          makeOptionsRange(year, year + 10, parseInt(expiryYear, 10))
-        }</select>
+        <select name="expiryMonth" placehoder="exp.MM" maxlength="2">${makeOptionsRange(1, 12, parseInt(expiryMonth, 10))}</select>
+        <select name="expiryYear" placehoder="exp.YY" maxlength="2">${makeOptionsRange(year, year + 10, parseInt(expiryYear, 10))}</select>
         <input
           inputmode="numeric"
           maxlength="4"
@@ -99,7 +96,6 @@ export default class CreditCardCollector extends DataCollector {
           name="cardSecurityCode"
           onkeyup="${keyUpHandler}"
           placeholder="CVV"
-          required
           size="4"
           type="text">
         <label class="fullspan">
@@ -119,9 +115,8 @@ export default class CreditCardCollector extends DataCollector {
   }
 }
 
-function validateCCNumber({
-  target: inputElement
-}) {
+function validateCCNumber(ev) {
+  const { target: inputElement } = ev;
   if (BasicCardResponse.isValid(inputElement.value)) {
     inputElement.setCustomValidity("");
     return;
@@ -138,12 +133,13 @@ function makeOptionsRange(start, end, selected = null) {
   }
   while (start <= end) {
     const isSelected = selected === start;
-    options.push(hyperHTML.wire()
-      `
+    options.push(
+      hyperHTML.wire()`
       <option value="${start}" selected="${isSelected}">
         ${start}
       </option>
-    `);
+    `
+    );
     start++;
   }
   return options;

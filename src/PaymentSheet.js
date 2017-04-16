@@ -13,7 +13,8 @@ import LineItems from "./PaymentSheet.LineItems";
 import PaymentMethodChooser from "./datacollectors/PaymentMethodChooser";
 import ShippingOptions from "./PaymentSheet.ShippingOptions";
 import Total from "./PaymentSheet.Total";
-import PaymentConfirmationCollector from "./datacollectors/PaymentConfirmationCollector";
+import PaymentConfirmationCollector
+  from "./datacollectors/PaymentConfirmationCollector";
 import AwaitPaymentResponse from "./PaymentSheet.AwaitPaymentResponse";
 
 const privates = new WeakMap();
@@ -40,71 +41,31 @@ class PaymentSheet extends EventTarget(eventListeners) {
   constructor() {
     super();
     const priv = privates.set(this, new Map()).get(this);
-    const dialog = document.createElement("dialog");
-    dialog.id = "payment-sheet";
-    const abortListener = () => {
-      this.abort();
-    }
-    dialog.addEventListener("cancel", abortListener);
-
-    priv.set("dialog", dialog);
-    priv.set("renderer", hyperHTML.bind(dialog));
-    priv.set("isShowing", false);
+    initDialog.call(this);
 
     // WIDGETS
     priv.set("host-widget", new Host());
     const shippingOptionsPicker = new ShippingOptions();
     shippingOptionsPicker.addEventListener("shippingoptionchange", ev => {
       this.dispatchEvent(ev);
-    })
-    priv.set("topWidgets", new Map([
-      ["lineItems", {widget: new LineItems(), active: true}],
-      ["shippingOptionsPicker", {widget: shippingOptionsPicker, active: true}],
-      ["total", {widget: new Total(), active: true}],
-      ["awaitPaymentResponse", {widget: new AwaitPaymentResponse(), active: false}],
-    ]));
-    const paymentChooder = new PaymentMethodChooser();
-    const addressCollector = new AddressCollector("shipping");
-    addressCollector.addEventListener("datacollected", () => {
-      const opts = {
-        detail: {
-          shippingAddress: addressCollector.toPaymentAddress()
-        }
-      };
-      this.dispatchEvent(new CustomEvent("shippingaddresschange", opts));
     });
-    const creditCardCollector = new CreditCardCollector(addressCollector);
-    const paymentConfirmationCollector = new PaymentConfirmationCollector(addressCollector, creditCardCollector);
-    const sheets = [
-      new DataSheet("Choose your payment method:", paymentChooder),
-      new DataSheet("Shipping address:", addressCollector),
-      new DataSheet("", creditCardCollector),
-      new DataSheet("", paymentConfirmationCollector),
-    ];
-
-    sheets.forEach(sheet => sheet.addEventListener("abort", abortListener));
-    const dataSheetManager = new DataSheetManager(sheets);
-    priv.set("dataSheetManager", dataSheetManager);
-    dataSheetManager.addEventListener("next", () => {
-      console.log("showing next...");
-      this.render();
-    });
-
-    dataSheetManager.addEventListener("done", ({ detail: collectedData }) => {
-      // Show just the waiting spinner... 
-      const topWidgets = priv.get("topWidgets");
-      Array
-        .from(topWidgets.values())
-        .forEach(obj => obj.active = false)
-      topWidgets.get("awaitPaymentResponse").active = true;
-      this.render();
-      priv.get("sessionPromise").resolve(collectedData);
-    });
-    const ready = async() => {
-      await attatchDialog(dialog);
-      await Promise.all(sheets.map(sheet => sheet.ready));
-    }
-    priv.set("ready", ready());
+    // TODO: convert to proper manager
+    priv.set(
+      "topWidgets",
+      new Map([
+        ["lineItems", { widget: new LineItems(), active: true }],
+        [
+          "shippingOptionsPicker",
+          { widget: shippingOptionsPicker, active: true },
+        ],
+        ["total", { widget: new Total(), active: true }],
+        [
+          "awaitPaymentResponse",
+          { widget: new AwaitPaymentResponse(), active: false },
+        ],
+      ])
+    );
+    priv.set("ready", init.call(this));
   }
 
   get sessionDone() {
@@ -114,7 +75,11 @@ class PaymentSheet extends EventTarget(eventListeners) {
   get ready() {
     return privates.get(this).get("ready");
   }
-
+  /**
+   * Abort showing the sheet.
+   *  
+   * @param {String} reason 
+   */
   async abort(reason) {
     console.log("aborting", reason);
     if (db.isOpen()) {
@@ -137,8 +102,10 @@ class PaymentSheet extends EventTarget(eventListeners) {
     priv.set("isShowing", true);
     startPaymentSession(this);
     await this.ready;
+    const dataSheetManager = priv.get("dataSheetManager");
+    dataSheetManager.update(requestData);
     const dialog = priv.get("dialog");
-    this.render();
+    this.render(requestData);
     dialog.showModal();
     try {
       return await this.sessionDone; // collected data is returned
@@ -184,26 +151,33 @@ class PaymentSheet extends EventTarget(eventListeners) {
     const host = priv.get("host-widget");
     const dataSheetsManager = priv.get("dataSheetManager");
     const currentSheet = dataSheetsManager.active;
-    renderer `
-    <h1>
-      <img src="./payment-sheet/images/logo-payment.png" alt="">Firefox Web Payment
-    </h1>
-    <section id="payment-sheet-top-section">${
-      Array
-        .from(topWidgets.values())
-        .filter(({active})=> active)
-        .map(({widget}) => widget.render(requestData))
-    }</section>
-    <section id="payment-sheet-data-sheet" hidden="${currentSheet ? false : true}">${
-      currentSheet ? currentSheet.render(requestData) : ""
-    }</section>
-    <section id="payment-sheet-bottom">${
-      host.render(window.location)
-    }<section>`;
+    renderer`
+      <h1>
+        <img src="./payment-sheet/images/logo-payment.png" alt="">Firefox Web Payment
+      </h1>
+      <section id="payment-sheet-top-section">${Array.from(topWidgets.values())
+      .filter(({ active }) => active)
+      .map(({ widget }) => widget.render(requestData))}</section>
+      <section id="payment-sheet-data-sheet" hidden="${currentSheet ? false : true}">${currentSheet ? currentSheet.render(requestData) : ""}</section>
+      <section id="payment-sheet-bottom">${host.render(window.location)}<section>
+    `;
     if (currentSheet) {
       await currentSheet.validate();
     }
   }
+}
+
+/**
+ * @this PaymentSheet
+ */
+function initDialog() {
+  const priv = privates.get(this);
+  const dialog = document.createElement("dialog");
+  dialog.id = "payment-sheet";
+  dialog.addEventListener("cancel", this.abort.bind(this));
+  priv.set("dialog", dialog);
+  priv.set("renderer", hyperHTML.bind(dialog));
+  priv.set("isShowing", false);
 }
 
 function attatchDialog(dialog) {
@@ -212,7 +186,7 @@ function attatchDialog(dialog) {
       document.body.appendChild(dialog);
       dialogPolyfill.registerDialog(dialog);
       return resolve();
-    }
+    };
     if (document.readyState === "complete") {
       attachAndDone();
       return;
@@ -231,6 +205,54 @@ function startPaymentSession(paymentSheet) {
     });
   });
   priv.set("sessionPromise", invertedPromise);
+}
+
+async function init() {
+  const priv = privates.get(this);
+  const paymentChooser = await new PaymentMethodChooser().ready;
+  const addressCollector = await new AddressCollector("shipping").ready;
+  addressCollector.addEventListener("shippingaddresschange", ev => {
+    this.dispatchEvent(ev);
+  });
+  const creditCardCollector = await new CreditCardCollector(
+    addressCollector
+  ).ready;
+  const paymentConfirmationCollector = await new PaymentConfirmationCollector(
+    addressCollector,
+    creditCardCollector
+  ).ready;
+
+  const sheets = [
+    new DataSheet("Choose your payment method:", paymentChooser, {
+      userMustChoose: true,
+    }),
+    new DataSheet("Shipping address:", addressCollector),
+    new DataSheet("", creditCardCollector),
+    new DataSheet("", paymentConfirmationCollector, { userMustChoose: true }),
+  ];
+  sheets.forEach(sheet =>
+    sheet.addEventListener("abort", this.abort.bind(this)));
+  const dataSheetManager = new DataSheetManager(sheets);
+  priv.set("dataSheetManager", dataSheetManager);
+  dataSheetManager.addEventListener("update", () => {
+    console.log("showing new sheet...");
+    this.render();
+  });
+
+  dataSheetManager.addEventListener("done", ({ detail: collectedData }) => {
+    // Show just the waiting spinner...
+    const topWidgets = priv.get("topWidgets");
+    Array.from(topWidgets.values()).forEach(obj => obj.active = false);
+    topWidgets.get("awaitPaymentResponse").active = true;
+    this.render();
+    priv.get("sessionPromise").resolve(collectedData);
+  });
+
+  await Promise.all([
+    dataSheetManager.ready,
+    attatchDialog(priv.get("dialog")),
+  ]);
+  return this;
 }
 
 const paymentSheet = new PaymentSheet();
