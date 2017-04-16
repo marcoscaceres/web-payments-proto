@@ -88,6 +88,10 @@
   animation: grow .5s ease-out;
 }
 
+#payment-sheet abbr {
+  text-decoration: none;
+}
+
 .paysheet-controls {
   margin-right: .3cm;
   text-align: right;
