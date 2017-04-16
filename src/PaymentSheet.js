@@ -240,14 +240,18 @@ async function init() {
     addressCollector,
     creditCardCollector
   ).ready;
+  const addressDataSheet = new DataSheet("Shipping address:", addressCollector);
   const sheets = [
     new DataSheet("Choose your payment method:", paymentChooser, {
       userMustChoose: true,
     }),
-    new DataSheet("Shipping address:", addressCollector),
+    addressDataSheet,
     new DataSheet("", creditCardCollector),
     new DataSheet("", paymentConfirmationCollector, { userMustChoose: true }),
   ];
+  addressDataSheet.addEventListener("continue", () => {
+    addressCollector.notifyAddressChange();
+  });
   sheets.forEach(sheet =>
     sheet.addEventListener("abort", () => {
       this.abort("User aborted.");

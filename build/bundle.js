@@ -2638,8 +2638,14 @@ class DataCollector
   }
 
   set dataSheet(dataSheet) {
+    dataSheet.form.addEventListener("reset", () => {
+      console.log("Resetting...");
+      this.reset();
+    });
     return privates.get(this).set("dataSheet", dataSheet);
   }
+
+  reset() {}
 
   toObject() {
     const priv = privates.get(this);
@@ -5650,14 +5656,18 @@ async function init() {
     addressCollector,
     creditCardCollector
   ).ready;
+  const addressDataSheet = new __WEBPACK_IMPORTED_MODULE_3__PaymentSheet_DataSheet_js__["a" /* default */]("Shipping address:", addressCollector);
   const sheets = [
     new __WEBPACK_IMPORTED_MODULE_3__PaymentSheet_DataSheet_js__["a" /* default */]("Choose your payment method:", paymentChooser, {
       userMustChoose: true,
     }),
-    new __WEBPACK_IMPORTED_MODULE_3__PaymentSheet_DataSheet_js__["a" /* default */]("Shipping address:", addressCollector),
+    addressDataSheet,
     new __WEBPACK_IMPORTED_MODULE_3__PaymentSheet_DataSheet_js__["a" /* default */]("", creditCardCollector),
     new __WEBPACK_IMPORTED_MODULE_3__PaymentSheet_DataSheet_js__["a" /* default */]("", paymentConfirmationCollector, { userMustChoose: true }),
   ];
+  addressDataSheet.addEventListener("continue", () => {
+    addressCollector.notifyAddressChange();
+  });
   sheets.forEach(sheet =>
     sheet.addEventListener("abort", () => {
       this.abort("User aborted.");
@@ -20237,6 +20247,9 @@ const privates = new WeakMap();
 class DataSheet extends __WEBPACK_IMPORTED_MODULE_2_event_target_shim___default()(["abort"]) {
   constructor(heading, dataCollector, options = { userMustChoose: false }) {
     super();
+    const priv = privates.set(this, new Map()).get(this);
+    const form = document.createElement("form");
+    priv.set("form", form);
     dataCollector.dataSheet = this;
     const controlButtons = new __WEBPACK_IMPORTED_MODULE_1__PaymentSheet_DataSheetControls__["a" /* default */](dataCollector.buttonLabels);
     controlButtons.addEventListener("continue", () => {
@@ -20247,7 +20260,6 @@ class DataSheet extends __WEBPACK_IMPORTED_MODULE_2_event_target_shim___default(
         new CustomEvent("abort", { detail: { reason: "User aborted." } })
       );
     });
-    const form = document.createElement("form");
     form.classList.add("payment-sheet-data-collector");
     const changeListener = async ev => {
       this.validate();
@@ -20261,11 +20273,8 @@ class DataSheet extends __WEBPACK_IMPORTED_MODULE_2_event_target_shim___default(
     });
     dataCollector.addEventListener("invaliddata", this.validate.bind(this));
 
-    const priv = privates.set(this, new Map()).get(this);
-
     priv.set("controlButtons", controlButtons);
     priv.set("dataCollector", dataCollector);
-    priv.set("form", form);
     priv.set("heading", heading);
     priv.set("renderer", __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml___default.a.bind(form));
     priv.set(
@@ -20291,6 +20300,10 @@ class DataSheet extends __WEBPACK_IMPORTED_MODULE_2_event_target_shim___default(
 
   get collectedData() {
     return privates.get(this).get("dataCollector").toObject();
+  }
+
+  get form() {
+    return privates.get(this).get("form");
   }
 
   get ready() {
@@ -20848,7 +20861,11 @@ class AddressCollector extends __WEBPACK_IMPORTED_MODULE_4__DataCollector__["a" 
     const priv = privates.set(this, new Map()).get(this);
     priv.set("addressType", addressType);
     priv.set("didNotifyAddressChange", false);
-    this.addEventListener("datacollected", this.notifyAddressChange.bind(this));
+  }
+
+  reset() {
+    console.log("AddressCollector RESET!");
+    privates.get(this).set("didNotifyAddressChange", false);
   }
 
   notifyAddressChange() {

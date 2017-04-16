@@ -55,7 +55,11 @@ export default class AddressCollector extends DataCollector {
     const priv = privates.set(this, new Map()).get(this);
     priv.set("addressType", addressType);
     priv.set("didNotifyAddressChange", false);
-    this.addEventListener("datacollected", this.notifyAddressChange.bind(this));
+  }
+
+  reset() {
+    console.log("AddressCollector RESET!");
+    privates.get(this).set("didNotifyAddressChange", false);
   }
 
   notifyAddressChange() {

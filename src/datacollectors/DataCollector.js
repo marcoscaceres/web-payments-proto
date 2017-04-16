@@ -61,8 +61,14 @@ export default class DataCollector
   }
 
   set dataSheet(dataSheet) {
+    dataSheet.form.addEventListener("reset", () => {
+      console.log("Resetting...");
+      this.reset();
+    });
     return privates.get(this).set("dataSheet", dataSheet);
   }
+
+  reset() {}
 
   toObject() {
     const priv = privates.get(this);

@@ -6,6 +6,9 @@ const privates = new WeakMap();
 export default class DataSheet extends EventTarget(["abort"]) {
   constructor(heading, dataCollector, options = { userMustChoose: false }) {
     super();
+    const priv = privates.set(this, new Map()).get(this);
+    const form = document.createElement("form");
+    priv.set("form", form);
     dataCollector.dataSheet = this;
     const controlButtons = new Controls(dataCollector.buttonLabels);
     controlButtons.addEventListener("continue", () => {
@@ -16,7 +19,6 @@ export default class DataSheet extends EventTarget(["abort"]) {
         new CustomEvent("abort", { detail: { reason: "User aborted." } })
       );
     });
-    const form = document.createElement("form");
     form.classList.add("payment-sheet-data-collector");
     const changeListener = async ev => {
       this.validate();
@@ -30,11 +32,8 @@ export default class DataSheet extends EventTarget(["abort"]) {
     });
     dataCollector.addEventListener("invaliddata", this.validate.bind(this));
 
-    const priv = privates.set(this, new Map()).get(this);
-
     priv.set("controlButtons", controlButtons);
     priv.set("dataCollector", dataCollector);
-    priv.set("form", form);
     priv.set("heading", heading);
     priv.set("renderer", hyperHTML.bind(form));
     priv.set(
@@ -60,6 +59,10 @@ export default class DataSheet extends EventTarget(["abort"]) {
 
   get collectedData() {
     return privates.get(this).get("dataCollector").toObject();
+  }
+
+  get form() {
+    return privates.get(this).get("form");
   }
 
   get ready() {
