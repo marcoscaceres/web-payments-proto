@@ -18,18 +18,18 @@ export default class DataSheet extends EventTarget(["abort"]) {
     });
     const form = document.createElement("form");
     form.classList.add("payment-sheet-data-collector");
-    form.addEventListener("change", this.validate.bind(this));
+    const changeListener = async ev => {
+      this.validate();
+      await dataCollector.save();
+    };
+    form.addEventListener("keyup", changeListener);
+    form.addEventListener("change", changeListener);
     form.addEventListener("submit", ev => {
       ev.preventDefault();
       return false;
     });
-    dataCollector.addEventListener("invaliddata", async () => {
-      controlButtons.deactivate();
-      await this.validate();
-    });
-    dataCollector.addEventListener("datacollected", () => {
-      controlButtons.activate();
-    });
+    dataCollector.addEventListener("invaliddata", this.validate.bind(this));
+
     const priv = privates.set(this, new Map()).get(this);
 
     priv.set("controlButtons", controlButtons);
@@ -70,17 +70,16 @@ export default class DataSheet extends EventTarget(["abort"]) {
     return privates.get(this).get("form").checkValidity();
   }
 
-  async validate() {
+  validate() {
     const priv = privates.get(this);
     const dataCollector = priv.get("dataCollector");
     const controlButtons = priv.get("controlButtons");
     const form = priv.get("form");
-    if (!form.checkValidity()) {
+    if (form.checkValidity()) {
+      controlButtons.activate();
+    } else {
       controlButtons.deactivate();
-      return;
     }
-    controlButtons.activate();
-    await dataCollector.save();
   }
 
   reset() {

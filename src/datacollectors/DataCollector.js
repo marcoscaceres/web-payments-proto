@@ -98,10 +98,6 @@ export default class DataCollector
       }
       await db[tableName].put(dataToSave);
     }
-    const ev = new CustomEvent("datacollected", {
-      detail: this.toObject(),
-    });
-    this.dispatchEvent(ev);
   }
 
   get buttonLabels() {
