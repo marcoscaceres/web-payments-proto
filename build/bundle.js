@@ -2711,7 +2711,7 @@ async function init(tableName, initialData) {
         timesUsed: 0,
       });
     } else {
-      this.data = await __WEBPACK_IMPORTED_MODULE_1__AutofillDB__["a" /* default */][tableName].orderBy("timeLastUsed").first();
+      this.data = await __WEBPACK_IMPORTED_MODULE_1__AutofillDB__["a" /* default */][tableName].orderBy("timeLastUsed").last();
     }
   }
   return this;

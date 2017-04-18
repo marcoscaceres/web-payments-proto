@@ -132,7 +132,7 @@ async function init(tableName, initialData) {
         timesUsed: 0,
       });
     } else {
-      this.data = await db[tableName].orderBy("timeLastUsed").first();
+      this.data = await db[tableName].orderBy("timeLastUsed").last();
     }
   }
   return this;
