@@ -2555,12 +2555,12 @@ module.exports = {
 
 const db = new __WEBPACK_IMPORTED_MODULE_0_dexie___default.a("Autofill");
 
-db
-  .version(1)
-  .stores({
-    addresses: "&guid, organization, streetAddress, addressLevel1, addressLevel2, postalCode, country, tel, email, timeCreated, timeLastUsed, timeLastModified, timesUsed, type",
-    cards: "&cardNumber, cardholderName, expiryMonth, expiryYear, billingAddressUuid, timeCreated, timeLastUsed, timeLastModified, timesUsed",
-  });
+db.version(1).stores({
+  addresses: "&guid, organization, streetAddress, addressLevel1, addressLevel2, postalCode, country, tel, email, timeCreated, timeLastUsed, timeLastModified, timesUsed, type",
+  cards: "&cardNumber, cardholderName, expiryMonth, expiryYear, billingAddressUuid, timeCreated, timeLastUsed, timeLastModified, timesUsed",
+});
+
+window.db = db;
 
 /* harmony default export */ __webpack_exports__["a"] = (db);
 
