@@ -44,6 +44,14 @@ export default class CreditCardCollector extends DataCollector {
     return new BasicCardResponse(details);
   }
 
+  async save() {
+    // only save if the credit card is valid
+    if (!this.form.querySelector("[name=cardNumber]").validity.valid) {
+      return;
+    }
+    await super.save();
+  }
+
   render() {
     const priv = privates.get(this);
     const paymentAddress = priv.get("addressCollector").toPaymentAddress();

@@ -21048,6 +21048,14 @@ class CreditCardCollector extends __WEBPACK_IMPORTED_MODULE_1__DataCollector__["
     return new __WEBPACK_IMPORTED_MODULE_3__BasicCardResponse__["a" /* default */](details);
   }
 
+  async save() {
+    // only save if the credit card is valid
+    if (!this.form.querySelector("[name=cardNumber]").validity.valid) {
+      return;
+    }
+    await super.save();
+  }
+
   render() {
     const priv = privates.get(this);
     const paymentAddress = priv.get("addressCollector").toPaymentAddress();
