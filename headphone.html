@@ -39,3 +39,18 @@
       </section>
     </main>
   </div>
+  <p>
+    <small>Please use credit card number: 4222222222222 (<button id="killswitch">clear db</button>)</small>
+  </p>
+  <script>
+    document.querySelector("#killswitch").addEventListener("click", async () => {
+      try {
+        await db.delete();
+        console.log("Database successfully deleted");
+      } catch (err) {
+        console.error("Could not delete database");
+      } finally {
+        window.location.reload();
+      }
+    })
+  </script>
