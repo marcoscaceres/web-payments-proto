@@ -2,10 +2,12 @@ import hyperHTML from "hyperhtml/hyperhtml.js";
 import DataCollector from "./DataCollector";
 import AddressFormat from "../formatters/AddressFormat";
 import BasicCardResponse from "../BasicCardResponse";
+import uuid from "uuid/v4";
 
 const privates = new WeakMap();
 
 const schema = new Set([
+  "uuid",
   "cardholderName",
   "cardNumber",
   "cardSecurityCode",
@@ -19,13 +21,15 @@ const buttonLabels = Object.freeze({
 });
 
 function makeInitialData() {
-  return Array.from(schema).reduce(
+  const data = Array.from(schema).reduce(
     (obj, propName) => {
       obj[propName] = "";
       return obj;
     },
     {}
   );
+  data.uuid = uuid();
+  return data;
 }
 
 export default class CreditCardCollector extends DataCollector {
@@ -71,10 +75,15 @@ export default class CreditCardCollector extends DataCollector {
       cardNumber,
       expiryMonth,
       expiryYear,
+      uuid,
     } = this.data;
     return this.renderer`
       <section class="credit-card-details">
         <h3 class="fullspan">Enter payment details</h3>
+        <input 
+          type="hidden"
+          name="uuid"
+          value="${uuid}">
         <input
           autocomplete="cc-number"
           inputmode="numeric"
