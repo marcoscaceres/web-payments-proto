@@ -105,8 +105,14 @@ export default class CreditCardCollector extends DataCollector {
           placeholder="Name on card"
           autocomplete="cc-name"
           value="${cardholderName}">
-        <select name="expiryMonth" placehoder="exp.MM" maxlength="2">${makeOptionsRange(1, 12, parseInt(expiryMonth, 10))}</select>
-        <select name="expiryYear" placehoder="exp.YY" maxlength="2">${makeOptionsRange(year, year + 10, parseInt(expiryYear, 10))}</select>
+        <select 
+          name="expiryMonth"
+          placehoder="exp.MM" 
+          maxlength="2">${makeOptionsRange(1, 12, parseInt(expiryMonth, 10))}</select>
+        <select 
+          name="expiryYear" 
+          placehoder="exp.YY" 
+          maxlength="2">${makeOptionsRange(year, year + 10, parseInt(expiryYear, 10))}</select>
         <input
           inputmode="numeric"
           maxlength="4"
