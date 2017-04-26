@@ -19545,7 +19545,6 @@ class OrderSummary {
     priv.set("sections", sections);
     priv.set("renderer", __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml___default.a.bind(summaryElem));
     priv.set("defaultCurrency", defaultCurrency);
-    debugger;
     sections.forEach(section =>
       section.addEventListener("change", this.render.bind(this)));
     this.render();
