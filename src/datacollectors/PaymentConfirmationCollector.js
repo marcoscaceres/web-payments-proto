@@ -27,6 +27,11 @@ export default class PaymentConfirmationCollector extends DataCollector {
     const priv = privates.set(this, new Map()).get(this);
     priv.set("addressCollector", addressCollector);
     priv.set("creditCardCollector", creditCardCollector);
+    // TODO : Set this up properly
+    priv.set(
+      "ready",
+      Promise.all([addressCollector.ready, creditCardCollector.ready])
+    );
   }
 
   get buttonLabels() {
@@ -129,7 +134,7 @@ export default class PaymentConfirmationCollector extends DataCollector {
   }
 }
 
-function makeCollectorSwitcher(dataCollector, currentSheet) {
+function makeCollectorSwitcher(dataCollector) {
   return ev => {
     ev.preventDefault();
     dataCollector.dataSheet.requestDisplay();
