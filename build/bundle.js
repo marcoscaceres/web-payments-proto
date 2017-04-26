@@ -5578,7 +5578,7 @@ class PaymentSheet extends __WEBPACK_IMPORTED_MODULE_7_event_target_shim___defau
     const host = priv.get("host-widget");
     const dataSheetsManager = priv.get("dataSheetManager");
     const currentSheet = dataSheetsManager.active;
-    return renderer`
+    renderer`
       <h1>
         <img src="./payment-sheet/images/logo-payment.png" alt="">Firefox Web Payment
       </h1>
@@ -5588,6 +5588,9 @@ class PaymentSheet extends __WEBPACK_IMPORTED_MODULE_7_event_target_shim___defau
       <section id="payment-sheet-data-sheet" hidden="${currentSheet ? false : true}">${currentSheet ? currentSheet.render(requestData) : ""}</section>
       <section id="payment-sheet-bottom">${host.render(window.location)}<section>
     `;
+    if (currentSheet) {
+      await currentSheet.validate();
+    }
   }
 }
 
