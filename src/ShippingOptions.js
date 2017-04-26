@@ -9,8 +9,8 @@ export default class ShippingOptions extends EventTarget(["change"]) {
     super();
     const containerElem = document.createElement("section");
     const priv = privates.set(this, new Map()).get(this);
-    for(const shippingOption of shippingOptions) {
-      if(shippingOption instanceof PaymentShippingOption){
+    for (const shippingOption of shippingOptions) {
+      if (shippingOption instanceof PaymentShippingOption) {
         continue;
       }
       throw new TypeError("Expected instance of PaymentShippingOption");
@@ -25,43 +25,46 @@ export default class ShippingOptions extends EventTarget(["change"]) {
     return privates.get(this).get("containerElem");
   }
 
-  render(shippingOptions) {
-    const renderer = privates.get(this).get("renderer");
+  render() {
+    const priv = privates.get(this);
+    const renderer = priv.get("renderer");
+    const shippingOptions = priv.get("shippingOptions");
     const wires = shippingOptions
       .map(toHTML)
       .reduce((accum, elems) => accum.concat(elems), []);
-    const onChange = (ev) => {
+    const onChange = ev => {
       ev.stopPropagation();
       for (const opt of privates.get(this).get("shippingOptions")) {
-        opt.selected = (opt.id === ev.target.value);
+        opt.selected = opt.id === ev.target.value;
       }
       this.dispatchEvent(new CustomEvent("change"));
     };
-    return renderer `
+    return renderer`
       <dl class="shipping-options" onchange="${onChange}">${wires}</dl>
     `;
   }
 
   get selected() {
-    return privates.get(this).get("shippingOptions")
+    return privates
+      .get(this)
+      .get("shippingOptions")
       .find(option => option.selected);
   }
 
   get displayItems() {
-    return privates.get(this).get("shippingOptions");
+    return this.selected;
   }
 }
 
 function toHTML(shippingOption) {
-  return hyperHTML.wire(shippingOption)
-  `
+  return hyperHTML.wire(shippingOption)`
   <dt>
     <input
-        type="radio"
-        name="shipping"
-        id="${"shipping_option_" + shippingOption.id}"
-        value="${shippingOption.id}"
-        checked="${shippingOption.selected}">
+      type="radio"
+      name="shipping"
+      id="${"shipping_option_" + shippingOption.id}"
+      value="${shippingOption.id}"
+      checked="${shippingOption.selected}">
     <label for="${"shipping_option_" + shippingOption.id}">
       ${shippingOption.label}
     </label>

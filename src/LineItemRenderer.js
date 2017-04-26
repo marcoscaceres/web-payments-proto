@@ -1,9 +1,11 @@
+import EventTarget from "event-target-shim";
+
 import hyperHTML from "hyperhtml/hyperhtml";
 const privates = new WeakMap();
 
-export default class LineItemRenderer {
-
+export default class LineItemRenderer extends EventTarget(["change"]) {
   constructor() {
+    super();
     const priv = privates.set(this, new Map()).get(this);
     const containerElem = document.createElement("section");
     priv.set("containerElem", containerElem);
@@ -15,7 +17,7 @@ export default class LineItemRenderer {
     const htmlElems = paymentItems
       .map(toDefListItem)
       .reduce((accumulator, elem) => accumulator.concat(elem), []);
-    return renderer `<dl class="line-items">${htmlElems}</dl>`;
+    return renderer`<dl class="line-items">${htmlElems}</dl>`;
   }
   get containerElem() {
     return privates.get(this).get("containerElem");
@@ -25,15 +27,14 @@ export default class LineItemRenderer {
 function toDefListItem(paymentItem) {
   const {
     currency,
-    value
+    value,
   } = paymentItem.amount;
   const formatter = new Intl.NumberFormat(navigator.languages, {
     style: "currency",
     currency,
-    currencyDisplay: "symbol"
+    currencyDisplay: "symbol",
   });
-  return hyperHTML.wire()
-  `
+  return hyperHTML.wire(paymentItem)`
     <dt>
       ${paymentItem.label}
     </dt>

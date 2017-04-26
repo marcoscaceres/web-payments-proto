@@ -366,13 +366,12 @@ var hyperHTML = (function () {'use strict';
   //
   // render`<a href="${url}" onclick="${click}">${name}</a>`;
   //
-  // Note: attributes with `on` prefix are set directly as callbacks.
-  //       These won't ever be transformed into strings while other
-  //       attributes will be automatically sanitized.
+  // Note: attributes with a special meaning like DOM Level 0
+  //       listeners or accessors properties are directly set
   function setAttribute(node, attribute) {
     var
       name = attribute.name,
-      isSpecial = SPECIAL_ATTRIBUTE.test(name)
+      isSpecial = name in node
     ;
     if (isSpecial) node.removeAttribute(name);
     return isSpecial ?
@@ -673,7 +672,7 @@ var hyperHTML = (function () {'use strict';
   }
   //*/
 
-  // remove and/or and a list of nodes through a fragment
+  // remove and/or add a list of nodes through a fragment
   /* temporarily removed until it's demonstrated it's needed
   function updateViaFragment(node, fragment, i) {
     if (0 < i) {
@@ -692,8 +691,6 @@ var hyperHTML = (function () {'use strict';
   // -------------------------
 
   var
-    // decide special attributes behavior (DOM Level 0 events or "boolean attributes", as per HTML)
-    SPECIAL_ATTRIBUTE = /^(?:(?:on|allow)[a-z]+|async|autofocus|autoplay|capture|checked|controls|default|defer|disabled|formnovalidate|hidden|ismap|itemscope|loop|multiple|muted|nomodule|novalidate|open|playsinline|readonly|required|reversed|selected|truespeed|typemustmatch|usecache)$/,
     // avoids WeakMap to avoid memory pressure, use CSS compatible syntax for IE
     EXPANDO = '_hyper_html: ',
     // use a pseudo unique id to avoid conflicts and normalize CSS style for IE
@@ -732,9 +729,6 @@ var hyperHTML = (function () {'use strict';
     IEAttributes
   ;
 
-  // Simply to avoid duplicated RegExp in viperHTML
-  hyperHTML.SPECIAL_ATTRIBUTE = SPECIAL_ATTRIBUTE;
-
   // -------------------------
   // ⚡️ ️️The End ➰
   // -------------------------
@@ -762,7 +756,7 @@ module.exports = function(it){
 /***/ (function(module, exports, __webpack_require__) {
 
 // 7.1.13 ToObject(argument)
-var defined = __webpack_require__(20);
+var defined = __webpack_require__(21);
 module.exports = function(it){
   return Object(defined(it));
 };
@@ -841,7 +835,7 @@ __webpack_require__(26).inspectSource = function(it){
 
 var $export = __webpack_require__(0)
   , fails   = __webpack_require__(3)
-  , defined = __webpack_require__(20)
+  , defined = __webpack_require__(21)
   , quot    = /"/g;
 // B.2.3.2.1 CreateHTML(string, tag, attribute, value)
 var createHTML = function(string, tag, attribute, value) {
@@ -865,7 +859,7 @@ module.exports = function(NAME, exec){
 
 // to indexed object, toObject with fallback for non-array-like ES3 strings
 var IObject = __webpack_require__(50)
-  , defined = __webpack_require__(20);
+  , defined = __webpack_require__(21);
 module.exports = function(it){
   return IObject(defined(it));
 };
@@ -911,38 +905,6 @@ module.exports = Object.getPrototypeOf || function(O){
 
 /***/ }),
 /* 19 */
-/***/ (function(module, exports) {
-
-var toString = {}.toString;
-
-module.exports = function(it){
-  return toString.call(it).slice(8, -1);
-};
-
-/***/ }),
-/* 20 */
-/***/ (function(module, exports) {
-
-// 7.2.1 RequireObjectCoercible(argument)
-module.exports = function(it){
-  if(it == undefined)throw TypeError("Can't call method on  " + it);
-  return it;
-};
-
-/***/ }),
-/* 21 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var fails = __webpack_require__(3);
-
-module.exports = function(method, arg){
-  return !!method && fails(function(){
-    arg ? method.call(null, function(){}, 1) : method.call(null);
-  });
-};
-
-/***/ }),
-/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1160,6 +1122,38 @@ EventTarget.prototype = Object.create(
     }
 )
 
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports) {
+
+var toString = {}.toString;
+
+module.exports = function(it){
+  return toString.call(it).slice(8, -1);
+};
+
+/***/ }),
+/* 21 */
+/***/ (function(module, exports) {
+
+// 7.2.1 RequireObjectCoercible(argument)
+module.exports = function(it){
+  if(it == undefined)throw TypeError("Can't call method on  " + it);
+  return it;
+};
+
+/***/ }),
+/* 22 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var fails = __webpack_require__(3);
+
+module.exports = function(method, arg){
+  return !!method && fails(function(){
+    arg ? method.call(null, function(){}, 1) : method.call(null);
+  });
+};
 
 /***/ }),
 /* 23 */
@@ -2153,7 +2147,7 @@ module.exports = function(it, tag, stat){
 /***/ (function(module, exports, __webpack_require__) {
 
 var $export = __webpack_require__(0)
-  , defined = __webpack_require__(20)
+  , defined = __webpack_require__(21)
   , fails   = __webpack_require__(3)
   , spaces  = __webpack_require__(85)
   , space   = '[' + spaces + ']'
@@ -2215,7 +2209,7 @@ module.exports = g;
 /***/ (function(module, exports, __webpack_require__) {
 
 // getting tag from 19.1.3.6 Object.prototype.toString()
-var cof = __webpack_require__(19)
+var cof = __webpack_require__(20)
   , TAG = __webpack_require__(5)('toStringTag')
   // ES3 wrong here
   , ARG = cof(function(){ return arguments; }()) == 'Arguments';
@@ -2243,7 +2237,7 @@ module.exports = function(it){
 /***/ (function(module, exports, __webpack_require__) {
 
 // fallback for non-array-like ES3 and non-enumerable old V8 strings
-var cof = __webpack_require__(19);
+var cof = __webpack_require__(20);
 module.exports = Object('z').propertyIsEnumerable(0) ? Object : function(it){
   return cof(it) == 'String' ? it.split('') : Object(it);
 };
@@ -2380,7 +2374,7 @@ module.exports = function(NAME, wrapper, methods, common, IS_MAP, IS_WEAK){
 var hide     = __webpack_require__(13)
   , redefine = __webpack_require__(14)
   , fails    = __webpack_require__(3)
-  , defined  = __webpack_require__(20)
+  , defined  = __webpack_require__(21)
   , wks      = __webpack_require__(5);
 
 module.exports = function(KEY, length, exec){
@@ -2451,7 +2445,7 @@ module.exports = function(fn, args, that){
 
 // 7.2.8 IsRegExp(argument)
 var isObject = __webpack_require__(4)
-  , cof      = __webpack_require__(19)
+  , cof      = __webpack_require__(20)
   , MATCH    = __webpack_require__(5)('match');
 module.exports = function(it){
   var isRegExp;
@@ -2573,7 +2567,7 @@ window.db = db;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__AutofillDB__ = __webpack_require__(63);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_event_target_shim__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_event_target_shim__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_event_target_shim___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_event_target_shim__);
 
 
@@ -2828,7 +2822,7 @@ module.exports = function(it){
 /***/ (function(module, exports, __webpack_require__) {
 
 // 7.2.2 IsArray(argument)
-var cof = __webpack_require__(19);
+var cof = __webpack_require__(20);
 module.exports = Array.isArray || function isArray(arg){
   return cof(arg) == 'Array';
 };
@@ -2961,7 +2955,7 @@ var global    = __webpack_require__(2)
   , Observer  = global.MutationObserver || global.WebKitMutationObserver
   , process   = global.process
   , Promise   = global.Promise
-  , isNode    = __webpack_require__(19)(process) == 'process';
+  , isNode    = __webpack_require__(20)(process) == 'process';
 
 module.exports = function(){
   var head, last, notify;
@@ -3083,7 +3077,7 @@ module.exports = function(O, D){
 /***/ (function(module, exports, __webpack_require__) {
 
 var toInteger = __webpack_require__(33)
-  , defined   = __webpack_require__(20);
+  , defined   = __webpack_require__(21);
 // true  -> String#at
 // false -> String#codePointAt
 module.exports = function(TO_STRING){
@@ -3106,7 +3100,7 @@ module.exports = function(TO_STRING){
 
 // helper for String#{startsWith, endsWith, includes}
 var isRegExp = __webpack_require__(57)
-  , defined  = __webpack_require__(20);
+  , defined  = __webpack_require__(21);
 
 module.exports = function(that, searchString, NAME){
   if(isRegExp(searchString))throw TypeError('String#' + NAME + " doesn't accept regex!");
@@ -3120,7 +3114,7 @@ module.exports = function(that, searchString, NAME){
 "use strict";
 
 var toInteger = __webpack_require__(33)
-  , defined   = __webpack_require__(20);
+  , defined   = __webpack_require__(21);
 
 module.exports = function repeat(count){
   var str = String(defined(this))
@@ -3181,7 +3175,7 @@ if(!setTask || !clearTask){
     delete queue[id];
   };
   // Node.js 0.8-
-  if(__webpack_require__(19)(process) == 'process'){
+  if(__webpack_require__(20)(process) == 'process'){
     defer = function(id){
       process.nextTick(ctx(run, id, 1));
     };
@@ -3770,7 +3764,7 @@ class PaymentShippingOption extends __WEBPACK_IMPORTED_MODULE_0__DisplayItem__["
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_event_target_shim__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_event_target_shim__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_event_target_shim___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_event_target_shim__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_hyperhtml_hyperhtml_js__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_hyperhtml_hyperhtml_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_hyperhtml_hyperhtml_js__);
@@ -3815,7 +3809,7 @@ class RenderableWidget extends __WEBPACK_IMPORTED_MODULE_0_event_target_shim___d
 /* 96 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var cof = __webpack_require__(19);
+var cof = __webpack_require__(20);
 module.exports = function(it, msg){
   if(typeof it != 'number' && cof(it) != 'Number')throw TypeError(msg);
   return +it;
@@ -3940,7 +3934,7 @@ var dP          = __webpack_require__(7).f
   , redefineAll = __webpack_require__(39)
   , ctx         = __webpack_require__(27)
   , anInstance  = __webpack_require__(34)
-  , defined     = __webpack_require__(20)
+  , defined     = __webpack_require__(21)
   , forOf       = __webpack_require__(44)
   , $iterDefine = __webpack_require__(75)
   , step        = __webpack_require__(107)
@@ -4416,7 +4410,7 @@ module.exports = Object.is || function is(x, y){
 // https://github.com/tc39/proposal-string-pad-start-end
 var toLength = __webpack_require__(9)
   , repeat   = __webpack_require__(84)
-  , defined  = __webpack_require__(20);
+  , defined  = __webpack_require__(21);
 
 module.exports = function(that, maxLength, fillString, left){
   var S            = String(defined(that))
@@ -5235,18 +5229,22 @@ class DisplayItem extends __WEBPACK_IMPORTED_MODULE_0__Localizable__["a" /* defa
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_event_target_shim__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_event_target_shim___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_event_target_shim__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_hyperhtml_hyperhtml__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_hyperhtml_hyperhtml___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_hyperhtml_hyperhtml__);
+
+
 
 const privates = new WeakMap();
 
-class LineItemRenderer {
-
+class LineItemRenderer extends __WEBPACK_IMPORTED_MODULE_0_event_target_shim___default()(["change"]) {
   constructor() {
+    super();
     const priv = privates.set(this, new Map()).get(this);
     const containerElem = document.createElement("section");
     priv.set("containerElem", containerElem);
-    priv.set("renderer", __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml___default.a.bind(containerElem));
+    priv.set("renderer", __WEBPACK_IMPORTED_MODULE_1_hyperhtml_hyperhtml___default.a.bind(containerElem));
   }
 
   render(paymentItems) {
@@ -5254,7 +5252,7 @@ class LineItemRenderer {
     const htmlElems = paymentItems
       .map(toDefListItem)
       .reduce((accumulator, elem) => accumulator.concat(elem), []);
-    return renderer `<dl class="line-items">${htmlElems}</dl>`;
+    return renderer`<dl class="line-items">${htmlElems}</dl>`;
   }
   get containerElem() {
     return privates.get(this).get("containerElem");
@@ -5266,15 +5264,14 @@ class LineItemRenderer {
 function toDefListItem(paymentItem) {
   const {
     currency,
-    value
+    value,
   } = paymentItem.amount;
   const formatter = new Intl.NumberFormat(navigator.languages, {
     style: "currency",
     currency,
-    currencyDisplay: "symbol"
+    currencyDisplay: "symbol",
   });
-  return __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml___default.a.wire()
-  `
+  return __WEBPACK_IMPORTED_MODULE_1_hyperhtml_hyperhtml___default.a.wire(paymentItem)`
     <dt>
       ${paymentItem.label}
     </dt>
@@ -5404,7 +5401,7 @@ class PaymentAddress {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__AutofillDB__ = __webpack_require__(63);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_dialog_polyfill_dialog_polyfill__ = __webpack_require__(321);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_dialog_polyfill_dialog_polyfill___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_dialog_polyfill_dialog_polyfill__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_event_target_shim__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_event_target_shim__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_event_target_shim___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_event_target_shim__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__PaymentSheet_Host__ = __webpack_require__(346);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_hyperhtml_hyperhtml_js__ = __webpack_require__(8);
@@ -5955,15 +5952,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   const summaryWidgets = [inventorySummary, shippingOptions, taxCalculator];
   const orderSummary = new __WEBPACK_IMPORTED_MODULE_4__OrderSummary__["a" /* default */](summaryElem, summaryWidgets);
 });
-
-// if (typeof HTMLCollection.prototype[Symbol.iterator] !== "function") {
-//   HTMLCollection.prototype[Symbol.iterator] = function() {
-//     let i = 0;
-//     return {
-//       next: () => ({ done: i >= this.length, value: this.item(i++) }),
-//     };
-//   };
-// }
 
 
 /***/ }),
@@ -8052,7 +8040,7 @@ __webpack_require__(43)('copyWithin');
 var $export = __webpack_require__(0)
   , $every  = __webpack_require__(23)(4);
 
-$export($export.P + $export.F * !__webpack_require__(21)([].every, true), 'Array', {
+$export($export.P + $export.F * !__webpack_require__(22)([].every, true), 'Array', {
   // 22.1.3.5 / 15.4.4.16 Array.prototype.every(callbackfn [, thisArg])
   every: function every(callbackfn /* , thisArg */){
     return $every(this, callbackfn, arguments[1]);
@@ -8079,7 +8067,7 @@ __webpack_require__(43)('fill');
 var $export = __webpack_require__(0)
   , $filter = __webpack_require__(23)(2);
 
-$export($export.P + $export.F * !__webpack_require__(21)([].filter, true), 'Array', {
+$export($export.P + $export.F * !__webpack_require__(22)([].filter, true), 'Array', {
   // 22.1.3.7 / 15.4.4.20 Array.prototype.filter(callbackfn [, thisArg])
   filter: function filter(callbackfn /* , thisArg */){
     return $filter(this, callbackfn, arguments[1]);
@@ -8134,7 +8122,7 @@ __webpack_require__(43)(KEY);
 
 var $export  = __webpack_require__(0)
   , $forEach = __webpack_require__(23)(0)
-  , STRICT   = __webpack_require__(21)([].forEach, true);
+  , STRICT   = __webpack_require__(22)([].forEach, true);
 
 $export($export.P + $export.F * !STRICT, 'Array', {
   // 22.1.3.10 / 15.4.4.18 Array.prototype.forEach(callbackfn [, thisArg])
@@ -8198,7 +8186,7 @@ var $export       = __webpack_require__(0)
   , $native       = [].indexOf
   , NEGATIVE_ZERO = !!$native && 1 / [1].indexOf(1, -0) < 0;
 
-$export($export.P + $export.F * (NEGATIVE_ZERO || !__webpack_require__(21)($native)), 'Array', {
+$export($export.P + $export.F * (NEGATIVE_ZERO || !__webpack_require__(22)($native)), 'Array', {
   // 22.1.3.11 / 15.4.4.14 Array.prototype.indexOf(searchElement [, fromIndex])
   indexOf: function indexOf(searchElement /*, fromIndex = 0 */){
     return NEGATIVE_ZERO
@@ -8229,7 +8217,7 @@ var $export   = __webpack_require__(0)
   , arrayJoin = [].join;
 
 // fallback for not array-like strings
-$export($export.P + $export.F * (__webpack_require__(50) != Object || !__webpack_require__(21)(arrayJoin)), 'Array', {
+$export($export.P + $export.F * (__webpack_require__(50) != Object || !__webpack_require__(22)(arrayJoin)), 'Array', {
   join: function join(separator){
     return arrayJoin.call(toIObject(this), separator === undefined ? ',' : separator);
   }
@@ -8248,7 +8236,7 @@ var $export       = __webpack_require__(0)
   , $native       = [].lastIndexOf
   , NEGATIVE_ZERO = !!$native && 1 / [1].lastIndexOf(1, -0) < 0;
 
-$export($export.P + $export.F * (NEGATIVE_ZERO || !__webpack_require__(21)($native)), 'Array', {
+$export($export.P + $export.F * (NEGATIVE_ZERO || !__webpack_require__(22)($native)), 'Array', {
   // 22.1.3.14 / 15.4.4.15 Array.prototype.lastIndexOf(searchElement [, fromIndex])
   lastIndexOf: function lastIndexOf(searchElement /*, fromIndex = @[*-1] */){
     // convert -0 to +0
@@ -8272,7 +8260,7 @@ $export($export.P + $export.F * (NEGATIVE_ZERO || !__webpack_require__(21)($nati
 var $export = __webpack_require__(0)
   , $map    = __webpack_require__(23)(1);
 
-$export($export.P + $export.F * !__webpack_require__(21)([].map, true), 'Array', {
+$export($export.P + $export.F * !__webpack_require__(22)([].map, true), 'Array', {
   // 22.1.3.15 / 15.4.4.19 Array.prototype.map(callbackfn [, thisArg])
   map: function map(callbackfn /* , thisArg */){
     return $map(this, callbackfn, arguments[1]);
@@ -8313,7 +8301,7 @@ $export($export.S + $export.F * __webpack_require__(3)(function(){
 var $export = __webpack_require__(0)
   , $reduce = __webpack_require__(99);
 
-$export($export.P + $export.F * !__webpack_require__(21)([].reduceRight, true), 'Array', {
+$export($export.P + $export.F * !__webpack_require__(22)([].reduceRight, true), 'Array', {
   // 22.1.3.19 / 15.4.4.22 Array.prototype.reduceRight(callbackfn [, initialValue])
   reduceRight: function reduceRight(callbackfn /* , initialValue */){
     return $reduce(this, callbackfn, arguments.length, arguments[1], true);
@@ -8329,7 +8317,7 @@ $export($export.P + $export.F * !__webpack_require__(21)([].reduceRight, true), 
 var $export = __webpack_require__(0)
   , $reduce = __webpack_require__(99);
 
-$export($export.P + $export.F * !__webpack_require__(21)([].reduce, true), 'Array', {
+$export($export.P + $export.F * !__webpack_require__(22)([].reduce, true), 'Array', {
   // 22.1.3.18 / 15.4.4.21 Array.prototype.reduce(callbackfn [, initialValue])
   reduce: function reduce(callbackfn /* , initialValue */){
     return $reduce(this, callbackfn, arguments.length, arguments[1], false);
@@ -8344,7 +8332,7 @@ $export($export.P + $export.F * !__webpack_require__(21)([].reduce, true), 'Arra
 
 var $export    = __webpack_require__(0)
   , html       = __webpack_require__(70)
-  , cof        = __webpack_require__(19)
+  , cof        = __webpack_require__(20)
   , toIndex    = __webpack_require__(41)
   , toLength   = __webpack_require__(9)
   , arraySlice = [].slice;
@@ -8379,7 +8367,7 @@ $export($export.P + $export.F * __webpack_require__(3)(function(){
 var $export = __webpack_require__(0)
   , $some   = __webpack_require__(23)(3);
 
-$export($export.P + $export.F * !__webpack_require__(21)([].some, true), 'Array', {
+$export($export.P + $export.F * !__webpack_require__(22)([].some, true), 'Array', {
   // 22.1.3.23 / 15.4.4.17 Array.prototype.some(callbackfn [, thisArg])
   some: function some(callbackfn /* , thisArg */){
     return $some(this, callbackfn, arguments[1]);
@@ -8406,7 +8394,7 @@ $export($export.P + $export.F * (fails(function(){
   // V8 bug
   test.sort(null);
   // Old WebKit
-}) || !__webpack_require__(21)($sort)), 'Array', {
+}) || !__webpack_require__(22)($sort)), 'Array', {
   // 22.1.3.25 Array.prototype.sort(comparefn)
   sort: function sort(comparefn){
     return comparefn === undefined
@@ -8856,7 +8844,7 @@ $export($export.S, 'Math', {
 
 var global            = __webpack_require__(2)
   , has               = __webpack_require__(11)
-  , cof               = __webpack_require__(19)
+  , cof               = __webpack_require__(20)
   , inheritIfRequired = __webpack_require__(71)
   , toPrimitive       = __webpack_require__(25)
   , fails             = __webpack_require__(3)
@@ -10988,7 +10976,7 @@ __webpack_require__(43)('includes');
 var $export   = __webpack_require__(0)
   , microtask = __webpack_require__(78)()
   , process   = __webpack_require__(2).process
-  , isNode    = __webpack_require__(19)(process) == 'process';
+  , isNode    = __webpack_require__(20)(process) == 'process';
 
 $export($export.G, {
   asap: function asap(fn){
@@ -11003,7 +10991,7 @@ $export($export.G, {
 
 // https://github.com/ljharb/proposal-is-error
 var $export = __webpack_require__(0)
-  , cof     = __webpack_require__(19);
+  , cof     = __webpack_require__(20);
 
 $export($export.S, 'Error', {
   isError: function isError(it){
@@ -11629,7 +11617,7 @@ $export($export.P, 'String', {
 
 // https://tc39.github.io/String.prototype.matchAll/
 var $export     = __webpack_require__(0)
-  , defined     = __webpack_require__(20)
+  , defined     = __webpack_require__(21)
   , toLength    = __webpack_require__(9)
   , isRegExp    = __webpack_require__(57)
   , getFlags    = __webpack_require__(55)
@@ -19225,7 +19213,7 @@ module.exports = function() {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_event_target_shim__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_event_target_shim__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_event_target_shim___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_event_target_shim__);
 
 const privates = new WeakMap();
@@ -19330,13 +19318,17 @@ class InventorySummary extends __WEBPACK_IMPORTED_MODULE_0__LineItemRenderer__["
     super();
     const priv = privates.set(this, new Map()).get(this);
     priv.set("inventoryTable", inventoryTable);
-    const changeListener = () => this.render(inventoryTable.displayItems);
+    const changeListener = () => this.render();
     inventoryTable.addEventListener("change", changeListener);
     changeListener();
   }
 
   get displayItems() {
     return privates.get(this).get("inventoryTable").displayItems;
+  }
+
+  render() {
+    return super.render(this.displayItems);
   }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = InventorySummary;
@@ -19352,7 +19344,7 @@ class InventorySummary extends __WEBPACK_IMPORTED_MODULE_0__LineItemRenderer__["
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml_js__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__PaymentItem_js__ = __webpack_require__(93);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__PaymentCurrencyAmount_js__ = __webpack_require__(30);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_event_target_shim__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_event_target_shim__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_event_target_shim___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_event_target_shim__);
 
 
@@ -19550,10 +19542,13 @@ const privates = new WeakMap();
 class OrderSummary {
   constructor(summaryElem, sections = [], defaultCurrency = "USD") {
     const priv = privates.set(this, new Map()).get(this);
-    priv.set("sections", new Set(sections));
+    priv.set("sections", sections);
     priv.set("renderer", __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml___default.a.bind(summaryElem));
     priv.set("defaultCurrency", defaultCurrency);
-    this.render(sections);
+    debugger;
+    sections.forEach(section =>
+      section.addEventListener("change", this.render.bind(this)));
+    this.render();
   }
 
   sumTotal() {
@@ -19569,13 +19564,26 @@ class OrderSummary {
     return displayItem;
   }
 
-  render(sections) {
-    const renderer = privates.get(this).get("renderer");
+  render() {
+    const priv = privates.get(this);
+    const renderer = priv.get("renderer");
+    const sections = priv.get("sections");
     const clickHandler = doPaymentRequest.bind(this);
-    const sectionElems = sections.map(section => section.containerElem);
-    renderer`
+    const { amount: { value, currency } } = this.sumTotal();
+    const formatter = new Intl.NumberFormat("en-us", {
+      style: "currency",
+      currency,
+      currencyDisplay: "symbol",
+    });
+    return renderer`
       <h3>Order summary</h3>
-      <section>${sectionElems}</section>
+      <section>${sections.map(section => section.containerElem)}</section>
+      <section>
+        <dl class="order-summary-total">
+          <dt>Total</dt>
+          <dd>${formatter.format(value)}</dd>
+        </dl>
+      </section>
       <div id="button-container">
         <button id="checkout-button" onclick="${clickHandler}">Checkout</button>
       </div>
@@ -19654,7 +19662,7 @@ function processResponse(r) {
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_uuid_v4__ = __webpack_require__(92);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_uuid_v4___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_uuid_v4__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_event_target_shim__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_event_target_shim__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_event_target_shim___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_event_target_shim__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__PaymentSheet_js__ = __webpack_require__(130);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__PaymentCurrencyAmount__ = __webpack_require__(30);
@@ -20237,7 +20245,7 @@ class AwaitPaymentResponse {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__PaymentSheet_DataSheetControls__ = __webpack_require__(345);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_event_target_shim__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_event_target_shim__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_event_target_shim___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_event_target_shim__);
 
 
@@ -20356,7 +20364,7 @@ class DataSheet extends __WEBPACK_IMPORTED_MODULE_2_event_target_shim___default(
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml_js__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml_js__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_event_target_shim__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_event_target_shim__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_event_target_shim___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_event_target_shim__);
 
 
@@ -20513,7 +20521,7 @@ function toTR(lineItem) {
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml_js__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml_js__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_event_target_shim__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_event_target_shim__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_event_target_shim___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_event_target_shim__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__PaymentCurrencyAmount__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__RenderableWidget__ = __webpack_require__(95);
@@ -20656,7 +20664,7 @@ class Total extends __WEBPACK_IMPORTED_MODULE_1__RenderableWidget__["a" /* defau
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_event_target_shim__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_event_target_shim__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_event_target_shim___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_event_target_shim__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_hyperhtml_hyperhtml_js__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_hyperhtml_hyperhtml_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_hyperhtml_hyperhtml_js__);
@@ -20672,8 +20680,8 @@ class ShippingOptions extends __WEBPACK_IMPORTED_MODULE_0_event_target_shim___de
     super();
     const containerElem = document.createElement("section");
     const priv = privates.set(this, new Map()).get(this);
-    for(const shippingOption of shippingOptions) {
-      if(shippingOption instanceof __WEBPACK_IMPORTED_MODULE_2__PaymentShippingOption_js__["a" /* default */]){
+    for (const shippingOption of shippingOptions) {
+      if (shippingOption instanceof __WEBPACK_IMPORTED_MODULE_2__PaymentShippingOption_js__["a" /* default */]) {
         continue;
       }
       throw new TypeError("Expected instance of PaymentShippingOption");
@@ -20688,45 +20696,48 @@ class ShippingOptions extends __WEBPACK_IMPORTED_MODULE_0_event_target_shim___de
     return privates.get(this).get("containerElem");
   }
 
-  render(shippingOptions) {
-    const renderer = privates.get(this).get("renderer");
+  render() {
+    const priv = privates.get(this);
+    const renderer = priv.get("renderer");
+    const shippingOptions = priv.get("shippingOptions");
     const wires = shippingOptions
       .map(toHTML)
       .reduce((accum, elems) => accum.concat(elems), []);
-    const onChange = (ev) => {
+    const onChange = ev => {
       ev.stopPropagation();
       for (const opt of privates.get(this).get("shippingOptions")) {
-        opt.selected = (opt.id === ev.target.value);
+        opt.selected = opt.id === ev.target.value;
       }
       this.dispatchEvent(new CustomEvent("change"));
     };
-    return renderer `
+    return renderer`
       <dl class="shipping-options" onchange="${onChange}">${wires}</dl>
     `;
   }
 
   get selected() {
-    return privates.get(this).get("shippingOptions")
+    return privates
+      .get(this)
+      .get("shippingOptions")
       .find(option => option.selected);
   }
 
   get displayItems() {
-    return privates.get(this).get("shippingOptions");
+    return this.selected;
   }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = ShippingOptions;
 
 
 function toHTML(shippingOption) {
-  return __WEBPACK_IMPORTED_MODULE_1_hyperhtml_hyperhtml_js___default.a.wire(shippingOption)
-  `
+  return __WEBPACK_IMPORTED_MODULE_1_hyperhtml_hyperhtml_js___default.a.wire(shippingOption)`
   <dt>
     <input
-        type="radio"
-        name="shipping"
-        id="${"shipping_option_" + shippingOption.id}"
-        value="${shippingOption.id}"
-        checked="${shippingOption.selected}">
+      type="radio"
+      name="shipping"
+      id="${"shipping_option_" + shippingOption.id}"
+      value="${shippingOption.id}"
+      checked="${shippingOption.selected}">
     <label for="${"shipping_option_" + shippingOption.id}">
       ${shippingOption.label}
     </label>
@@ -20753,21 +20764,18 @@ function toHTML(shippingOption) {
 const privates = new WeakMap();
 
 class TaxCalculator extends __WEBPACK_IMPORTED_MODULE_1__LineItemRenderer__["a" /* default */] {
-  constructor(taxPercent, sections = [], defaultCurrency = "USD") {
-    super();
-    this.containerElem.classList.add("tax-line");
+  constructor(taxPercent = 0.10, sections = [], defaultCurrency = "USD") {
+    super(sections);
     const priv = privates.set(this, new Map()).get(this);
+    this.containerElem.classList.add("tax-line");
     priv.set("taxPercent", taxPercent);
     priv.set("defaultCurrency", defaultCurrency);
     priv.set("sections", new Set(sections));
-        // subscribe to changes from dependent sections, and render on change
-    const renderListener = () => {
-      this.render(this.displayItems);
-    };
-    sections.forEach(
-      section => section.addEventListener("change", renderListener)
-    );
-    this.render(this.displayItems);
+    // subscribe to changes from dependent sections, and render on change
+    const renderListener = this.render.bind(this);
+    sections.forEach(section =>
+      section.addEventListener("change", renderListener));
+    this.render();
   }
 
   get displayItems() {
@@ -20775,18 +20783,25 @@ class TaxCalculator extends __WEBPACK_IMPORTED_MODULE_1__LineItemRenderer__["a" 
     const defaultCurrency = priv.get("defaultCurrency");
     const sections = priv.get("sections");
     const taxPercent = priv.get("taxPercent");
-    const total = Array
-            .from(sections)
-            .map(section => section.displayItems)
-            .reduce((accumulator, displayItems) => accumulator.concat(displayItems), [])
-            .map(displayItem => parseInt(displayItem.amount.value, 10))
-            .reduce((total, value) => total + value, 0);
+    const total = Array.from(sections)
+      .map(section => section.displayItems)
+      .reduce((accumulator, displayItems) => accumulator.concat(displayItems), [
+      ])
+      .map(displayItem => parseInt(displayItem.amount.value, 10))
+      .reduce((total, value) => total + value, 0);
     const tax = total * taxPercent;
     const amount = new __WEBPACK_IMPORTED_MODULE_0__PaymentCurrencyAmount__["a" /* default */](defaultCurrency, tax);
     return [new __WEBPACK_IMPORTED_MODULE_2__PaymentItem__["a" /* default */]("Tax", amount)];
   }
+
+  render() {
+    const result = super.render(this.displayItems);
+    this.dispatchEvent(new CustomEvent("change"));
+    return result;
+  }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = TaxCalculator;
+
 
 
 /***/ }),
@@ -20797,7 +20812,7 @@ class TaxCalculator extends __WEBPACK_IMPORTED_MODULE_1__LineItemRenderer__["a" 
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml_js__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_hyperhtml_hyperhtml_js__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Countries__ = __webpack_require__(126);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_event_target_shim__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_event_target_shim__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_event_target_shim___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_event_target_shim__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_uuid_v4__ = __webpack_require__(92);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_uuid_v4___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_uuid_v4__);
@@ -21111,8 +21126,14 @@ class CreditCardCollector extends __WEBPACK_IMPORTED_MODULE_1__DataCollector__["
           placeholder="Name on card"
           autocomplete="cc-name"
           value="${cardholderName}">
-        <select name="expiryMonth" placehoder="exp.MM" maxlength="2">${makeOptionsRange(1, 12, parseInt(expiryMonth, 10))}</select>
-        <select name="expiryYear" placehoder="exp.YY" maxlength="2">${makeOptionsRange(year, year + 10, parseInt(expiryYear, 10))}</select>
+        <select 
+          name="expiryMonth"
+          placehoder="exp.MM" 
+          maxlength="2">${makeOptionsRange(1, 12, parseInt(expiryMonth, 10))}</select>
+        <select 
+          name="expiryYear" 
+          placehoder="exp.YY" 
+          maxlength="2">${makeOptionsRange(year, year + 10, parseInt(expiryYear, 10))}</select>
         <input
           inputmode="numeric"
           maxlength="4"

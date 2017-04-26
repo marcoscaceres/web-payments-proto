@@ -35,12 +35,3 @@ window.addEventListener("DOMContentLoaded", async () => {
   const summaryWidgets = [inventorySummary, shippingOptions, taxCalculator];
   const orderSummary = new OrderSummary(summaryElem, summaryWidgets);
 });
-
-// if (typeof HTMLCollection.prototype[Symbol.iterator] !== "function") {
-//   HTMLCollection.prototype[Symbol.iterator] = function() {
-//     let i = 0;
-//     return {
-//       next: () => ({ done: i >= this.length, value: this.item(i++) }),
-//     };
-//   };
-// }

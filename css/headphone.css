@@ -182,3 +182,12 @@ html, body, header, main {
   width: 100%;
   height: 1.5cm
 }
+
+#shop .order-summary-total dt, #shop .order-summary-total dd {
+  padding: .4cm 0;
+}
+
+#shop .order-summary-total dt {
+   text-transform: uppercase;
+   font-weight: bold;
+}

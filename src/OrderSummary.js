@@ -7,10 +7,12 @@ const privates = new WeakMap();
 export default class OrderSummary {
   constructor(summaryElem, sections = [], defaultCurrency = "USD") {
     const priv = privates.set(this, new Map()).get(this);
-    priv.set("sections", new Set(sections));
+    priv.set("sections", sections);
     priv.set("renderer", hyperHTML.bind(summaryElem));
     priv.set("defaultCurrency", defaultCurrency);
-    this.render(sections);
+    sections.forEach(section =>
+      section.addEventListener("change", this.render.bind(this)));
+    this.render();
   }
 
   sumTotal() {
@@ -26,13 +28,26 @@ export default class OrderSummary {
     return displayItem;
   }
 
-  render(sections) {
-    const renderer = privates.get(this).get("renderer");
+  render() {
+    const priv = privates.get(this);
+    const renderer = priv.get("renderer");
+    const sections = priv.get("sections");
     const clickHandler = doPaymentRequest.bind(this);
-    const sectionElems = sections.map(section => section.containerElem);
-    renderer`
+    const { amount: { value, currency } } = this.sumTotal();
+    const formatter = new Intl.NumberFormat("en-us", {
+      style: "currency",
+      currency,
+      currencyDisplay: "symbol",
+    });
+    return renderer`
       <h3>Order summary</h3>
-      <section>${sectionElems}</section>
+      <section>${sections.map(section => section.containerElem)}</section>
+      <section>
+        <dl class="order-summary-total">
+          <dt>Total</dt>
+          <dd>${formatter.format(value)}</dd>
+        </dl>
+      </section>
       <div id="button-container">
         <button id="checkout-button" onclick="${clickHandler}">Checkout</button>
       </div>

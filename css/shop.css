@@ -118,9 +118,16 @@ body {
 
 #shop .tax-line {
   border-bottom: 1px solid silver;
-  margin-bottom: 1cm;
 }
 
+#shop .order-summary-total dt, #shop .order-summary-total dd {
+  padding: .4cm 0;
+}
+
+#shop .order-summary-total dt {
+   text-transform: uppercase;
+   font-weight: bold;
+}
 
 #shop #checkout-button {
   text-transform: uppercase;
@@ -144,11 +151,6 @@ body {
   background-color: white;
   padding: 0 0.3cm;
   font-size: 1em;
-}
-
-
-#shop #tax-line {
-  margin-bottom: .7cm;
 }
 
 #shop dl.shipping-options {
