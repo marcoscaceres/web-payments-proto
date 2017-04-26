@@ -103,6 +103,7 @@ export default class DataCollector
         await db.open();
       }
       await db[tableName].put(dataToSave);
+      this.data = dataToSave;
     }
   }
 
