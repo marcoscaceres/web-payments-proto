@@ -2674,6 +2674,7 @@ class DataCollector
         await __WEBPACK_IMPORTED_MODULE_1__AutofillDB__["a" /* default */].open();
       }
       await __WEBPACK_IMPORTED_MODULE_1__AutofillDB__["a" /* default */][tableName].put(dataToSave);
+      this.data = dataToSave;
     }
   }
 
@@ -21233,11 +21234,6 @@ class PaymentConfirmationCollector extends __WEBPACK_IMPORTED_MODULE_1__DataColl
     const priv = privates.set(this, new Map()).get(this);
     priv.set("addressCollector", addressCollector);
     priv.set("creditCardCollector", creditCardCollector);
-    // TODO : Set this up properly
-    priv.set(
-      "ready",
-      Promise.all([addressCollector.ready, creditCardCollector.ready])
-    );
   }
 
   get buttonLabels() {
