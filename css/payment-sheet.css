@@ -32,6 +32,9 @@
   }
 }
 
+input {
+  box-shadow: none !important;
+}
 
 #payment-sheet {
   --blue: rgb(0, 148, 251);
@@ -327,6 +330,10 @@
   border: 1px solid rgb(188,188,188);
   padding: .2cm;
   justify-self: stetch;
+}
+
+#payment-sheet input[type=text]:invalid, #payment-sheet input[type=tel]:invalid, #payment-sheet select:invalid {
+  border: 1px solid rgb(188,188,188);
 }
 
 #payment-sheet label {

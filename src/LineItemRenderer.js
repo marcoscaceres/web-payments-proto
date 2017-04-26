@@ -19,6 +19,7 @@ export default class LineItemRenderer extends EventTarget(["change"]) {
       .reduce((accumulator, elem) => accumulator.concat(elem), []);
     return renderer`<dl class="line-items">${htmlElems}</dl>`;
   }
+
   get containerElem() {
     return privates.get(this).get("containerElem");
   }
