@@ -21233,6 +21233,11 @@ class PaymentConfirmationCollector extends __WEBPACK_IMPORTED_MODULE_1__DataColl
     const priv = privates.set(this, new Map()).get(this);
     priv.set("addressCollector", addressCollector);
     priv.set("creditCardCollector", creditCardCollector);
+    // TODO : Set this up properly
+    priv.set(
+      "ready",
+      Promise.all([addressCollector.ready, creditCardCollector.ready])
+    );
   }
 
   get buttonLabels() {
@@ -21337,7 +21342,7 @@ class PaymentConfirmationCollector extends __WEBPACK_IMPORTED_MODULE_1__DataColl
 /* harmony export (immutable) */ __webpack_exports__["a"] = PaymentConfirmationCollector;
 
 
-function makeCollectorSwitcher(dataCollector, currentSheet) {
+function makeCollectorSwitcher(dataCollector) {
   return ev => {
     ev.preventDefault();
     dataCollector.dataSheet.requestDisplay();
