@@ -1,4 +1,4 @@
-import hyperHTML from "hyperhtml/hyperhtml.js";
+import { wire } from "hyperhtml/cjs";
 import Countries from "../Countries";
 /**
 interface PaymentAddress {
@@ -17,15 +17,15 @@ interface PaymentAddress {
 };
  */
 
-export default class Addressformat {
-  constructor(locales, options = {}) {}
+export default class AddressFormat {
+  // constructor(locales, options = {}) {}
 
   format(paymentAddress, outputFormat = "text") {
     let result;
     const { name: countryName } = Countries.get(paymentAddress.country);
     switch (outputFormat) {
-    case "html":
-      result = hyperHTML.wire(paymentAddress)`
+      case "html":
+        result = wire(paymentAddress)`
           <div>
             ${paymentAddress.addressLine.join(" ")}
           </div>
@@ -36,9 +36,11 @@ export default class Addressformat {
              ${countryName.toLocaleUpperCase()} ${paymentAddress.postalCode}
           </div>
         `;
-      break;
-    default:
-      result = `${paymentAddress.addressLine.join(" ")} ${paymentAddress.city}, ${paymentAddress.region} ${countryName}`;
+        break;
+      default:
+        result = `${paymentAddress.addressLine.join(" ")} ${
+          paymentAddress.city
+        }, ${paymentAddress.region} ${countryName}`;
     }
     return result;
   }

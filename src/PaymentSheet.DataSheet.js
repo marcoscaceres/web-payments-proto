@@ -1,9 +1,9 @@
-import hyperHTML from "hyperhtml/hyperhtml";
+import { bind } from "hyperhtml/cjs";
 import Controls from "./PaymentSheet.DataSheetControls";
-import EventTarget from "event-target-shim";
+import { defineEventAttribute } from "event-target-shim";
 const privates = new WeakMap();
 
-export default class DataSheet extends EventTarget(["abort"]) {
+export default class DataSheet extends EventTarget {
   constructor(heading, dataCollector, options = { userMustChoose: false }) {
     super();
     const priv = privates.set(this, new Map()).get(this);
@@ -20,7 +20,7 @@ export default class DataSheet extends EventTarget(["abort"]) {
       );
     });
     form.classList.add("payment-sheet-data-collector");
-    const changeListener = async ev => {
+    const changeListener = async () => {
       this.validate();
       await dataCollector.save();
     };
@@ -35,7 +35,7 @@ export default class DataSheet extends EventTarget(["abort"]) {
     priv.set("controlButtons", controlButtons);
     priv.set("dataCollector", dataCollector);
     priv.set("heading", heading);
-    priv.set("renderer", hyperHTML.bind(form));
+    priv.set("renderer", bind(form));
     priv.set(
       "ready",
       dataCollector.ready.then(() => {
@@ -58,7 +58,10 @@ export default class DataSheet extends EventTarget(["abort"]) {
   }
 
   get collectedData() {
-    return privates.get(this).get("dataCollector").toObject();
+    return privates
+      .get(this)
+      .get("dataCollector")
+      .toObject();
   }
 
   get form() {
@@ -70,12 +73,14 @@ export default class DataSheet extends EventTarget(["abort"]) {
   }
 
   get isValid() {
-    return privates.get(this).get("form").checkValidity();
+    return privates
+      .get(this)
+      .get("form")
+      .checkValidity();
   }
 
   validate() {
     const priv = privates.get(this);
-    const dataCollector = priv.get("dataCollector");
     const controlButtons = priv.get("controlButtons");
     const form = priv.get("form");
     if (form.checkValidity()) {
@@ -104,3 +109,4 @@ export default class DataSheet extends EventTarget(["abort"]) {
     <section>${controlButtons.render(dataCollector.buttonLabels)}</section>`;
   }
 }
+defineEventAttribute(DataSheet, "abort");

@@ -12,13 +12,14 @@ const expectedStringKeys = Object.freeze([
   "region",
   "sortingCode",
 ]);
-const expectedArrayKeys = Object.freeze([
-  "addressLine",
-]);
+const expectedArrayKeys = Object.freeze(["addressLine"]);
 
-function typeMapper(typeConverter){
-  return function(details){
-    return key => [`[[${key}]]`, typeConverter(details.hasOwnProperty(key) ? details[key] : "")];
+function typeMapper(typeConverter) {
+  return function(details) {
+    return key => [
+      `[[${key}]]`,
+      typeConverter(details.hasOwnProperty(key) ? details[key] : ""),
+    ];
   };
 }
 
@@ -32,7 +33,10 @@ export default class PaymentAddress {
     expectedStringKeys
       .map(stringMapper(details))
       .concat(expectedArrayKeys.map(arrayMapper(details)))
-      .reduce((accum, [internalSlotName, value]) => priv.set(internalSlotName, value), priv);
+      .reduce(
+        (accum, [internalSlotName, value]) => priv.set(internalSlotName, value),
+        priv
+      );
   }
   // serializer = {attribute};
   toJSON() {

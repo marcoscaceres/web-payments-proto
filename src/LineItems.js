@@ -1,26 +1,29 @@
-import hyperHTML from "hyperhtml/hyperhtml.js";
-
+import { bind, wire } from "hyperhtml/cjs";
+import { _details } from "src/PaymentRequest";
+import RenderableWidget from "./RenderableWidget";
 const privates = new WeakMap();
 
-export default class LineItems {
-  constructor(containerElement, displayItems = []) {
+export default class LineItems extends RenderableWidget {
+  constructor(containerElement) {
+    super();
     const priv = privates.set(this, new Map()).get(this);
-    priv.set("renderer", hyperHTML.bind(containerElement));
-    render(displayItems);
+    priv.set("renderer", bind(containerElement));
   }
 
-  render(items) {
-    const render = privates.get(this).get("render");
-    const html = (items.length) ? items.map(toHTML) : "No items selected";
-    render `
-      <dl class="order-items">${items}</dl>
+  render() {
+    const priv = privates.get(this);
+    const request = priv.get("request");
+    const render = priv.get("render");
+    const items = request[_details].displayItems;
+    const html = items.length ? items.map(toHTML) : "No items selected";
+    render`
+      <dl class="order-items">${html}</dl>
     `;
   }
 }
 
 function toHTML(paymentItem) {
-  return hyperHTML.wire(paymentItem)
-  `
+  return wire(paymentItem)`
     <dt>
       ${paymentItem.label}
     </dt>

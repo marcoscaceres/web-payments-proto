@@ -1,4 +1,3 @@
-import EventTarget from "event-target-shim";
 const privates = new WeakMap();
 
 export default class WidgetManager {

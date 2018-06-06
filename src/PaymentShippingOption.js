@@ -9,16 +9,16 @@ export default class PaymentShippingOption extends DisplayItem {
     priv.set("id", String(id));
     priv.set("selected", Boolean(selected));
   }
-  get id(){
+  get id() {
     return privates.get(this).get("id");
   }
-  get selected(){
+  get selected() {
     return privates.get(this).get("selected");
   }
-  set selected(value){
+  set selected(value) {
     return privates.get(this).set("selected", Boolean(value));
   }
-  toObject(){
+  toObject() {
     return Object.assign(super.toObject(), {
       id: this.id,
       selected: this.selected,

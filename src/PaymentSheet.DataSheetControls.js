@@ -1,5 +1,5 @@
-import hyperHTML from "hyperhtml/hyperhtml.js";
-import EventTarget from "event-target-shim";
+import { bind } from "hyperhtml/cjs";
+import { defineEventAttribute } from "event-target-shim";
 
 const defaultLabels = Object.freeze({
   cancelLabel: "Cancel",
@@ -9,7 +9,7 @@ const defaultLabels = Object.freeze({
 
 const privates = new WeakMap();
 
-export default class DataSheetControls extends EventTarget(["cancel", "continue"]) {
+export default class DataSheetControls extends EventTarget {
   constructor(labels = defaultLabels) {
     super();
     const priv = privates.set(this, new Map()).get(this);
@@ -17,7 +17,7 @@ export default class DataSheetControls extends EventTarget(["cancel", "continue"
     containerElement.classList.add("paysheet-controls");
     priv.set("canContinue", false);
     priv.set("labels", labels);
-    priv.set("renderer", hyperHTML.bind(containerElement));
+    priv.set("renderer", bind(containerElement));
   }
   activate() {
     const priv = privates.get(this);
@@ -29,7 +29,7 @@ export default class DataSheetControls extends EventTarget(["cancel", "continue"
     priv.set("canContinue", false);
     this.render();
   }
-  render({ cancelLabel, proceedLabel, nextSheet } = privates.get(this).get("labels")) {
+  render({ cancelLabel, proceedLabel } = privates.get(this).get("labels")) {
     const priv = privates.get(this);
     const renderer = priv.get("renderer");
     const cancelHandler = () => {
@@ -39,7 +39,7 @@ export default class DataSheetControls extends EventTarget(["cancel", "continue"
       this.dispatchEvent(new CustomEvent("continue"));
     };
     const canContinue = !priv.get("canContinue");
-    return renderer `
+    return renderer`
       <button type="button" class="cancel" onclick="${cancelHandler}">
         ${cancelLabel}
       </button>
@@ -49,3 +49,6 @@ export default class DataSheetControls extends EventTarget(["cancel", "continue"
     `;
   }
 }
+["cancel", "continue"].forEach(name =>
+  defineEventAttribute(DataSheetControls, name)
+);

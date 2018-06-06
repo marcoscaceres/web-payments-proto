@@ -1,4 +1,4 @@
-import hyperHTML from "hyperhtml/hyperhtml.js";
+import { wire } from "hyperhtml/cjs";
 import DataCollector from "./DataCollector";
 import AddressFormat from "../formatters/AddressFormat";
 import BasicCardResponse from "../BasicCardResponse";
@@ -21,13 +21,10 @@ const buttonLabels = Object.freeze({
 });
 
 function makeInitialData() {
-  const data = Array.from(schema).reduce(
-    (obj, propName) => {
-      obj[propName] = "";
-      return obj;
-    },
-    {}
-  );
+  const data = Array.from(schema).reduce((obj, propName) => {
+    obj[propName] = "";
+    return obj;
+  }, {});
   data.uuid = uuid();
   return data;
 }
@@ -95,7 +92,7 @@ export default class CreditCardCollector extends DataCollector {
           placeholder="Card Number"
           required
           type="text"
-          value="${cardNumber}">
+          value="${cardNumber ? cardNumber : "4111 1111 1111 1111"}">
         <input
           type="text"
           minlength="1"
@@ -108,11 +105,19 @@ export default class CreditCardCollector extends DataCollector {
         <select 
           name="expiryMonth"
           placehoder="exp.MM" 
-          maxlength="2">${makeOptionsRange(1, 12, parseInt(expiryMonth, 10))}</select>
+          maxlength="2">${makeOptionsRange(
+            1,
+            12,
+            parseInt(expiryMonth, 10)
+          )}</select>
         <select 
           name="expiryYear" 
           placehoder="exp.YY" 
-          maxlength="2">${makeOptionsRange(year, year + 10, parseInt(expiryYear, 10))}</select>
+          maxlength="2">${makeOptionsRange(
+            year,
+            year + 10,
+            parseInt(expiryYear, 10)
+          )}</select>
         <input
           inputmode="numeric"
           maxlength="4"
@@ -158,7 +163,7 @@ function makeOptionsRange(start, end, selected = null) {
   while (start <= end) {
     const isSelected = selected === start;
     options.push(
-      hyperHTML.wire()`
+      wire()`
       <option value="${start}" selected="${isSelected}">
         ${start}
       </option>

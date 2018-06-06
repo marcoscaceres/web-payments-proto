@@ -1,83 +1,91 @@
 import paymentSheet from "./PaymentSheet.js";
+import {
+  _state as _requestState,
+  _options as _requestOptions,
+} from "./PaymentRequest";
 
-const PaymentCompleteEnum = Object.freeze([
-  "fail",
-  "success",
-  "unknown",
-]);
-
-const internalSlots = new WeakMap();
+const PaymentCompleteEnum = Object.freeze(["fail", "success", "unknown"]);
+const _request = Symbol("[[request]]");
+const _retrying = Symbol("[[retrying]]");
+const _complete = Symbol("[[complete]]");
+const _details = Symbol("[[details]]");
+const _id = Symbol("[[id]]");
+const _methodName = Symbol("[[methodName]]");
+const _payerName = Symbol("[[payerName]]");
+const _payerPhone = Symbol("[[payerPhone]]");
+const _shippingAddress = Symbol("[[shippingAddress]]");
+const _shippingOption = Symbol("[[shippingOption]]");
+const _payerEmail = Symbol("[[payerEmail]]");
 
 export default class PaymentResponse {
-  constructor(request, requestOptions, responseDetail){
-    const { requestShipping, requestPayerName, requestPayerPhone } = requestOptions;
-    internalSlots.set(this, new Map([
-      ["[[completeCalled]]", false],
-      ["[[details]]", Object.assign({}, responseDetail.details)],
-      ["[[id]]", request.id],
-      ["[[methodName]]", responseDetail.methodName],
-      ["[[payerName]]", requestPayerName ? responseDetail.payerName : null],
-      ["[[payerPhone]]", requestPayerPhone ? responseDetail.payerPhone : null],
-      ["[[shippingAddress]]", requestShipping ? responseDetail.shippingAddress : null],
-      ["[[shippingOption]]", request.selectedShippingOption],
-    ]));
-    // Set the details attribute value of response to an object containing 
-    // the payment method specific message that will be used by the merchant 
-    // to process the transaction. The format of this response will be defined
-    // for each payment method.
+  constructor(request, responseDetail) {
+    const { requestShipping, requestPayerName, requestPayerPhone } = request[
+      _requestOptions
+    ];
+    const payerPhone = requestPayerPhone ? responseDetail.payerPhone : null;
+    const shippingAddress = requestShipping
+      ? responseDetail.shippingAddress
+      : null;
+    const payerName = requestPayerName ? responseDetail.payerName : null;
+    this[_request] = request;
+    this[_retrying] = false;
+    this[_complete] = false;
+    this[_details] = Object.assign({}, responseDetail.details);
+    this[_id] = request.id;
+    this[_methodName] = responseDetail.methodName;
+    this[_payerName] = payerName;
+    this[_payerPhone] = payerPhone;
+    this[_shippingAddress] = shippingAddress;
+    this[_shippingOption] = request.selectedShippingOption;
   }
 
-  
   //readonly attribute DOMString requestId;
-  get requestId(){
-    return internalSlots.get(this).get("[[id]]"); 
+  get requestId() {
+    return this[_id];
   }
   //readonly attribute DOMString methodName;
-  get methodName(){
-    return internalSlots.get(this).get("[[methodName]]"); 
+  get methodName() {
+    return this[_methodName];
   }
   //readonly attribute object details;
-  get details(){
-   return internalSlots.get(this).get("[[details]]");  
+  get details() {
+    return this[_details];
   }
-
   //readonly attribute PaymentAddress? shippingAddress;
-  get shippingAddress(){
-    return internalSlots.get(this).get("[[shippingAddress]]"); 
+  get shippingAddress() {
+    return this[_shippingAddress];
   }
   //readonly attribute DOMString? shippingOption;
-  get shippingOption(){
-    return internalSlots.get(this).get("[[shippingOption]]"); 
+  get shippingOption() {
+    return this[_shippingOption];
   }
-  
   //readonly attribute DOMString? payerName;
-  get payerName(){
-    return internalSlots.get(this).get("[[payerName]]"); 
+  get payerName() {
+    return this[_payerName];
   }
   //readonly attribute DOMString? payerEmail;
-  get payerEmail(){
-    return internalSlots.get(this).get("[[payerEmail]]");
+  get payerEmail() {
+    return this[_payerEmail];
   }
   //readonly attribute DOMString? payerPhone;
-  get payerPhone(){
-    return internalSlots.get(this).get("[[payerPhone]]");
+  get payerPhone() {
+    return this[_payerPhone];
   }
 
   //Promise<void> complete(optional PaymentComplete result = "unknown");
-  async complete(result = "unknown"){
-    if(!PaymentCompleteEnum.includes(result)){
+  async complete(result = "unknown") {
+    if (!PaymentCompleteEnum.includes(result)) {
       throw new TypeError("Invalid argument value: " + result);
     }
-    const slots = internalSlots.get(this);
-    if(slots.get("[[completeCalled]]")){
-      throw new DOMException("Reponse already completed", "InvalidStateError");
+    if (this[_complete]) {
+      throw new DOMException("Response already completed", "InvalidStateError");
     }
-    slots.set("[[completeCalled]]", true);
+    this[_complete] = true;
     await paymentSheet.requestClose(result);
   }
 
   //serializer = { attribute };
-  toJSON(){
+  toJSON() {
     return JSON.stringify({
       requestId: this.requestId,
       methodName: this.methodName,
@@ -89,6 +97,6 @@ export default class PaymentResponse {
       payerPhone: this.payerPhone,
     });
   }
-};
+}
 
 window.PaymentResponse = PaymentResponse;

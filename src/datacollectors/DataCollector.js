@@ -1,7 +1,7 @@
-import hyperHTML from "hyperhtml/hyperhtml";
+import { bind } from "hyperhtml/cjs";
 import db from "../AutofillDB";
-import EventTarget from "event-target-shim";
-//import FormData from "formdata-polyfill";
+import { defineEventAttribute } from "event-target-shim";
+
 const privates = new WeakMap();
 const buttonLabels = Object.freeze({
   proceedLabel: "Continue",
@@ -10,26 +10,25 @@ const buttonLabels = Object.freeze({
 
 /**
  * @class DataCollector
- * 
+ *
  * Base class for collecting data based on schema. It provides simple means for
- * accessing collected data and for save data to IDB (via `tableName`). 
- * 
+ * accessing collected data and for save data to IDB (via `tableName`).
+ *
  * @param Set schema provides the names of the input fields this data collector is
- * concerned with. 
- * @param classList A list of CSS classes to apply to the renderer, to layout form correctly. 
- * @param String tableName Opitonal, the IndexedDB table name to save to.    
- * 
- * @see "datacollectors" folder. 
+ * concerned with.
+ * @param classList A list of CSS classes to apply to the renderer, to layout form correctly.
+ * @param String tableName Optional, the IndexedDB table name to save to.
+ *
+ * @see "datacollectors" folder.
  */
-export default class DataCollector
-  extends EventTarget(["datacollected", "invaliddata", "needsmodification"]) {
+export default class DataCollector extends EventTarget {
   constructor(schema, classList = [], tableName = "", initialData = null) {
     super();
     const priv = privates.set(this, new Map()).get(this);
     const section = document.createElement("section");
     classList.forEach(name => section.classList.add(name));
     priv.set("data", null);
-    priv.set("renderer", hyperHTML.bind(section));
+    priv.set("renderer", bind(section));
     priv.set("schema", schema);
     priv.set("section", section);
     priv.set("tableName", tableName);
@@ -53,7 +52,10 @@ export default class DataCollector
   }
 
   get form() {
-    return privates.get(this).get("section").closest("form");
+    return privates
+      .get(this)
+      .get("section")
+      .closest("form");
   }
 
   get dataSheet() {
@@ -62,13 +64,15 @@ export default class DataCollector
 
   set dataSheet(dataSheet) {
     dataSheet.form.addEventListener("reset", () => {
-      console.log("Resetting...");
+      console.log("Abstract resetting...");
       this.reset();
     });
     return privates.get(this).set("dataSheet", dataSheet);
   }
 
-  reset() {}
+  reset() {
+    console.log("Abstract DataCollector resetting...");
+  }
 
   toObject() {
     const priv = privates.get(this);
@@ -77,13 +81,10 @@ export default class DataCollector
     // We filter the data related to this DataCollector, as per the given schema.
     return Array.from(new FormData(form).entries())
       .filter(([key]) => schema.has(key))
-      .reduce(
-        (accum, [key, value]) => {
-          accum[key] = value;
-          return accum;
-        },
-        {}
-      );
+      .reduce((accum, [key, value]) => {
+        accum[key] = value;
+        return accum;
+      }, {});
   }
 
   /**
@@ -112,12 +113,15 @@ export default class DataCollector
     return buttonLabels;
   }
 }
+["datacollected", "invaliddata", "needsmodification"].forEach(name =>
+  defineEventAttribute(DataCollector, name)
+);
 /**
  * Intialize either from default data or from database
- * 
+ *
  * @this DataCollector
- * @param {String} tableName 
- * @param {Object} initialData 
+ * @param {String} tableName
+ * @param {Object} initialData
  */
 async function init(tableName, initialData) {
   if (tableName) {

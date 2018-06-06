@@ -16,28 +16,14 @@ const ccTypes = new Map([
   ["CARDGUARD EAD BG ILS", [5392]],
   ["China UnionPay", [62]],
   ["Dankort", [5019]],
-  ["Diners Club", [
-    [300, 305], 309, 36, [38, 39]
-  ]],
-  ["Discover Card", [6011, [622126, 622925],
-    [644, 649], 65
-  ]],
-  ["JCB", [
-    [3528, 3589]
-  ]],
+  ["Diners Club", [[300, 305], 309, 36, [38, 39]]],
+  ["Discover Card", [6011, [622126, 622925], [644, 649], 65]],
+  ["JCB", [[3528, 3589]]],
   ["Maestro", [50, [56, 58], 6]],
-  ["MasterCard", [
-    [2221, 2720],
-    [51, 55]
-  ]],
-  ["MIR", [
-    [2200, 2204]
-  ]],
+  ["MasterCard", [[2221, 2720], [51, 55]]],
+  ["MIR", [[2200, 2204]]],
   ["UATP", [1]],
-  ["Verve", [
-    [506099, 506198],
-    [650002, 650027]
-  ]],
+  ["Verve", [[506099, 506198], [650002, 650027]]],
   ["Visa", [4]],
 ]);
 
@@ -47,18 +33,21 @@ export default class BasicCardResponse {
     if (typeof details !== "object") {
       throw TypeError("Expected object for details");
     }
-    if (("cardNumber" in details) === false) {
+    if ("cardNumber" in details === false) {
       throw TypeError("cardNumber member is required");
     }
-    if ("billingAddress" in details && !(details.billingAddress instanceof PaymentAddress)) {
+    if (
+      "billingAddress" in details &&
+      !(details.billingAddress instanceof PaymentAddress)
+    ) {
       throw TypeError("Expected billingAddress to be a PaymentAddress");
     }
     // Save members as privates
-    Array
-      .from(members.entries())
+    Array.from(members.entries())
       .filter(([member]) => member in details)
       .reduce(
-        (accum, [member, caster]) => priv.set(member, caster(details[member])), priv
+        (accum, [member, caster]) => priv.set(member, caster(details[member])),
+        priv
       );
   }
   // DOMString cardholderName;
@@ -85,7 +74,7 @@ export default class BasicCardResponse {
   get billingAddress() {
     return privates.get(this).get("billingAddress");
   }
-  /** 
+  /**
    * Luhn algorithm
    *
    * Used for validating credit card numbers.
@@ -111,19 +100,18 @@ export default class BasicCardResponse {
       nCheck += nDigit;
       bEven = !bEven;
     }
-    return (nCheck % 10) === 0;
+    return nCheck % 10 === 0;
   }
 
   static getCardNetwork(ccNumber) {
-    const found = Array
-      .from(
-        ccTypes.entries()
-      ).find(([, startValues]) => {
-        return startValues
-          .find(
-            startValue => Array.isArray(startValue) ? inRange(ccNumber, startValue) : ccNumber.startsWith(startValue)
-          );
-      });
+    const found = Array.from(ccTypes.entries()).find(([, startValues]) => {
+      return startValues.find(
+        startValue =>
+          Array.isArray(startValue)
+            ? inRange(ccNumber, startValue)
+            : ccNumber.startsWith(startValue)
+      );
+    });
     return found ? found[0] : "";
   }
 }

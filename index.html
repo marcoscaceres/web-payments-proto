@@ -1,42 +1,42 @@
-<!doctype html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="generator" content=
+"HTML Tidy for HTML5 for Apple macOS version 5.6.0">
 <meta charset="utf-8">
 <script src="build/bundle.js"></script>
 <link rel="stylesheet" href="css/shop.css">
 <link rel="stylesheet" href="css/payment-sheet.css">
 <title>Shop</title>
-
+</head>
 <body>
-  <main id="shop">
-    <h1>Shopping</h1>
-    <h2 class="main-stuff">Shopping Cart</h2>
-    <form class="main-stuff">
-      <section id="inventory-table">
-        <!-- dynamically filled -->
-      </section>
-      <aside id="order-summary">
-        <!-- dynamically filled -->
-      </aside>
-    </form>
-    <section id="payment-complete" hidden>
-      <h1>Thank you for your order</h1>
-      <p>Your order number is: 00482156131</p>
-      <ul>
-        <li><a href="#">View receipt</a></li>
-        <li><a href="#">Print receipt</a></li>
-        <li><a href="#">Keep shopping</a></li>
-      </ul>
-    </section>
-  </main>
-  <script>
+<main id="shop">
+<h1>Shopping</h1>
+<h2 class="main-stuff">Shopping Cart</h2>
+<form class="main-stuff">
+<section id="inventory-table"><!-- dynamically filled --></section>
+<aside id="order-summary"><!-- dynamically filled --></aside>
+</form>
+<section id="payment-complete" hidden="">
+<h1>Thank you for your order</h1>
+<p>Your order number is: 00482156131</p>
+<ul>
+<li><a href="#">View receipt</a></li>
+<li><a href="#">Print receipt</a></li>
+<li><a href="#">Keep shopping</a></li>
+</ul>
+</section>
+</main>
+<script>
     document.querySelector("form").addEventListener("submit", ev => {
       ev.preventDefault();
       return false;
     });
-  </script>
-  <p style="position: absolute; bottom: 0px">
-    <small>Please use credit card number:  4111 1111 1111 1111 or 3782 8224 6310 005 or 3852 0000 0232 37 (<button id="killswitch">clear db</button>)</small>
-  </p>
-  <script>
+</script>
+<p style="position: absolute; bottom: 0px"><small>Please use credit
+card number: 4111 1111 1111 1111 or 3782 8224 6310 005 or 3852 0000
+0232 37 (<button id="killswitch">clear db</button>)</small></p>
+<script>
     document.querySelector("#killswitch").addEventListener("click", async () => {
       try {
         await db.delete();
@@ -47,4 +47,6 @@
         window.location.reload();
       }
     })
-  </script>
+</script>
+</body>
+</html>

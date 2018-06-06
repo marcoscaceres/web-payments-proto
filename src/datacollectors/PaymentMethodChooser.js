@@ -1,4 +1,4 @@
-import hyperHTML from "hyperhtml/hyperhtml.js";
+import { wire } from "hyperhtml/cjs";
 import DataCollector from "./DataCollector";
 const privates = new WeakMap();
 
@@ -70,14 +70,14 @@ function toRadio(paymentMethod) {
   };
   const srcset = icons.map(toSrcset);
   const img = toImage({ srcset, name });
-  return hyperHTML.wire(paymentMethod)`
+  return wire(paymentMethod)`
     <label onkeypress="${keyHandler}" role="radio" aria-checked="false">
     <input required value="${value}" required name="payment-method" type="radio">${img}</label>`;
 }
 // Either a srcset or just a src
 function toImage(details) {
   const { srcset, alt } = details;
-  return hyperHTML.wire(details)`<img
+  return wire(details)`<img
      tabindex="0"
      alt="${alt}"
      srcset="${srcset.join(" ")}"
@@ -90,13 +90,10 @@ function toSrcset({ src, sizes }) {
   return sizes
     .split(" ")
     .map(size => size.split("x")[0] + "w")
-    .reduce(
-      (collector, width) => {
-        collector.push(`${src} ${width}`);
-        return collector;
-      },
-      []
-    )
+    .reduce((collector, width) => {
+      collector.push(`${src} ${width}`);
+      return collector;
+    }, [])
     .sort()
     .join();
 }

@@ -1,23 +1,21 @@
-import hyperHTML from "hyperhtml/hyperhtml.js";
 import Countries from "../Countries";
-import EventTarget from "event-target-shim";
 import guid from "uuid/v4";
 import DataCollector from "./DataCollector";
-import db from "../AutofillDB";
 import PaymentAddress from "../PaymentAddress";
 
 const privates = new WeakMap();
 const addressTypes = new Set(["shipping", "billing"]);
-const schema = new Set([
-  "addressLevel1",
-  "addressLevel2",
-  "country",
-  "fullName",
-  "guid",
-  "phoneNumber",
-  "postalCode",
-  "streetAddress",
-]);
+const defaultAddress = {
+  addressLevel1: "",
+  addressLevel2: "",
+  country: "",
+  fullName: "",
+  guid: "",
+  phoneNumber: "",
+  postalCode: "",
+  streetAddress: "",
+};
+const schema = new Set([...Object.keys(defaultAddress)]);
 const defaultRequestData = Object.freeze({
   options: {
     requestPayerEmail: false,
@@ -28,20 +26,11 @@ const defaultRequestData = Object.freeze({
 });
 
 function makeInitialData() {
-  const obj = {
-    guid: guid(),
-  };
-  return Array.from(schema).reduce(
-    (obj, propName) => {
-      obj[propName] = "";
-      return obj;
-    },
-    obj
-  );
+  return Object.assign({}, defaultAddress, { guid: guid() });
 }
 
 export default class AddressCollector extends DataCollector {
-  constructor(addressType = "shipping", requestedFields) {
+  constructor(addressType = "shipping") {
     const initialData = makeInitialData();
     super(
       schema,
@@ -115,16 +104,9 @@ export default class AddressCollector extends DataCollector {
   }
 
   render(requestData = defaultRequestData) {
+    const { data } = this;
     const {
-      data,
-    } = this;
-    const {
-      options: {
-        requestPayerEmail,
-        requestPayerName,
-        requestPayerPhone,
-        requestShipping,
-      },
+      options: { requestPayerName, requestPayerPhone, requestShipping },
     } = requestData;
     return this.renderer`
       <input 
@@ -169,7 +151,12 @@ export default class AddressCollector extends DataCollector {
         placeholder="State"
         required="${requestShipping}"
         type="text"
-        value="${data.addressLevel1}">${Countries.asHTMLSelect("two-thirds", data.country || "US", "country", requestShipping ? "required" : null)}<input
+        value="${data.addressLevel1}">${Countries.asHTMLSelect(
+      "two-thirds",
+      data.country || "US",
+      "country",
+      requestShipping ? "required" : null
+    )}<input
         autocomplete="${this.addressType + " postal-code"}"
         name="postalCode"
         placeholder="Post code"

@@ -1,4 +1,4 @@
-import hyperHTML from "hyperhtml/hyperhtml";
+import { bind } from "hyperhtml/cjs";
 import PaymentCurrencyAmount from "./PaymentCurrencyAmount";
 import PaymentShippingOption from "./PaymentShippingOption";
 import PaymentItem from "./PaymentItem";
@@ -8,10 +8,11 @@ export default class OrderSummary {
   constructor(summaryElem, sections = [], defaultCurrency = "USD") {
     const priv = privates.set(this, new Map()).get(this);
     priv.set("sections", sections);
-    priv.set("renderer", hyperHTML.bind(summaryElem));
+    priv.set("renderer", bind(summaryElem));
     priv.set("defaultCurrency", defaultCurrency);
     sections.forEach(section =>
-      section.addEventListener("change", this.render.bind(this)));
+      section.addEventListener("change", this.render.bind(this))
+    );
     this.render();
   }
 
@@ -33,7 +34,9 @@ export default class OrderSummary {
     const renderer = priv.get("renderer");
     const sections = priv.get("sections");
     const clickHandler = doPaymentRequest.bind(this);
-    const { amount: { value, currency } } = this.sumTotal();
+    const {
+      amount: { value, currency },
+    } = this.sumTotal();
     const formatter = new Intl.NumberFormat("en-us", {
       style: "currency",
       currency,
@@ -69,6 +72,7 @@ async function doPaymentRequest() {
   const typeSplitter = makeSplitter(
     item => item instanceof PaymentShippingOption
   );
+
   const { left: shippingOptions, right: displayItems } = Array.from(sections)
     .map(section => section.displayItems)
     .reduce((accumulator, items) => accumulator.concat(items), [])
@@ -86,6 +90,7 @@ async function doPaymentRequest() {
     total: total.toObject(),
     shippingOptions: shippingOptions.map(item => item.toObject()),
   };
+
   const options = {
     requestShipping: true,
     requestPayerName: true,
@@ -93,25 +98,56 @@ async function doPaymentRequest() {
   };
   const request = new PaymentRequest(methodData, details, options);
 
-  request.onshippingoptionchange = ev => {
+  request.addEventListener("shippingoptionchange", async ev => {
     console.log("hmmm.... onshippingoptionchange", ev);
-  };
+    const detailsPromise = new Promise(resolve => {
+      const details = makeRandomDetails();
+      setTimeout(() => {
+        resolve(details);
+      }, 100);
+    });
+    ev.updateWith(detailsPromise);
+  });
   request.onshippingaddresschange = ev => {
     console.log("hmmm.... onshippingaddresschange", ev);
   };
-  request.show().then(processResponse).catch(err => console.log(err));
+  try {
+    const randomDetails = makeRandomDetails();
+    const p = new Promise(r => {
+      setTimeout(() => {
+        r(randomDetails);
+      }, 2000);
+    });
+    const acceptPromise = request.show(p);
+    const response = await acceptPromise;
+    await processResponse(response);
+  } catch (err) {
+    console.error(err);
+  }
   return false;
 }
 
-function processResponse(r) {
-  setTimeout(
-    async () => {
-      await r.complete("success");
-      document
-        .querySelectorAll(".main-stuff")
-        .forEach(elem => elem.setAttribute("hidden", true));
-      document.querySelector("#payment-complete").removeAttribute("hidden");
+async function processResponse(response) {
+  await response.retry({});
+  setTimeout(async () => {
+    await response.complete("success");
+    document
+      .querySelectorAll(".main-stuff")
+      .forEach(elem => elem.setAttribute("hidden", true));
+    document.querySelector("#payment-complete").removeAttribute("hidden");
+  }, 2000);
+}
+
+function makeRandomDetails() {
+  return {
+    total: {
+      label: "Total",
+      amount: {
+        value: String(Math.random())
+          .substring(2)
+          .substring(15),
+        currency: "usd",
+      },
     },
-    2000
-  );
+  };
 }

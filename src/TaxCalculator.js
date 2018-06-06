@@ -5,7 +5,7 @@ import PaymentItem from "./PaymentItem";
 const privates = new WeakMap();
 
 export default class TaxCalculator extends LineItemRenderer {
-  constructor(taxPercent = 0.10, sections = [], defaultCurrency = "USD") {
+  constructor(taxPercent = 0.1, sections = [], defaultCurrency = "USD") {
     super(sections);
     const priv = privates.set(this, new Map()).get(this);
     this.containerElem.classList.add("tax-line");
@@ -15,7 +15,8 @@ export default class TaxCalculator extends LineItemRenderer {
     // subscribe to changes from dependent sections, and render on change
     const renderListener = this.render.bind(this);
     sections.forEach(section =>
-      section.addEventListener("change", renderListener));
+      section.addEventListener("change", renderListener)
+    );
     this.render();
   }
 
@@ -26,8 +27,10 @@ export default class TaxCalculator extends LineItemRenderer {
     const taxPercent = priv.get("taxPercent");
     const total = Array.from(sections)
       .map(section => section.displayItems)
-      .reduce((accumulator, displayItems) => accumulator.concat(displayItems), [
-      ])
+      .reduce(
+        (accumulator, displayItems) => accumulator.concat(displayItems),
+        []
+      )
       .map(displayItem => parseInt(displayItem.amount.value, 10))
       .reduce((total, value) => total + value, 0);
     const tax = total * taxPercent;

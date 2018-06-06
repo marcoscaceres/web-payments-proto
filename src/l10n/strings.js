@@ -1,10 +1,10 @@
 const strings = new Map();
 
 strings.set("en", {
-  "buttonLabels": {
+  buttonLabels: {
     left: "Cancel",
     right: "Continue",
-  }
+  },
 });
 
 export default strings;

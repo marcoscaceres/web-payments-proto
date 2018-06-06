@@ -1,8 +1,6 @@
-import hyperHTML from "hyperhtml/hyperhtml.js";
 import DataCollector from "./DataCollector";
 import AddressFormat from "../formatters/AddressFormat";
 import BasicCardResponse from "../BasicCardResponse";
-import db from "../AutofillDB";
 
 const monthYearFormatter = new Intl.DateTimeFormat(navigator.languages, {
   month: "2-digit",
@@ -39,9 +37,7 @@ export default class PaymentConfirmationCollector extends DataCollector {
 
   render(requestData = defaultRequestData) {
     const {
-      options: {
-        requestShipping,
-      },
+      options: { requestShipping },
     } = requestData;
     const priv = privates.get(this);
     const addressCollector = priv.get("addressCollector");
@@ -73,10 +69,10 @@ export default class PaymentConfirmationCollector extends DataCollector {
       }
       this.dispatchEvent(event);
     };
-    const isRealData = requestData !== defaultRequestData;
-    if (isRealData && !addressCollector.didNotifyAddressChange) {
-      addressCollector.notifyAddressChange();
-    }
+    // const isRealData = requestData !== defaultRequestData;
+    // if (isRealData && !addressCollector.didNotifyAddressChange) {
+    //   addressCollector.notifyAddressChange();
+    // }
     const type = cardResponse.cardSecurityCode ? "hidden" : "text";
     return this.renderer`
       <section class="shipping-summary" hidden="${!requestShipping}">

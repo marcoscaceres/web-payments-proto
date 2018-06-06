@@ -4,6 +4,12 @@ const privates = new WeakMap();
 
 export default class PaymentItem extends DisplayItem {
   constructor(label, amount, pending = false) {
+    if (label === undefined) {
+      throw new TypeError("Label is required.");
+    }
+    if (amount === undefined) {
+      throw new TypeError("amount is required.");
+    }
     super(label, amount);
     const priv = privates.set(this, new Map()).get(this);
     priv.set("pending", Boolean(pending));
@@ -11,7 +17,7 @@ export default class PaymentItem extends DisplayItem {
   get pending() {
     return privates.get(this).get("pending");
   }
-  toObject(){
+  toObject() {
     return Object.assign(super.toObject(), {
       pending: this.pending,
     });

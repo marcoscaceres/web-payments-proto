@@ -1,10 +1,10 @@
-import EventTarget from "event-target-shim";
-import hyperHTML from "hyperhtml/hyperhtml.js";
+import { defineEventAttribute } from "event-target-shim";
+import { bind, wire } from "hyperhtml/cjs";
 import PaymentShippingOption from "./PaymentShippingOption.js";
 
 const privates = new WeakMap();
 
-export default class ShippingOptions extends EventTarget(["change"]) {
+export default class ShippingOptions extends EventTarget {
   constructor(shippingOptions = []) {
     super();
     const containerElem = document.createElement("section");
@@ -16,7 +16,7 @@ export default class ShippingOptions extends EventTarget(["change"]) {
       throw new TypeError("Expected instance of PaymentShippingOption");
     }
     priv.set("containerElem", containerElem);
-    priv.set("renderer", hyperHTML.bind(containerElem));
+    priv.set("renderer", bind(containerElem));
     priv.set("shippingOptions", shippingOptions);
     this.render(shippingOptions);
   }
@@ -52,12 +52,13 @@ export default class ShippingOptions extends EventTarget(["change"]) {
   }
 
   get displayItems() {
-    return this.selected;
+    return privates.get(this).get("shippingOptions");
   }
 }
+defineEventAttribute(ShippingOptions, "change");
 
 function toHTML(shippingOption) {
-  return hyperHTML.wire(shippingOption)`
+  return wire(shippingOption)`
   <dt>
     <input
       type="radio"

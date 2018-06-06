@@ -1,17 +1,30 @@
+import { _state, _updating, updatePaymentRequest } from "./PaymentRequest.js";
+const _waitForUpdate = Symbol("[[waitForUpdate]]");
+
 export default class PaymentRequestUpdateEvent extends Event {
-  constructor(type){
+  constructor(type) {
     super(type);
+    this[_waitForUpdate] = false;
   }
-  async updateWith(detailsPromise){    
-    // Let event be this PaymentRequestUpdateEvent instance.
-    // Let target be the value of event's target attribute.
-    // If target is not a PaymentRequest object, then throw a TypeError.
-    // If the dispatch flag is unset, then throw an "InvalidStateError" DOMException.
-    // If event.[[\waitForUpdate]] is true, then throw an "InvalidStateError" DOMException.
-    // If target.[[\state]] is not "interactive", then throw an "InvalidStateError" DOMException.
-    // If target.[[\updating]] is true, then throw an "InvalidStateError" DOMException.
-    // Set event's stop propagation flag and stop immediate propagation flag.
-    // Set event.[[\waitForUpdate]] to true.
-    // Set target.[[\updating]] to true. 
+  updateWith(detailsPromise) {
+    if (!this.isTrusted) {
+      console.warn("Event is not trusted - would normally throw here");
+    }
+    if (this[_waitForUpdate]) {
+      throw new DOMException("Already waiting for update", "InvalidStateError");
+    }
+    const request = this.target;
+    if (request[_state] !== "interactive") {
+      throw new DOMException("Sheet is not interactive", "InvalidStateError");
+    }
+    if (request[_updating]) {
+      throw new DOMException("Sheet is already updating", "InvalidStateError");
+    }
+    this.stopPropagation();
+    this.stopImmediatePropagation();
+    this[_waitForUpdate] = true;
+    request[_updating] = true;
+    updatePaymentRequest(detailsPromise, request).catch(console.error);
   }
-};
+}
+window.PaymentRequestUpdateEvent = PaymentRequestUpdateEvent;

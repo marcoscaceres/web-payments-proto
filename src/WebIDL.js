@@ -9,11 +9,10 @@ function toStringMaker(name) {
 const protoProps = {
   writable: false,
   enumerable: false,
-  configurable: false
+  configurable: false,
 };
 
 export function exportInterfaceObject(interfaceProto, interfaceObject) {
-
   const identifier = interfaceObject.name;
   interfaceProto.prototype.toString = function() {
     if (this instanceof interfaceProto) {
@@ -22,19 +21,21 @@ export function exportInterfaceObject(interfaceProto, interfaceObject) {
     return `[object ${identifier} Prototype]`;
   };
   interfaceObject.prototype = interfaceProto.prototype;
-  Object.defineProperty(interfaceObject, 'prototype', protoProps);
+  Object.defineProperty(interfaceObject, "prototype", protoProps);
 
   interfaceProto.prototype.constructor = interfaceObject;
-  Object.defineProperty(interfaceProto.prototype, 'constructor', {
-    enumerable: false
+  Object.defineProperty(interfaceProto.prototype, "constructor", {
+    enumerable: false,
   });
 
   //replace toString with a "native" looking one
-  interfaceProto.toString = interfaceObject.toString = toStringMaker(identifier);
+  interfaceProto.toString = interfaceObject.toString = toStringMaker(
+    identifier
+  );
 
   //Expose on global object
   Object.defineProperty(window, identifier, {
-    value: interfaceObject
+    value: interfaceObject,
   });
   return interfaceObject;
 }
@@ -43,18 +44,21 @@ const attrDefaults = {
   isReadOnly: false,
   isStatic: false,
   extendedAttrs: [],
-}
+};
 
 export function implementAttr(object, name, opts = attrDefaults) {
-  const { isReadOnly, isStatic, get, set, extendedAttrs } = Object.assign({}, opts, attrDefaults);
+  const { isReadOnly, isStatic, get, set, extendedAttrs } = {
+    ...attrDefaults,
+    ...opts,
+  };
   const property = {
     get,
     set,
     enumerable: true,
-    configurable: !!(extendedAttrs.unforgable) || true
+    configurable: !!extendedAttrs.unforgable || true,
   };
 
-  if (typeof object !== 'object' || typeof name !== 'string') {
+  if (typeof object !== "object" || typeof name !== "string") {
     throw new TypeError();
   }
 
@@ -69,10 +73,10 @@ export function implementAttr(object, name, opts = attrDefaults) {
   }
 
   //getter
-  if (!!isStatic) {
-    if (typeof object !== 'function') {
-      interfaceObject = Object.getProtoTypeOf(object).prototype;
-      if (typeof interfaceObject !== 'function') {
+  if (isStatic) {
+    const interfaceObject = Object.getProtoTypeOf(object).prototype;
+    if (typeof object !== "function") {
+      if (typeof interfaceObject !== "function") {
         throw new TypeError();
       }
     }

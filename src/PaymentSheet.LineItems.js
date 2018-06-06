@@ -1,20 +1,23 @@
-import hyperHTML from "hyperhtml/hyperhtml.js";
-import RenderableWidget from "./RenderableWidget";
-import PaymentCurrencyAmount from "./PaymentCurrencyAmount";
+import { wire } from "hyperhtml/cjs";
+import RenderableWidget from "./RenderableWidget.js";
+import PaymentCurrencyAmount from "./PaymentCurrencyAmount.js";
+import { _details } from "./PaymentRequest.js";
 const privates = new WeakMap();
 
 export default class LineItems extends RenderableWidget {
   constructor() {
     super(document.createElement("details"));
-    const priv = privates.set(this, new Map()).get(this);
+    privates.set(this, new Map()).get(this);
     this.element.id = "payment-sheet-line-items";
   }
 
-  render({ displayItems }) {
+  render() {
+    const priv = privates.get(this);
+    const displayItems = this.request[_details].displayItems;
     const lineItemsHTML = displayItems.map(toTR);
     const tableData = lineItemsHTML.length
       ? displayItems.map(toTR)
-      : hyperHTML.wire()`<tr><td colspan="2">No line items</td></tr>`;
+      : wire(displayItems)`<tr><td colspan="2">No line items</td></tr>`;
     return this.renderer`
       <summary>
         View All Items
@@ -29,7 +32,7 @@ function toTR(lineItem) {
     amount: { currency, value },
   } = lineItem;
   const itemCost = new PaymentCurrencyAmount(currency, value).toString();
-  return hyperHTML.wire(lineItem)`<tr>
+  return wire(lineItem)`<tr>
      <td lang="${lineItem.lang}" dir="${lineItem.dir}">
        ${lineItem.label}
      </td>

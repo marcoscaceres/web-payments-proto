@@ -1,14 +1,16 @@
-import hyperHTML from "hyperhtml/hyperhtml.js";
+import { bind } from "hyperhtml/cjs";
+import RenderableWidget from "./RenderableWidget";
 const privates = new WeakMap();
 
-export default class AwaitPaymentResponse {
-  constructor(){
+export default class AwaitPaymentResponse extends RenderableWidget {
+  constructor() {
+    super();
     const priv = privates.set(this, new Map()).get(this);
     const section = document.createElement("section");
     section.classList.add("await-payment-response");
-    priv.set("renderer", hyperHTML.bind(section));
+    priv.set("renderer", bind(section));
   }
-  render(){
+  render() {
     const priv = privates.get(this);
     const renderer = priv.get("renderer");
     return renderer`

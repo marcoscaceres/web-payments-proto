@@ -1,4 +1,4 @@
-import hyperHTML from "hyperhtml/hyperhtml.js";
+import { bind } from "hyperhtml/cjs";
 const privates = new WeakMap();
 
 export default class Renderable {
@@ -13,7 +13,7 @@ export default class Renderable {
         containerElem = elem;
     }
     priv.set("containerElem", containerElem);
-    priv.set("renderer", hyperHTML.bind(containerElem));
+    priv.set("renderer", bind(containerElem));
   }
   get containerElem() {
     return privates.get(this).get("containerElem");
@@ -22,6 +22,6 @@ export default class Renderable {
     return privates.get(this).get("renderer");
   }
   render() {
-    throw new Error("Abstract! make your own!")
+    throw new Error("Abstract! make your own!");
   }
 }

@@ -1,21 +1,20 @@
 module.exports = {
-  entry: ["babel-polyfill", "./src/index.js"],
-  //devtool: "source-map",
+  entry: ["./src/index.js"],
+  devtool: "source-map",
+  mode: "development",
   output: {
     path: __dirname,
-    filename: "./build/bundle.js"
+    filename: "./build/bundle.js",
   },
   resolve: {
-    extensions: [".js", ".json"]
+    extensions: [".js"],
   },
   module: {
-    loaders: [{
-      test: /\.css$/,
-      loader: "style-loader!css-loader",
-    }, {
-      test: /\.js?$/,
-      exclude: /node_modules/,
-      //loaders: ["babel-loader"],
-    }]
-  }
+    rules: [
+      {
+        test: /\.css$/,
+        use: ["style-loader", "css-loader"],
+      },
+    ],
+  },
 };

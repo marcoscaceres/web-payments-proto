@@ -1,28 +1,19 @@
-import hyperHTML from "hyperhtml/hyperhtml.js";
+import { bind } from "hyperhtml/cjs";
+import RenderableWidget from "./RenderableWidget";
 
 const privates = new WeakMap();
 
-export default class Host {
-  constructor(url = window.location.href) {
+export default class Host extends RenderableWidget {
+  constructor() {
+    super();
     const priv = privates.set(this, new Map()).get(this);
     const containerElem = document.createElement("section");
     containerElem.id = "payment-sheet-host";
-    priv.set("renderer", hyperHTML.bind(containerElem));
+    priv.set("renderer", bind(containerElem));
   }
-  render(url) {
+  render() {
     const priv = privates.get(this);
     const renderer = priv.get("renderer");
-    let result;
-    try {
-      let host = new URL(url).host;
-      return renderer `<p>Requested by 
-          <span>
-            ${host}
-          </span>
-        </p>`;
-    } catch (err) {
-      return renderer `<p class="payment-sheet-error">Invalid URL!!!!</p>`;
-    }
+    return renderer`<p>Requested by <span>${window.location.host}</span></p>`;
   }
 }
-

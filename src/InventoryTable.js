@@ -1,10 +1,10 @@
-import hyperHTML from "hyperhtml/hyperhtml.js";
+import { bind, wire } from "hyperhtml/esm";
 import PaymentItem from "./PaymentItem.js";
 import PaymentCurrencyAmount from "./PaymentCurrencyAmount.js";
-import EventTarget from "event-target-shim";
+import { defineEventAttribute } from "event-target-shim";
 const privates = new WeakMap();
 
-export default class InventoryTable extends EventTarget(["change"]) {
+export default class InventoryTable extends EventTarget {
   constructor(containerElem, dataURL) {
     super();
     const priv = privates.set(this, new Map()).get(this);
@@ -13,7 +13,7 @@ export default class InventoryTable extends EventTarget(["change"]) {
     priv.set("table", table);
     makeTableSkeleton(table);
     const tBody = table.querySelector("tbody");
-    priv.set("renderer", hyperHTML.bind(tBody));
+    priv.set("renderer", bind(tBody));
     const ready = Promise.resolve(dataURL ? this.fill(dataURL) : undefined);
     priv.set("ready", ready);
     // set up change listener
@@ -40,46 +40,46 @@ export default class InventoryTable extends EventTarget(["change"]) {
         }
         const tr = selectElem.closest("tr");
         const price = parseInt(tr.querySelector(".price").textContent, 10);
-        const quantity = parseInt(selectElem.item(selectElem.selectedIndex).value, 10);
+        const quantity = parseInt(
+          selectElem.item(selectElem.selectedIndex).value,
+          10
+        );
         const newTotal = quantity * price;
-        renderer `${newTotal}`;
-      }
+        renderer`${newTotal}`;
+      },
     };
     const renderer = privates.get(this).get("renderer");
     fillInventoryTable(renderer, data, evt);
     // watch totals
-    var totals = Array
-      .from(
-        document.querySelectorAll(".itemSum>output")
-      )
-      .map(elem => ({
+    var totals = Array.from(document.querySelectorAll(".itemSum>output")).map(
+      elem => ({
         elem,
-        renderer: hyperHTML.bind(elem),
+        renderer: bind(elem),
         selectElem: elem.closest("tr").querySelector("select.itemsSelector"),
-      }));
+      })
+    );
   }
 
-  get containerElem(){
+  get containerElem() {
     return privates.get(this).get("containerElem");
   }
 
   get displayItems() {
     const table = privates.get(this).get("table");
-    const items = Array
-      .from(table.querySelectorAll(".lineItem"))
-      .map(tr => {
-        const currency = "USD";
-        const value = tr.querySelector(".itemSum>output").textContent;
-        const amount = new PaymentCurrencyAmount(currency, value);
-        const label = tr.querySelector(".itemLabel").textContent;
-        const howMany = tr.querySelector(".itemsSelector");
-        const itemCount = howMany.item(howMany.selectedIndex).value;
-        const finalLabel = `${label} x${itemCount}`;
-        return new PaymentItem(finalLabel, amount);
-      });
+    const items = Array.from(table.querySelectorAll(".lineItem")).map(tr => {
+      const currency = "USD";
+      const value = tr.querySelector(".itemSum>output").textContent;
+      const amount = new PaymentCurrencyAmount(currency, value);
+      const label = tr.querySelector(".itemLabel").textContent;
+      const howMany = tr.querySelector(".itemsSelector");
+      const itemCount = howMany.item(howMany.selectedIndex).value;
+      const finalLabel = `${label} x${itemCount}`;
+      return new PaymentItem(finalLabel, amount);
+    });
     return items;
   }
 }
+defineEventAttribute(InventoryTable, "change");
 
 function makeTableSkeleton(table) {
   table.innerHTML = `
@@ -106,38 +106,43 @@ function range(start, finish) {
 }
 
 function toSelectOptions(listItems) {
-  const options = Array
-    .from(listItems)
-    .map(item => `<option value="${item}">${item}</option>`)
+  const options = Array.from(listItems).map(
+    item => `<option value="${item}">${item}</option>`
+  );
   return options;
 }
 
-function toTableData({ img, price, label, sizes, ref, colors }, { onChange }) {
-  return hyperHTML.wire()
-  `
+function toTableData(details, { onChange }) {
+  const { img, price, label, sizes, ref, colors } = details;
+  return wire(details)`
     <td>
       <img src="${img}" alt="">
     </td>
     <td>
-      <h3 class="itemLabel">${label}</h3>
+      <h3 class="itemLabel">${label} working?</h3>
       <p>Ref. ${ref}</p>
-      <p class="itemSizes">Size: <select name="sizes" class="sizeSelector">${toSelectOptions(sizes)}</select></p>
+      <p class="itemSizes">Size: <select name="sizes" class="sizeSelector">${toSelectOptions(
+        sizes
+      )}</select></p>
       <p>Colors: ${colors}</p>
     </td>
     <td>
-      <select name="itemCount" class="itemsSelector" onchange="${onChange}">${toSelectOptions(range(1,10))}</select>
+      <select name="itemCount" class="itemsSelector" onchange="${onChange}">${toSelectOptions(
+    range(1, 10)
+  )}</select>
     </td>
     <td>$<span class="price">${price}</span></td>
     <td class="itemSum">$<output>${price}</output></td>
   `;
 }
 
-
 function fillInventoryTable(hyperTBody, inventoryItems, evt) {
-  const TRs = inventoryItems
-    .map(
-      item => hyperHTML.wire()
-      `<tr class="lineItem" data-ref="${item.ref}">${toTableData(item, evt)}</tr>`
-    );
-  hyperTBody `${TRs}`;
+  const TRs = inventoryItems.map(
+    item =>
+      wire()`<tr class="lineItem" data-ref="${item.ref}">${toTableData(
+        item,
+        evt
+      )}</tr>`
+  );
+  hyperTBody`${TRs}`;
 }

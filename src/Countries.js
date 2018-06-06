@@ -1,4 +1,4 @@
-import hyperHTML from "hyperhtml/hyperhtml.js";
+import { bind, wire } from "hyperhtml/cjs";
 export const countries = new Map([
   ["AF", { name: "Afghanistan" }],
   ["AX", { name: "land Islands" }],
@@ -252,36 +252,39 @@ export const countries = new Map([
 ]);
 
 export default class Countries {
-  constructor(){
+  constructor() {
     throw new TypeError("No constructor - use statics");
   }
-  static get(key){
+  static get(key) {
     return Object.assign({}, countries.get(key));
   }
- 
-  static asHTMLSelect(cssClass="", selected="US", name="country", required="no"){
+
+  static asHTMLSelect(
+    cssClass = "",
+    selected = "US",
+    name = "country",
+    required = "no"
+  ) {
     const select = document.createElement("select");
-    select.classList.add(cssClass); 
+    select.classList.add(cssClass);
     select.name = name;
     select.autocomplete = "country";
     select.required = required === "required";
-    const renderer = hyperHTML.bind(select);
+    const renderer = bind(select);
     return renderer`${Countries.asHTMLOptions(selected)}`;
   }
 
-  static asHTMLOptions(selected){
-    return Array
-      .from(countries.entries())
-      .map(
-        ([code, details]) => toHTMLOption([code, details], selected)
-      );
+  static asHTMLOptions(selected) {
+    return Array.from(countries.entries()).map(([code, details]) =>
+      toHTMLOption([code, details], selected)
+    );
   }
 }
 
 function toHTMLOption(entry, selected) {
   const [code, { name }] = entry;
   const isSelected = code === selected;
-  return hyperHTML.wire(entry)`
+  return wire(entry)`
   <option value="${code}" selected="${isSelected}">
       ${name} 
   </option>`;

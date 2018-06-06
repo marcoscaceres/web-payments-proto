@@ -1,28 +1,21 @@
 //import "../css/payment-sheet.css";
+import { _details, _options } from "./PaymentRequest.js";
+import { bind } from "hyperhtml/cjs";
 import "dialog-polyfill/dialog-polyfill.css";
 import AddressCollector from "./datacollectors/AddressCollector";
 import CreditCardCollector from "./datacollectors/CreditCardCollector";
 import DataSheet from "./PaymentSheet.DataSheet.js";
 import DataSheetManager from "./DataSheetManager";
-import db from "./AutofillDB";
 import dialogPolyfill from "dialog-polyfill/dialog-polyfill";
-import EventTarget from "event-target-shim";
 import Host from "./PaymentSheet.Host";
-import hyperHTML from "hyperhtml/hyperhtml.js";
 import LineItems from "./PaymentSheet.LineItems";
 import PaymentMethodChooser from "./datacollectors/PaymentMethodChooser";
 import ShippingOptions from "./PaymentSheet.ShippingOptions";
 import Total from "./PaymentSheet.Total";
-import PaymentConfirmationCollector
-  from "./datacollectors/PaymentConfirmationCollector";
+import PaymentConfirmationCollector from "./datacollectors/PaymentConfirmationCollector";
 import AwaitPaymentResponse from "./PaymentSheet.AwaitPaymentResponse";
 
 const privates = new WeakMap();
-const eventListeners = Object.freeze([
-  "shippingoptionchange",
-  "shippingaddresschange",
-  "abort",
-]);
 /**
  * Payment Sheet a HTMLDialogElement that is composed of two section:
  *  Top section:
@@ -33,11 +26,11 @@ const eventListeners = Object.freeze([
  *
  *  DataSheets
  *    [x] Payment Method Selector
- *  
+ *
  *  Bottom info
  *    [x] host information
  */
-class PaymentSheet extends EventTarget(eventListeners) {
+class PaymentSheet extends EventTarget {
   constructor() {
     super();
     console.log("Creating payment sheet");
@@ -47,26 +40,30 @@ class PaymentSheet extends EventTarget(eventListeners) {
     // WIDGETS
     priv.set("host-widget", new Host());
     const shippingOptionsPicker = new ShippingOptions();
-    shippingOptionsPicker.addEventListener("shippingoptionchange", ev => {
-      this.dispatchEvent(ev);
-    });
-    // TODO: convert to proper manager
-    priv.set(
-      "topWidgets",
-      new Map([
-        ["lineItems", { widget: new LineItems(), active: true }],
-        [
-          "shippingOptionsPicker",
-          { widget: shippingOptionsPicker, active: true },
-        ],
-        ["total", { widget: new Total(), active: true }],
-        [
-          "awaitPaymentResponse",
-          { widget: new AwaitPaymentResponse(), active: false },
-        ],
-      ])
+    shippingOptionsPicker.addEventListener(
+      "shippingoptionchange",
+      ({ detail }) => {
+        this.dispatchEvent(new CustomEvent("shippingoptionchange", { detail }));
+      }
     );
-    priv.set("ready", init.call(this));
+    // TODO: convert to proper manager
+    const topWidgets = new Map();
+    topWidgets.set("lineItems", { widget: new LineItems(), active: true });
+    topWidgets.set("shippingOptionsPicker", {
+      widget: shippingOptionsPicker,
+      active: true,
+    });
+    topWidgets.set("total", { widget: new Total(), active: true });
+    topWidgets.set("awaitPaymentResponse", {
+      widget: new AwaitPaymentResponse(),
+      active: false,
+    });
+    priv.set("topWidgets", topWidgets);
+    const ready = async () => {
+      await init(this);
+      return this;
+    };
+    priv.set("ready", ready());
   }
 
   get sessionDone() {
@@ -78,44 +75,39 @@ class PaymentSheet extends EventTarget(eventListeners) {
   }
   /**
    * Abort showing the sheet.
-   *  
-   * @param {CustomEvent} ev 
+   *
+   * @param {CustomEvent} ev
    */
   async abort(reason) {
     console.log("aborting", reason);
-    if (db.isOpen()) {
-      await db.close();
-    }
     const priv = privates.get(this);
-    priv.get("dataSheetManager").reset();
-    const event = new CustomEvent("abort");
-    priv.get("sessionPromise").reject(new DOMException(reason, "AbortError"));
     await this.close();
-    this.dispatchEvent(event);
   }
 
-  async open(requestData) {
+  async open(request) {
     const priv = privates.get(this);
     const dialog = priv.get("dialog");
-    if (!dialog.isConnected) {
-      await attatchDialog(dialog);
-    }
     if (priv.get("isShowing")) {
       throw new DOMException("Sheet is already showing", "AbortError");
     }
-    priv.set("requestData", requestData);
+    priv.get("dataSheetManager").reset();
+    const topWidgets = priv.get("topWidgets");
+    for (const { widget } of topWidgets.values()) {
+      widget.request = request;
+    }
+    if (!dialog.isConnected) {
+      await attatchDialog(dialog);
+    }
+    priv.set("request", request);
     priv.set("isShowing", true);
     startPaymentSession(this);
-    await this.ready;
-    const dataSheetManager = priv.get("dataSheetManager");
-    dataSheetManager.update(requestData);
-    this.render(requestData);
     dialog.showModal();
-    try {
-      return await this.sessionDone; // collected data is returned
-    } catch (err) {
-      throw err;
-    }
+    await this.update();
+    return this.sessionDone; // collected data is returned
+  }
+
+  async update() {
+    await this.render();
   }
 
   async requestClose(reason) {
@@ -157,8 +149,37 @@ class PaymentSheet extends EventTarget(eventListeners) {
     priv.set("isShowing", false);
   }
 
-  async render(requestData = privates.get(this).get("requestData")) {
+  disableInputs() {
     const priv = privates.get(this);
+    const topWidgets = priv.get("topWidgets");
+    for (const { widget } of topWidgets.values()) {
+      widget.disable();
+    }
+  }
+
+  enableInputs() {
+    console.log("...ENABLING INPUTS AGAIN...");
+    const priv = privates.get(this);
+    const topWidgets = priv.get("topWidgets");
+    for (const { widget } of topWidgets.values()) {
+      widget.enable();
+    }
+  }
+
+  async render() {
+    await this.ready;
+    const priv = privates.get(this);
+    const request = priv.get("request");
+    const { displayItems, total, shippingOptions } = request[_details];
+    const options = request[_options];
+    const requestData = {
+      displayItems,
+      options,
+      shippingOptions,
+      total,
+    };
+    const dataSheetManager = priv.get("dataSheetManager");
+    dataSheetManager.update(requestData);
     const renderer = priv.get("renderer");
     const topWidgets = priv.get("topWidgets");
     const host = priv.get("host-widget");
@@ -166,13 +187,17 @@ class PaymentSheet extends EventTarget(eventListeners) {
     const currentSheet = dataSheetsManager.active;
     renderer`
       <h1>
-        <img src="./payment-sheet/images/logo-payment.png" alt="">Firefox Web Payment
+        <img src="./payment-sheet/images/logo-payment.png" alt=""> Firefox Web Payment
       </h1>
-      <section id="payment-sheet-top-section">${Array.from(topWidgets.values())
-      .filter(({ active }) => active)
-      .map(({ widget }) => widget.render(requestData))}</section>
-      <section id="payment-sheet-data-sheet" hidden="${currentSheet ? false : true}">${currentSheet ? currentSheet.render(requestData) : ""}</section>
-      <section id="payment-sheet-bottom">${host.render(window.location)}<section>
+      <section id="payment-sheet-top-section">${[...topWidgets.values()]
+        .filter(({ active }) => active)
+        .map(({ widget }) => widget.render(requestData))}</section>
+      <section id="payment-sheet-data-sheet" hidden="${
+        currentSheet ? false : true
+      }">${currentSheet ? currentSheet.render(requestData) : ""}</section>
+      <section id="payment-sheet-bottom">${host.render(
+        window.location
+      )}<section>
     `;
     if (currentSheet) {
       await currentSheet.validate();
@@ -192,7 +217,7 @@ function initDialog() {
     this.abort("User aborted.");
   });
   priv.set("dialog", dialog);
-  priv.set("renderer", hyperHTML.bind(dialog));
+  priv.set("renderer", bind(dialog));
   priv.set("isShowing", false);
 }
 
@@ -222,19 +247,18 @@ function startPaymentSession(paymentSheet) {
   priv.set("sessionPromise", invertedPromise);
 }
 
-async function init() {
+async function init(request) {
   console.log("Initializing PaymentSheet");
-  const priv = privates.get(this);
+  const priv = privates.get(request);
   const paymentChooser = await new PaymentMethodChooser().ready;
   console.log("paymentChooser READY!");
   const addressCollector = await new AddressCollector("shipping").ready;
   console.log("AddressCollector READY!");
-  addressCollector.addEventListener("shippingaddresschange", ev => {
-    this.dispatchEvent(ev);
+  addressCollector.addEventListener("shippingaddresschange", ({ detail }) => {
+    request.dispatchEvent(new CustomEvent("shippingaddresschange", { detail }));
   });
-  const creditCardCollector = await new CreditCardCollector(
-    addressCollector
-  ).ready;
+  const creditCardCollector = await new CreditCardCollector(addressCollector)
+    .ready;
   console.log("creditCardCollector READY!");
   const paymentConfirmationCollector = await new PaymentConfirmationCollector(
     addressCollector,
@@ -254,26 +278,28 @@ async function init() {
   });
   sheets.forEach(sheet =>
     sheet.addEventListener("abort", () => {
-      this.abort("User aborted.");
-    }));
+      request.abort("User aborted.");
+    })
+  );
   const dataSheetManager = await new DataSheetManager(sheets).ready;
   console.log("dataSheetManager READY!");
   priv.set("dataSheetManager", dataSheetManager);
-  dataSheetManager.addEventListener("update", () => {
+  dataSheetManager.addEventListener("update", async () => {
     console.log("showing new sheet...");
-    this.render();
+    await request.render();
   });
 
-  dataSheetManager.addEventListener("done", ({ detail: collectedData }) => {
-    // Show just the waiting spinner...
-    const topWidgets = priv.get("topWidgets");
-    Array.from(topWidgets.values()).forEach(obj => obj.active = false);
-    topWidgets.get("awaitPaymentResponse").active = true;
-    this.render();
-    priv.get("sessionPromise").resolve(collectedData);
-  });
-
-  return this;
+  dataSheetManager.addEventListener(
+    "done",
+    async ({ detail: collectedData }) => {
+      // Show just the waiting spinner...
+      const topWidgets = priv.get("topWidgets");
+      Array.from(topWidgets.values()).forEach(obj => (obj.active = false));
+      topWidgets.get("awaitPaymentResponse").active = true;
+      await request.render();
+      priv.get("sessionPromise").resolve(collectedData);
+    }
+  );
 }
 
 const paymentSheet = new PaymentSheet();
