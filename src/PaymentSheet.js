@@ -2,6 +2,7 @@
 import { _details, _options } from "./PaymentRequest.js";
 import { bind } from "hyperhtml/cjs";
 import "dialog-polyfill/dialog-polyfill.css";
+import InvertedPromise from "./invertedPromise.js";
 import AddressCollector from "./datacollectors/AddressCollector";
 import CreditCardCollector from "./datacollectors/CreditCardCollector";
 import DataSheet from "./PaymentSheet.DataSheet.js";
@@ -80,8 +81,19 @@ class PaymentSheet extends EventTarget {
    */
   async abort(reason) {
     console.log("aborting", reason);
-    const priv = privates.get(this);
     await this.close();
+  }
+
+  async retry() {
+    debugger
+    console.log("Retry!");
+    const priv = privates.get(this);
+    startPaymentSession(this);
+    const dataSheetManager = priv.get("dataSheetManager");
+    const [firstSheet] = dataSheetManager.sheets;
+    dataSheetManager.active = firstSheet;
+    await this.update();
+    return this.sessionDone; // collected data is returned
   }
 
   async open(request) {
@@ -124,7 +136,6 @@ class PaymentSheet extends EventTarget {
         break;
       case "success":
         // do a success animation here
-        priv.get("sessionPromise").resolve();
         break;
       case "unknown": // unknown reason
         break;
@@ -214,7 +225,10 @@ function initDialog() {
   dialogPolyfill.registerDialog(dialog);
   dialog.id = "payment-sheet";
   dialog.addEventListener("cancel", () => {
-    this.abort("User aborted.");
+    const event = new Event("userabort");
+    const err = new DOMException("Sheet is already showing", "AbortError");
+    priv.get("sessionPromise").reject(err);
+    this.dispatchEvent(event);
   });
   priv.set("dialog", dialog);
   priv.set("renderer", bind(dialog));
@@ -237,14 +251,7 @@ function attatchDialog(dialog) {
 
 function startPaymentSession(paymentSheet) {
   const priv = privates.get(paymentSheet);
-  const invertedPromise = {};
-  invertedPromise.promise = new Promise((resolve, reject) => {
-    Object.assign(invertedPromise, {
-      resolve,
-      reject,
-    });
-  });
-  priv.set("sessionPromise", invertedPromise);
+  priv.set("sessionPromise", new InvertedPromise());
 }
 
 async function init(request) {

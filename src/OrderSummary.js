@@ -128,6 +128,10 @@ async function doPaymentRequest() {
 }
 
 async function processResponse(response) {
+  debugger
+  const retry = response.retry({});
+  console.log("retry 2", response.retry({}));
+  await retry;
   await response.retry({});
   setTimeout(async () => {
     await response.complete("success");

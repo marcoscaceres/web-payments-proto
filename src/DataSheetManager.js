@@ -29,6 +29,10 @@ export default class DataSheetManager extends EventTarget {
     priv.set("ready", readyPromise);
   }
 
+  get sheets() {
+    return privates.get(this).get("dataSheets");
+  }
+
   get ready() {
     return privates.get(this).get("ready");
   }

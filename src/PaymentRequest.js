@@ -1,9 +1,14 @@
-import InvertedPromise from "./InvertedPromise.js";
 import { defineEventAttribute } from "event-target-shim";
+import {
+  updatePaymentResponse,
+  _retrying,
+  _retryPromise,
+} from "./PaymentResponse.js";
+import InvertedPromise from "./InvertedPromise.js";
 import PaymentCurrencyAmount from "./PaymentCurrencyAmount";
+import PaymentDetailsUpdate from "./PaymentDetailsUpdate";
 import PaymentMethodChooser from "./datacollectors/PaymentMethodChooser";
 import PaymentRequestUpdateEvent from "./PaymentRequestUpdateEvent";
-import PaymentDetailsUpdate from "./PaymentDetailsUpdate";
 import PaymentResponse from "./PaymentResponse";
 import paymentSheet from "./PaymentSheet.js";
 import uuid from "uuid/v4";
@@ -22,7 +27,7 @@ export const _serializedMethodData = Symbol("[[serializedMethodData]]");
 export const _serializedModifierData = Symbol("[[serializedMethodData]]");
 export const _state = Symbol("[[state]]");
 export const _updating = Symbol("[[updating]]");
-export const _retryPromise = Symbol("[[retryPromise]]");
+export const _response = Symbol("[[response]]");
 
 const _disableForm = Symbol("disableForm");
 const _acceptPromise = Symbol("[[acceptPromise]]");
@@ -100,6 +105,7 @@ class PaymentRequest extends EventTarget {
     this[_updating] = false;
     this[_shippingAddress] = null;
     this[_selectedShippingOption] = selectedShippingOption;
+    this[_response] = null;
   }
 
   [_disableForm]() {
@@ -159,7 +165,7 @@ class PaymentRequest extends EventTarget {
       this[_acceptPromise].reject(err);
     }
 
-    paymentSheet.addEventListener("abort", () => {
+    paymentSheet.addEventListener("userabort", async () => {
       userAbortsPayment(this);
     });
 
@@ -177,8 +183,7 @@ class PaymentRequest extends EventTarget {
     try {
       const finalDetailsPromise = paymentSheet.open(this);
       if (detailsPromise) await updatePaymentRequest(detailsPromise, this);
-      const finalDetails = await finalDetailsPromise;
-      userAcceptsThePaymentRequest(this, finalDetails);
+      await userAcceptsThePaymentRequest(this, finalDetailsPromise);
     } catch (err) {
       this[_acceptPromise].reject(err);
     }
@@ -234,7 +239,7 @@ class PaymentRequest extends EventTarget {
 defineEventAttribute(PaymentRequest, "shippingoptionchange");
 defineEventAttribute(PaymentRequest, "shippingaddresschange");
 
-function userAcceptsThePaymentRequest(request, detail) {
+export async function userAcceptsThePaymentRequest(request, sheetDetails) {
   if (request[_updating]) {
     console.assert(false, "This should never happen: in [[updating]] state");
     return;
@@ -256,21 +261,46 @@ function userAcceptsThePaymentRequest(request, detail) {
       return;
     }
   }
-  const response = new PaymentResponse(request, options, detail);
+  const isRetry = request[_response] ? true : false;
+  const details = await sheetDetails;
+  const response = isRetry
+    ? request[_response]
+    : new PaymentResponse(request, details);
+
+  // If it's not a retry, initialize the things that won't change.
+  //if (!isRetry) {
+  // response[_request] = request;
+  // response[_retrying] = false;
+  // response[_complete] = false;
+  // response[_id] = request.id;
+  // response[_methodName] = details.methodName;
+  // response[_retryPromise] = undefined;
+  //}
+  updatePaymentResponse(response, request, details);
+  if (!isRetry) {
+    request[_response] = response;
+    request[_acceptPromise].resolve(response);
+  } else {
+    response[_retryPromise].resolve(undefined);
+  }
   request[_state] = "closed";
-  request[_acceptPromise].resolve(response);
 }
 
-async function userAbortsPayment(request) {
-  console.assert(request[_updating], "This should never happen");
+function userAbortsPayment(request) {
+  console.assert(request[_updating] === false, "This should never happen");
   console.assert(
     request[_state] === "interactive",
     "UA should ensure that this never occurs."
   );
-  await undefined; // spin the event loop
   request[_state] = "closed";
   const err = new DOMException("User aborted payment request", "AbortError");
-  request[_acceptPromise].reject(err);
+  const response = request[_response];
+  if (response) {
+    console.assert(response[_retrying]);
+    response[_retryPromise].reject(err);
+  } else {
+    request[_acceptPromise].reject(err);
+  }
 }
 
 function paymentRequestUpdated(request, eventName) {
@@ -465,8 +495,15 @@ async function abortTheUpdate(request, err) {
   await paymentSheet.abort(err.message);
   //  request._state]] to "closed".
   request[_state] = "closed";
-  // Reject the promise request.[[acceptPromise]] with exception.
-  request[_acceptPromise].reject(err);
+  const isRetry = request[_response] ? true : false;
+  if (!isRetry) {
+    const response = request[_response];
+    console.assert(response[_retrying]);
+    response[_retryPromise].reject(err);
+  } else {
+    // Reject the promise request.[[acceptPromise]] with exception.
+    request[_acceptPromise].reject(err);
+  }
   //Set request.[[\updating]] to false.
   request[_updating] = false;
 }
