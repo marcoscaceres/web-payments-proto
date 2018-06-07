@@ -2,7 +2,7 @@
 import { _details, _options } from "./PaymentRequest.js";
 import { bind } from "hyperhtml/cjs";
 import "dialog-polyfill/dialog-polyfill.css";
-import InvertedPromise from "./invertedPromise.js";
+import InvertedPromise from "./InvertedPromise.js";
 import AddressCollector from "./datacollectors/AddressCollector";
 import CreditCardCollector from "./datacollectors/CreditCardCollector";
 import DataSheet from "./PaymentSheet.DataSheet.js";
