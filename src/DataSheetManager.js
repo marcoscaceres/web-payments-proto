@@ -1,4 +1,3 @@
-import { defineEventAttribute } from "event-target-shim";
 const privates = new WeakMap();
 
 export default class DataSheetManager extends EventTarget {
@@ -60,9 +59,7 @@ export default class DataSheetManager extends EventTarget {
     dataSheets.forEach(sheet => sheet.render(requestData));
   }
 }
-["done", "update"].forEach(name =>
-  defineEventAttribute(DataSheetManager, name)
-);
+
 function continueHandler() {
   const priv = privates.get(this);
   const dataSheets = priv.get("dataSheets");
