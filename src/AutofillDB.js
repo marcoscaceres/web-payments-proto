@@ -2,14 +2,17 @@ import Dexie from "dexie";
 
 const db = new Dexie("Autofill");
 
+const defaultFields = "timeCreated, timeLastUsed, timeLastModified, timesUsed, "
+
+
 db.version(1).stores({
   addresses:
-    "&guid, organization, streetAddress, addressLevel1, addressLevel2, postalCode, country, tel, email, timeCreated, timeLastUsed, timeLastModified, timesUsed, type",
+    defaultFields + "&guid, organization, streetAddress, addressLevel1, addressLevel2, postalCode, country, tel, email, type",
   cards:
-    "&uuid, cardNumber, cardholderName, expiryMonth, expiryYear, billingAddressUuid, timeCreated, timeLastUsed, timeLastModified, timesUsed",
+    defaultFields + "&uuid, cardNumber, cardholderName, expiryMonth, expiryYear, billingAddressUuid",
 });
 db.version(2).stores({
-  payers: "&uuid, payerName, payerPhone, payerEmail",
+  payers: defaultFields + "&uuid, payerName, payerPhone, payerEmail",
 });
 window.db = db;
 
