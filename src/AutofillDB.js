@@ -8,7 +8,9 @@ db.version(1).stores({
   cards:
     "&uuid, cardNumber, cardholderName, expiryMonth, expiryYear, billingAddressUuid, timeCreated, timeLastUsed, timeLastModified, timesUsed",
 });
-
+db.version(2).stores({
+  payers: "&uuid, payerName, payerPhone, payerEmail",
+});
 window.db = db;
 
 export default db;
