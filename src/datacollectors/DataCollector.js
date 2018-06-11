@@ -1,6 +1,5 @@
 import { bind } from "hyperhtml/cjs";
 import db from "../AutofillDB";
-import { defineEventAttribute } from "event-target-shim";
 
 const privates = new WeakMap();
 const buttonLabels = Object.freeze({
@@ -113,9 +112,7 @@ export default class DataCollector extends EventTarget {
     return buttonLabels;
   }
 }
-["datacollected", "invaliddata", "needsmodification"].forEach(name =>
-  defineEventAttribute(DataCollector, name)
-);
+
 /**
  * Intialize either from default data or from database
  *
@@ -124,21 +121,23 @@ export default class DataCollector extends EventTarget {
  * @param {Object} initialData
  */
 async function init(tableName, initialData) {
-  if (tableName) {
-    if (!db.isOpen()) {
-      await db.open();
-    }
-    const count = await db[tableName].count();
-    if (!count) {
-      this.data = Object.assign({}, initialData, {
-        timeCreated: Date.now(),
-        timeLastModified: Date.now(),
-        timeLastUsed: Date.now(),
-        timesUsed: 0,
-      });
-    } else {
-      this.data = await db[tableName].orderBy("timeLastUsed").last();
-    }
+  if (!tableName) {
+    return this;
+  }
+  if (!db.isOpen()) {
+    await db.open();
+  }
+  if (!db[tableName]) throw new Error(`No database table/schema for ${tableName}`);
+  const count = await db[tableName].count();
+  if (!count) {
+    this.data = Object.assign({}, initialData, {
+      timeCreated: Date.now(),
+      timeLastModified: Date.now(),
+      timeLastUsed: Date.now(),
+      timesUsed: 0,
+    });
+  } else {
+    this.data = await db[tableName].orderBy("timeLastUsed").last();
   }
   return this;
 }
