@@ -1,6 +1,5 @@
 import { bind } from "hyperhtml/cjs";
 import Controls from "./PaymentSheet.DataSheetControls";
-import { defineEventAttribute } from "event-target-shim";
 const privates = new WeakMap();
 
 export default class DataSheet extends EventTarget {
@@ -109,4 +108,4 @@ export default class DataSheet extends EventTarget {
     <section>${controlButtons.render(dataCollector.buttonLabels)}</section>`;
   }
 }
-defineEventAttribute(DataSheet, "abort");
+
