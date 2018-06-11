@@ -1,7 +1,6 @@
 import { bind, wire } from "hyperhtml/esm";
 import PaymentItem from "./PaymentItem.js";
 import PaymentCurrencyAmount from "./PaymentCurrencyAmount.js";
-import { defineEventAttribute } from "event-target-shim";
 const privates = new WeakMap();
 
 export default class InventoryTable extends EventTarget {
@@ -79,7 +78,6 @@ export default class InventoryTable extends EventTarget {
     return items;
   }
 }
-defineEventAttribute(InventoryTable, "change");
 
 function makeTableSkeleton(table) {
   table.innerHTML = `
