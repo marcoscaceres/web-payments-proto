@@ -1,4 +1,3 @@
-import { defineEventAttribute } from "event-target-shim";
 import { bind, wire } from "hyperhtml/cjs";
 const privates = new WeakMap();
 
@@ -23,7 +22,6 @@ export default class LineItemRenderer extends EventTarget {
     return privates.get(this).get("containerElem");
   }
 }
-defineEventAttribute(LineItemRenderer, "change");
 
 function toDefListItem(paymentItem) {
   const { currency, value } = paymentItem.amount;
