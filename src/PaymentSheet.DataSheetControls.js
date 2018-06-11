@@ -1,5 +1,4 @@
 import { bind } from "hyperhtml/cjs";
-import { defineEventAttribute } from "event-target-shim";
 
 const defaultLabels = Object.freeze({
   cancelLabel: "Cancel",
@@ -49,6 +48,3 @@ export default class DataSheetControls extends EventTarget {
     `;
   }
 }
-["cancel", "continue"].forEach(name =>
-  defineEventAttribute(DataSheetControls, name)
-);
