@@ -1,4 +1,3 @@
-import { defineEventAttribute } from "event-target-shim";
 import { bind, wire } from "hyperhtml/cjs";
 import PaymentShippingOption from "./PaymentShippingOption.js";
 
@@ -55,7 +54,6 @@ export default class ShippingOptions extends EventTarget {
     return privates.get(this).get("shippingOptions");
   }
 }
-defineEventAttribute(ShippingOptions, "change");
 
 function toHTML(shippingOption) {
   return wire(shippingOption)`
