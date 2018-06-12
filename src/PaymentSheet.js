@@ -10,11 +10,12 @@ import DataSheetManager from "./DataSheetManager";
 import dialogPolyfill from "dialog-polyfill/dialog-polyfill";
 import Host from "./PaymentSheet.Host";
 import LineItems from "./PaymentSheet.LineItems";
-import PaymentMethodChooser from "./datacollectors/PaymentMethodChooser";
+//import PaymentMethodChooser from "./datacollectors/PaymentMethodChooser";
 import ShippingOptions from "./PaymentSheet.ShippingOptions";
 import Total from "./PaymentSheet.Total";
 import PaymentConfirmationCollector from "./datacollectors/PaymentConfirmationCollector";
 import AwaitPaymentResponse from "./PaymentSheet.AwaitPaymentResponse";
+import PayerDetailsCollector from "./datacollectors/PayerDetailsCollector.js";
 
 const privates = new WeakMap();
 /**
@@ -85,13 +86,15 @@ class PaymentSheet extends EventTarget {
   }
 
   async retry() {
-    debugger
     console.log("Retry!");
     const priv = privates.get(this);
     startPaymentSession(this);
     const dataSheetManager = priv.get("dataSheetManager");
     const [firstSheet] = dataSheetManager.sheets;
     dataSheetManager.active = firstSheet;
+    const topWidgets = priv.get("topWidgets");
+    Array.from(topWidgets.values()).forEach(obj => (obj.active = true));
+    topWidgets.get("awaitPaymentResponse").active = false;
     await this.update();
     return this.sessionDone; // collected data is returned
   }
@@ -102,7 +105,6 @@ class PaymentSheet extends EventTarget {
     if (priv.get("isShowing")) {
       throw new DOMException("Sheet is already showing", "AbortError");
     }
-    priv.get("dataSheetManager").reset();
     const topWidgets = priv.get("topWidgets");
     for (const { widget } of topWidgets.values()) {
       widget.request = request;
@@ -114,7 +116,7 @@ class PaymentSheet extends EventTarget {
     priv.set("isShowing", true);
     startPaymentSession(this);
     dialog.showModal();
-    await this.update();
+    await this.render();
     return this.sessionDone; // collected data is returned
   }
 
@@ -189,13 +191,11 @@ class PaymentSheet extends EventTarget {
       shippingOptions,
       total,
     };
-    const dataSheetManager = priv.get("dataSheetManager");
-    dataSheetManager.update(requestData);
     const renderer = priv.get("renderer");
     const topWidgets = priv.get("topWidgets");
     const host = priv.get("host-widget");
-    const dataSheetsManager = priv.get("dataSheetManager");
-    const currentSheet = dataSheetsManager.active;
+    const dataSheetManager = priv.get("dataSheetManager");
+    const currentSheet = dataSheetManager.active;
     renderer`
       <h1>
         <img src="./payment-sheet/images/logo-payment.png" alt=""> Firefox Web Payment
@@ -226,8 +226,9 @@ function initDialog() {
   dialog.id = "payment-sheet";
   dialog.addEventListener("cancel", () => {
     const event = new Event("userabort");
-    const err = new DOMException("Sheet is already showing", "AbortError");
+    const err = new DOMException("User aborted dialog", "AbortError");
     priv.get("sessionPromise").reject(err);
+    priv.set("isShowing", false);
     this.dispatchEvent(event);
   });
   priv.set("dialog", dialog);
@@ -254,15 +255,17 @@ function startPaymentSession(paymentSheet) {
   priv.set("sessionPromise", new InvertedPromise());
 }
 
-async function init(request) {
+async function init(paymentSheet) {
   console.log("Initializing PaymentSheet");
-  const priv = privates.get(request);
-  const paymentChooser = await new PaymentMethodChooser().ready;
-  console.log("paymentChooser READY!");
+  const priv = privates.get(paymentSheet);
+  // const paymentChooser = await new PaymentMethodChooser().ready;
+  // console.log("paymentChooser READY!");
   const addressCollector = await new AddressCollector("shipping").ready;
   console.log("AddressCollector READY!");
   addressCollector.addEventListener("shippingaddresschange", ({ detail }) => {
-    request.dispatchEvent(new CustomEvent("shippingaddresschange", { detail }));
+    paymentSheet.dispatchEvent(
+      new CustomEvent("shippingaddresschange", { detail })
+    );
   });
   const creditCardCollector = await new CreditCardCollector(addressCollector)
     .ready;
@@ -272,30 +275,33 @@ async function init(request) {
     creditCardCollector
   ).ready;
   const addressDataSheet = new DataSheet("Shipping address:", addressCollector);
+  const payerDetailsSheet = new DataSheet(
+    "Payer Details",
+    new PayerDetailsCollector()
+  );
   const sheets = [
-    new DataSheet("Choose your payment method:", paymentChooser, {
-      userMustChoose: true,
-    }),
+    payerDetailsSheet,
     addressDataSheet,
     new DataSheet("", creditCardCollector),
     new DataSheet("", paymentConfirmationCollector, { userMustChoose: true }),
   ];
+  payerDetailsSheet.addEventListener("change", ({ detail }) => {
+    const event = new CustomEvent("payerdetailschange", { detail });
+    paymentSheet.dispatchEvent(event);
+  });
   addressDataSheet.addEventListener("continue", () => {
     addressCollector.notifyAddressChange();
   });
-  sheets.forEach(sheet =>
-    sheet.addEventListener("abort", () => {
-      request.abort("User aborted.");
-    })
-  );
   const dataSheetManager = await new DataSheetManager(sheets).ready;
-  console.log("dataSheetManager READY!");
-  priv.set("dataSheetManager", dataSheetManager);
   dataSheetManager.addEventListener("update", async () => {
     console.log("showing new sheet...");
-    await request.render();
+    await paymentSheet.render();
   });
-
+  dataSheetManager.addEventListener("abort", async () => {
+    paymentSheet.abort("User aborted");
+  });
+  console.log("dataSheetManager READY!");
+  priv.set("dataSheetManager", dataSheetManager);
   dataSheetManager.addEventListener(
     "done",
     async ({ detail: collectedData }) => {
@@ -303,8 +309,9 @@ async function init(request) {
       const topWidgets = priv.get("topWidgets");
       Array.from(topWidgets.values()).forEach(obj => (obj.active = false));
       topWidgets.get("awaitPaymentResponse").active = true;
-      await request.render();
-      priv.get("sessionPromise").resolve(collectedData);
+      priv
+        .get("sessionPromise")
+        .resolve({ collectedData, methodName: "baic-card" });
     }
   );
 }

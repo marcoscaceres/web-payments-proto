@@ -22,7 +22,10 @@ export default class AddressFormat {
 
   format(paymentAddress, outputFormat = "text") {
     let result;
-    const { name: countryName } = Countries.get(paymentAddress.country);
+    const { name: countryName } = {
+      name: "",
+      ...Countries.get(paymentAddress.country),
+    };
     switch (outputFormat) {
       case "html":
         result = wire(paymentAddress)`

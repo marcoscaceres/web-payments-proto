@@ -5,27 +5,12 @@ export default class DataSheetManager extends EventTarget {
     super();
     const priv = privates.set(this, new Map()).get(this);
     priv.set("dataSheets", dataSheets.concat());
-    dataSheets.forEach(sheet =>
-      sheet.addEventListener("continue", continueHandler.bind(this))
-    );
-    dataSheets.forEach(sheet =>
-      sheet.addEventListener("requestdisplay", ev => {
-        this.active = ev.detail.sheet;
-        const opts = {
-          detail: {
-            activeSheet: ev.detail.sheet,
-          },
-        };
-        this.dispatchEvent(new CustomEvent("update", opts));
-      })
-    );
-    const readyPromise = Promise.all(dataSheets.map(sheet => sheet.ready)).then(
-      () => {
-        this.reset();
-        return this;
-      }
-    );
-    priv.set("ready", readyPromise);
+    dataSheets.forEach(addEventListeners.bind(this));
+    const readyPromise = Promise.all(dataSheets.map(({ ready }) => ready));
+    priv.set("ready", readyPromise.then(() => this));
+    readyPromise.then(sheets => {
+      this.active = sheets.find(sheet => !sheet.isValid)
+    });
   }
 
   get sheets() {
@@ -86,4 +71,24 @@ function continueHandler() {
     detail: collectedData,
   };
   this.dispatchEvent(new CustomEvent("done", opts));
+}
+
+/**
+ * @this DataSheetManager
+ * @param {DataSheet} sheet
+ */
+function addEventListeners(sheet){
+  sheet.addEventListener("continue", continueHandler.bind(this));
+  sheet.addEventListener("abort", () => {
+    this.dispatchEvent(new CustomEvent("abort"));
+  })
+  sheet.addEventListener("requestdisplay", ev => {
+    this.active = ev.detail.sheet;
+    const opts = {
+      detail: {
+        activeSheet: ev.detail.sheet,
+      },
+    };
+    this.dispatchEvent(new CustomEvent("update", opts));
+  });
 }

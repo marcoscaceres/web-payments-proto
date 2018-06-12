@@ -128,11 +128,15 @@ async function doPaymentRequest() {
 }
 
 async function processResponse(response) {
-  debugger
-  const retry = response.retry({});
-  console.log("retry 2", response.retry({}));
-  await retry;
+  response.addEventListener("payerdetailchange", ev => {
+    const randomDetails = makeRandomDetails();
+    console.log(randomDetails);
+    ev.updateWith(randomDetails);
+  });
+  console.log(response);
   await response.retry({});
+  await response.retry({});
+  console.log(response);
   setTimeout(async () => {
     await response.complete("success");
     document
@@ -147,9 +151,7 @@ function makeRandomDetails() {
     total: {
       label: "Total",
       amount: {
-        value: String(Math.random())
-          .substring(2)
-          .substring(15),
+        value: String(Math.random()).substring(3, 8),
         currency: "usd",
       },
     },

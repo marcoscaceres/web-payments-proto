@@ -34,6 +34,14 @@ export default class DataCollector extends EventTarget {
     priv.set("ready", init.call(this, tableName, initialData));
   }
 
+  get request() {
+    return privates.get(this).get("request");
+  }
+
+  set request(value) {
+    privates.get(this).set("request", value);
+  }
+
   get renderer() {
     return privates.get(this).get("renderer");
   }

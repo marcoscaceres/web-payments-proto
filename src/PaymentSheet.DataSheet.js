@@ -19,28 +19,32 @@ export default class DataSheet extends EventTarget {
       );
     });
     form.classList.add("payment-sheet-data-collector");
-    const changeListener = async () => {
+    const saveListener = async () => {
       this.validate();
       await dataCollector.save();
     };
-    form.addEventListener("keyup", changeListener);
+    const changeListener = async () => {
+      await saveListener();
+      const detail = this.collectedData;
+      const ev = new CustomEvent("change", { detail });
+      this.dispatchEvent(ev);
+    };
+    form.addEventListener("keyup", saveListener);
     form.addEventListener("change", changeListener);
     form.addEventListener("submit", ev => {
       ev.preventDefault();
       return false;
     });
     dataCollector.addEventListener("invaliddata", this.validate.bind(this));
-
+    const readyPromise = dataCollector.ready.then(() => {
+      this.render();
+      return this;
+    });
     priv.set("controlButtons", controlButtons);
     priv.set("dataCollector", dataCollector);
     priv.set("heading", heading);
     priv.set("renderer", bind(form));
-    priv.set(
-      "ready",
-      dataCollector.ready.then(() => {
-        this.render();
-      })
-    );
+    priv.set("ready", readyPromise);
     priv.set("userMustChoose", options.userMustChoose);
   }
   get userMustChoose() {
@@ -108,4 +112,3 @@ export default class DataSheet extends EventTarget {
     <section>${controlButtons.render(dataCollector.buttonLabels)}</section>`;
   }
 }
-

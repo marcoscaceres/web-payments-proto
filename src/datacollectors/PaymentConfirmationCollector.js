@@ -20,11 +20,12 @@ const defaultRequestData = Object.freeze({
 });
 
 export default class PaymentConfirmationCollector extends DataCollector {
-  constructor(addressCollector, creditCardCollector) {
+  constructor(addressCollector, creditCardCollector, payerDetailsCollector) {
     super(schema, ["payment-confirmation-collector"], "", null, "hold");
     const priv = privates.set(this, new Map()).get(this);
     priv.set("addressCollector", addressCollector);
     priv.set("creditCardCollector", creditCardCollector);
+    priv.set("payerDetailsCollector", payerDetailsCollector);
   }
 
   get buttonLabels() {

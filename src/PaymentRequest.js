@@ -3,6 +3,9 @@ import {
   updatePaymentResponse,
   _retrying,
   _retryPromise,
+  _payerEmail,
+  _payerName,
+  _payerPhone,
 } from "./PaymentResponse.js";
 import InvertedPromise from "./InvertedPromise.js";
 import PaymentCurrencyAmount from "./PaymentCurrencyAmount";
@@ -240,6 +243,7 @@ defineEventAttribute(PaymentRequest, "shippingoptionchange");
 defineEventAttribute(PaymentRequest, "shippingaddresschange");
 
 export async function userAcceptsThePaymentRequest(request, sheetDetails) {
+  await sheetDetails;
   if (request[_updating]) {
     console.assert(false, "This should never happen: in [[updating]] state");
     return;
@@ -267,15 +271,14 @@ export async function userAcceptsThePaymentRequest(request, sheetDetails) {
     ? request[_response]
     : new PaymentResponse(request, details);
 
-  // If it's not a retry, initialize the things that won't change.
-  //if (!isRetry) {
+  // If isRetry if false, initialize the newly created response:
   // response[_request] = request;
   // response[_retrying] = false;
   // response[_complete] = false;
   // response[_id] = request.id;
   // response[_methodName] = details.methodName;
   // response[_retryPromise] = undefined;
-  //}
+
   updatePaymentResponse(response, request, details);
   if (!isRetry) {
     request[_response] = response;
@@ -506,6 +509,65 @@ async function abortTheUpdate(request, err) {
   }
   //Set request.[[\updating]] to false.
   request[_updating] = false;
+}
+
+export function payerDetailChange(request, changeDetails) {
+  const { payerName, payerEmail, payerPhone } = changeDetails;
+  // Let request be the PaymentRequest object that the user is interacting with.
+  // If request[[response]] is null, terminate this algorithm.
+  if (request[_response] === null) {
+    console.assert("There should always be a response here");
+    return;
+  }
+  // Let response be request[[response]].
+  const response = request[_response];
+  // Assert: response[[retrying]] is true.
+  console.assert(response[_retrying], "Must be in a retry");
+  // Queue a task on the user interaction task source to run the following steps:
+  // Assert: request.[[updating]] is false.
+  console.assert(request[_updating] === false, "Must not be updating!");
+  // Assert: request.[[state]] is "interactive".
+  console.assert(
+    request[_state] === "interactive",
+    "Request must be interactive"
+  );
+  // If payer name changed:
+  if (response.payerName !== payerName) {
+    // Assert: request[[options]].requestPayerName is true.
+    console.assert(
+      request[_options].requestPayerName,
+      "Unexpected change to payer name"
+    );
+    // Set response's payerName attribute to payer name.
+    response[_payerName] = payerName;
+  }
+  // If payer email changed:
+  if (response.payerEmail !== payerEmail) {
+    // Assert: request[[options]].requestPayerEmail is true.
+    console.assert(
+      request[_options].requestPayerEmail,
+      "Unexpected change to payer email"
+    );
+    // Set response's payerEmail attribute to payer Email.
+    response[_payerEmail] = payerEmail;
+  }
+  if (response.payerPhone !== payerPhone) {
+    // Assert: request[[options]].requestPayerPhone is true.
+    console.assert(
+      request[_options].requestPayerPhone,
+      "Unexpected change to payer phone"
+    );
+    // Set response's payerPhone attribute to payer Phone.
+    response[_payerPhone] = payerPhone;
+  }
+  // Let event be the result of creating an event using PaymentRequestUpdateEvent.
+  // Initialize event's type attribute to "payerdetailchange".
+  const event = new PaymentRequestUpdateEvent("payerdetailchange");
+  // Dispatch event at response.
+  response.dispatchEvent(event);
+  // If event.[[waitForUpdate]] is true, disable any part of the user
+  // interface that could cause another update event to be fired.
+  paymentSheet.disableInputs();
 }
 
 window.PaymentRequest = PaymentRequest;

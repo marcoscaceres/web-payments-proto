@@ -92,7 +92,7 @@ export default class CreditCardCollector extends DataCollector {
           placeholder="Card Number"
           required
           type="text"
-          value="${cardNumber ? cardNumber : "4111 1111 1111 1111"}">
+          value="${cardNumber ? cardNumber : "4111111111111111"}">
         <input
           type="text"
           minlength="1"

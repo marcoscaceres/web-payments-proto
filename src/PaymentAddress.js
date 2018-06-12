@@ -23,8 +23,12 @@ function typeMapper(typeConverter) {
   };
 }
 
-const stringMapper = typeMapper(value => String(value));
-const arrayMapper = typeMapper(value => Array(...value));
+const stringMapper = typeMapper(value =>
+  String(value === undefined ? "" : value)
+);
+const arrayMapper = typeMapper(value =>
+  Array(...value).map(value => String(value === undefined ? "" : value))
+);
 
 export default class PaymentAddress {
   constructor(details) {
