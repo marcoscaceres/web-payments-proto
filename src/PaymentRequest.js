@@ -63,7 +63,7 @@ class PaymentRequest extends EventTarget {
         );
       }
       let serializedData = paymentMethod.data
-        ? JSON.strigify(paymentMethod.data)
+        ? JSON.stringify(paymentMethod.data)
         : null;
       serializedMethodData.set(
         paymentMethod.supportedMethods.concat(),
