@@ -14,6 +14,36 @@ const defaultMethods = [
     ],
   },
   {
+    name: "tokenized-card",
+    value: "test1",
+    icons: [
+      {
+        src: "./payment-sheet/images/paypal.svg",
+        sizes: "256x256",
+      },
+    ],
+  },
+  {
+    name: "token-reference",
+    value: "test2",
+    icons: [
+      {
+        src: "./payment-sheet/images/paypal.svg",
+        sizes: "256x256",
+      },
+    ],
+  },
+  {
+    name: "token-cryptogram",
+    value: "test3",
+    icons: [
+      {
+        src: "./payment-sheet/images/paypal.svg",
+        sizes: "256x256",
+      },
+    ],
+  },
+  {
     name: "https://paypal.com",
     value: "paypal",
     icons: [
