@@ -27,6 +27,7 @@ const defaultPaymentOptions = Object.freeze({
 export const _details = Symbol("[[details]]");
 export const _options = Symbol("[[options]]");
 export const _serializedMethodData = Symbol("[[serializedMethodData]]");
+export const _originalMethodData = Symbol("[[originalMethodDataa]]");
 export const _serializedModifierData = Symbol("[[serializedMethodData]]");
 export const _state = Symbol("[[state]]");
 export const _updating = Symbol("[[updating]]");
@@ -36,6 +37,7 @@ const _disableForm = Symbol("disableForm");
 const _acceptPromise = Symbol("[[acceptPromise]]");
 const _selectedShippingOption = Symbol("[[selectedShippingOption]]");
 const _shippingAddress = Symbol("[[shippingAddressSymbol]]");
+
 
 class PaymentRequest extends EventTarget {
   constructor(originalMethodData, originalDetails, originalOptions) {
@@ -70,6 +72,7 @@ class PaymentRequest extends EventTarget {
         serializedData
       );
     }
+
 
     // Process the total:
     if (!PaymentCurrencyAmount.isValid(details.total.amount.value)) {
@@ -109,6 +112,7 @@ class PaymentRequest extends EventTarget {
     this[_shippingAddress] = null;
     this[_selectedShippingOption] = selectedShippingOption;
     this[_response] = null;
+    this[_originalMethodData] = originalMethodData;
   }
 
   [_disableForm]() {
@@ -134,6 +138,14 @@ class PaymentRequest extends EventTarget {
   get shippingType() {
     const { shippingType } = this[_options];
     return shippingType ? shippingType : null;
+  }
+
+  get serializedMethodData() {
+    return this[_serializedMethodData];
+  }
+
+  get originalMethodData() {
+    return this[_originalMethodData];
   }
 
   /**

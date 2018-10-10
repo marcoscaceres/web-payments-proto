@@ -311,7 +311,8 @@ async function init(paymentSheet) {
       topWidgets.get("awaitPaymentResponse").active = true;
       priv
         .get("sessionPromise")
-        .resolve({ collectedData, methodName: "baic-card" });
+        .resolve({ collectedData, methodName: "tokenized-card" });
+        // .resolve({ collectedData, methodName: "basic-card" });
     }
   );
 }

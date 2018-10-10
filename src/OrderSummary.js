@@ -78,11 +78,21 @@ async function doPaymentRequest() {
     .reduce((accumulator, items) => accumulator.concat(items), [])
     .reduce(typeSplitter, undefined);
   const total = this.sumTotal();
-  const methodData = [
-    {
-      supportedMethods: ["basic-card"],
-    },
-  ];
+  //const methodData = [
+  //  {
+  //    supportedMethods: ["basic-card"],
+  //  },
+  //];
+  const methodData = [{
+    supportedMethods: ['tokenized-card'],
+    data: {
+      supportedNetworks: ['mastercard','visa', 'amex', 'discover', 'jcb','unionpay'],
+      supportedTypes: ['credit','debit'],
+      usageType: 'one-time',
+      payeeID: '234987',
+      keyProviderURL: 'https://pspKeyProvider.example/tokenizedCardPublicKey',
+    }
+  }];
   const id = `super-store-order-${String(Math.random()).substr(2)}`;
   const details = {
     id,

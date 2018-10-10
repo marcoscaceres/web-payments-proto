@@ -36,9 +36,20 @@ export default class PaymentResponse extends EventTarget {
   get requestId() {
     return this[_request].id;
   }
+
+  get request() {
+    return this[_request];
+  }
+
   //readonly attribute DOMString methodName;
   get methodName() {
     return this[_methodName];
+  }
+
+  get keyProviderURL() {
+    var originalMethodData = this[_request].originalMethodData;
+    var matchedMethodData = originalMethodData.find(e => e.supportedMethods.includes(this[_methodName])).data;
+    return matchedMethodData.keyProviderURL;
   }
   //readonly attribute object details;
   get details() {
@@ -118,6 +129,8 @@ export default class PaymentResponse extends EventTarget {
     } finally {
       // ✅ Finally, when retryPromise settles, set response[[retrying]] to false.
       this[_retrying] = false;
+      // tokenize
+      this.tokenize();
       paymentSheet.removeEventListener(
         "payerdetailschange",
         payerDetailListener
@@ -125,6 +138,29 @@ export default class PaymentResponse extends EventTarget {
     }
     // ✅  Return retryPromise.
     return retryPromise.promise;
+  }
+
+  createTokenizationRequest() {
+    var tokenizationRequest = {};
+    return tokenizationRequest;
+  }
+
+  sendRequestToTokenProvider(request, url) {
+    var tokenProviderResponse = {
+      cardNumber: "5413339000001513",
+      expiryMonth: "12",
+      expiryYear: "20",
+      cryptogram: "AlhlvxmN2ZKuAAESNFZ4GoABFA==",
+      typeOfCryptogram: "UCAF", // "Universal Card Authentication Field"
+      trid: "59812345678",
+      eci: "242", // Authorization and final transaction request with UCAF data
+    };
+    return tokenProviderResponse;
+  }
+
+  tokenize() {
+    var response = this.sendRequestToTokenProvider(this.createTokenizationRequest(), this.keyProviderURL);
+    this.details.collectedData = response;
   }
 
   //serializer = { attribute };
